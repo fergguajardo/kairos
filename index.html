@@ -438,7 +438,16 @@ function rCollect(){
     name: c.querySelector('.cat-name').textContent,
     items: [...c.querySelectorAll('.item')].map(it=>({ name: it.querySelector('.item-name').value, days: rDias(it) })) })) };
 }
-function rSave(){ const e = rEntry(); if(e){ e.data = rCollect(); saveTableros(); } }
+window.REDES = { onSave: null };
+function rSave(){saveTableros();if(typeof window.REDES.onSave==='function'){try{window.REDES.onSave(JSON.parse(JSON.stringify(redesData)))}catch(error){console.error('Redes: falló el gancho de guardado',error)}}}
+window.REDES.get=()=>JSON.parse(JSON.stringify(currentPage==='redes'&&rboard?rCollect():redesData));
+window.REDES.load=d=>{
+  if(!d||!Array.isArray(d.categorias)||d.categorias.some(c=>!c||typeof c.name!=='string'||!Array.isArray(c.items)||c.items.some(i=>!i||typeof i.name!=='string'||!Array.isArray(i.days)||i.days.some(day=>!Number.isInteger(day)||day<1||day>31))))throw new TypeError('Datos de Redes inválidos');
+  const next=JSON.parse(JSON.stringify(d));
+  localStorage.setItem(REDES_KEY,JSON.stringify(next));
+  redesData=next;rUndo=[];rRedo=[];
+  if(currentPage==='redes'){renderRedes(redesData);refreshRedesButtons()}
+};
 function rPush(){ rUndo.push(JSON.stringify(rCollect())); rRedo = []; refreshRedesButtons(); }
 function rDoUndo(){ if(!rUndo.length) return; rRedo.push(JSON.stringify(rCollect())); renderRedes(JSON.parse(rUndo.pop())); document.querySelector('h1').textContent='• Tareas · '+rTitulo; refreshRedesButtons(); }
 function rDoRedo(){ if(!rRedo.length) return; rUndo.push(JSON.stringify(rCollect())); renderRedes(JSON.parse(rRedo.pop())); document.querySelector('h1').textContent='• Tareas · '+rTitulo; refreshRedesButtons(); }
