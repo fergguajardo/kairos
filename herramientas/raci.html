@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Matriz RACI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  body{margin:0;background:#0a0a0a;padding:24px;font-family:'Outfit',system-ui,sans-serif}
+  .rc{--bg:#111;--card:#171717;--line:#2a2418;--gold:#c9a24b;--gold-soft:rgba(201,162,75,.14);--txt:#f3f3f3;--mut:#a8a8a8;--bad:#e5a0a0;
+    background:var(--bg);border:1px solid #3a2e14;border-radius:18px;padding:28px 30px;color:var(--txt);max-width:1400px;margin:0 auto}
+  .rc *{box-sizing:border-box}
+  .rc h3{margin:0 0 4px;font-size:22px;font-weight:600}
+  .rc .sub{margin:0 0 20px;color:var(--mut);font-size:14px;font-weight:500}
+  .meta{display:grid;grid-template-columns:2fr 1.5fr 1.2fr;gap:12px;margin-bottom:18px}
+  .meta label{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);margin-bottom:5px;font-weight:600}
+  .meta input{width:100%;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--txt);font:inherit;font-size:14px;outline:none}
+  .meta input:focus{border-color:var(--gold)}
+  .legend{display:flex;flex-wrap:wrap;gap:8px 18px;margin-bottom:16px;font-size:12.5px;color:var(--mut)}
+  .legend span{display:inline-flex;align-items:center;gap:7px}
+  .legend b{color:var(--txt);font-weight:600}
+
+  .cell,.chip{width:34px;height:34px;border-radius:9px;display:inline-grid;place-items:center;font-weight:600;font-size:14px;font-family:inherit}
+  .chip{width:26px;height:26px;font-size:12px;border-radius:7px}
+  .v-R{background:var(--gold);color:#111;border:1px solid var(--gold)}
+  .v-A{background:#f3f3f3;color:#111;border:1px solid #f3f3f3}
+  .v-AR{background:linear-gradient(135deg,#f3f3f3 50%,var(--gold) 50%);color:#111;border:1px solid var(--gold);font-size:11px}
+  .v-C{background:transparent;color:var(--gold);border:1px solid var(--gold)}
+  .v-I{background:transparent;color:var(--mut);border:1px dashed #666}
+
+  .wrap{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--card)}
+  table{border-collapse:separate;border-spacing:0;width:100%;min-width:640px}
+  th,td{padding:8px 10px;border-bottom:1px solid #222;text-align:center;vertical-align:middle}
+  tr:last-child td{border-bottom:0}
+  thead th{background:#1c1710;position:relative;font-size:13px;font-weight:600;color:var(--gold);min-width:92px;padding-top:12px;padding-bottom:12px}
+  th.task,td.task{text-align:left;position:sticky;left:0;background:var(--card);min-width:240px;z-index:1}
+  thead th.task{background:#1c1710;z-index:2;font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+  td.task{display:table-cell}
+  .tk{display:flex;align-items:center;gap:8px}
+  .tk i{font-style:normal;color:var(--gold);font-size:12px;font-weight:600;width:20px;flex:none}
+  .rc [contenteditable]{outline:none;word-break:break-word;min-height:1.3em;display:block}
+  .tk span[contenteditable]{flex:1;font-size:13.5px;font-weight:500;line-height:1.3}
+  .rc [contenteditable]:empty::before{content:attr(data-ph);color:#5e5e5e;font-weight:400}
+  .rc [contenteditable]:focus{color:#fff}
+  .cell{cursor:pointer;background:#0f0f0f;border:1px solid #2a2a2a;color:#444;transition:.12s;padding:0}
+  .cell:hover{border-color:var(--gold)}
+  .cell:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
+  .cell.v-R,.cell.v-A,.cell.v-AR,.cell.v-C,.cell.v-I{color:inherit}
+  .cell.v-R{color:#111}.cell.v-A,.cell.v-AR{color:#111}.cell.v-C{color:var(--gold)}.cell.v-I{color:var(--mut)}
+  .x{background:transparent;border:0;color:#666;cursor:pointer;font-size:15px;line-height:1;padding:2px 5px;border-radius:5px;opacity:0;transition:.15s}
+  tr:hover .x,th:hover .x,.x:focus{opacity:1}
+  .x:hover{color:var(--bad);background:#2a1a1a}
+  th .x{position:absolute;top:2px;right:2px}
+  td.ctl{min-width:130px;font-size:12px;font-weight:600;color:var(--mut)}
+  td.ctl.ok{color:var(--gold)}td.ctl.bad{color:var(--bad)}
+  thead th.ctl{color:var(--mut);font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+  tfoot td{background:#141414;font-size:12px;color:var(--mut);font-weight:500;border-top:1px solid var(--line)}
+  tfoot td.task{background:#141414}
+
+  .addbar{margin-top:16px;display:flex;flex-wrap:wrap;gap:8px}
+  .addbar button{background:transparent;border:1px dashed #3a3a3a;border-radius:9px;color:var(--mut);font:inherit;font-size:13px;padding:8px 14px;cursor:pointer;transition:.15s}
+  .addbar button:hover{border-color:var(--gold);color:var(--gold)}
+  .bar{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;align-items:center}
+  .btn{background:var(--gold-soft);border:1px solid #5a4720;color:var(--gold);border-radius:10px;padding:9px 16px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:.15s}
+  .btn:hover{background:var(--gold);color:#111}
+  .btn.ghost{background:transparent;border-color:#333;color:var(--mut)}
+  .btn.ghost:hover{border-color:#7a4a4a;color:var(--bad);background:transparent}
+  .msg{font-size:12px;color:var(--gold);opacity:0;transition:.3s}.msg.on{opacity:1}
+  .rc details{margin-top:18px;border-top:1px solid var(--line);padding-top:14px}
+  .rc summary{cursor:pointer;color:var(--gold);font-size:13px;font-weight:600}
+  .rc details ul{margin:10px 0 0;padding-left:20px;color:var(--mut);font-size:13px;line-height:1.6}
+  .rc details b{color:var(--txt);font-weight:600}
+  @media(max-width:700px){.rc{padding:20px 16px}.meta{grid-template-columns:1fr}}
+  @media print{
+    body{background:#fff;padding:0}
+    .rc{--bg:#fff;--card:#fff;--line:#ccc;--txt:#111;--mut:#555;--gold:#8a6a1f;--bad:#a33;background:#fff;border:0;color:#111;max-width:none}
+    .wrap{overflow:visible;border-color:#bbb}
+    thead th,thead th.task{background:#f3efe4;color:#5a4410}
+    th.task,td.task,tfoot td,tfoot td.task{background:#fff;position:static}
+    .cell{background:#fff;border-color:#ddd}
+    .v-R{background:#c9a24b!important;color:#111!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .v-A{background:#222!important;color:#fff!important;border-color:#222!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .cell.v-A,.cell.v-AR{color:#fff}
+    .v-AR{background:linear-gradient(135deg,#222 50%,#c9a24b 50%)!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;color:#fff!important}
+    .x,.addbar,.bar,.rc details{display:none}
+    .meta input{background:#fff;border-color:#bbb;color:#111}
+  }
+</style>
+</head>
+<body>
+
+<section class="rc" id="rc">
+  <h3>• Matriz RACI</h3>
+  <p class="sub">Quién hace, quién responde, a quién se consulta y a quién se informa en cada actividad.</p>
+
+  <div class="meta">
+    <div><label>Proyecto / proceso</label><input data-m="proy" placeholder="Ej.: Implementación del nuevo sistema"></div>
+    <div><label>Responsable de la matriz</label><input data-m="resp" placeholder="Quién la mantiene"></div>
+    <div><label>Fecha / versión</label><input data-m="ver" placeholder="Ej.: 06/10/2026 · v1"></div>
+  </div>
+
+  <div class="legend">
+    <span><i class="chip v-R">R</i><b>Responsable</b> ejecuta la tarea</span>
+    <span><i class="chip v-A">A</i><b>Aprobador</b> rinde cuentas, decide (uno solo)</span>
+    <span><i class="chip v-C">C</i><b>Consultado</b> opina antes (doble vía)</span>
+    <span><i class="chip v-I">I</i><b>Informado</b> se entera después (una vía)</span>
+    <span><i class="chip v-AR">A/R</i>mismo rol ejecuta y aprueba</span>
+  </div>
+
+  <div class="wrap"><table id="tbl"></table></div>
+
+  <div class="addbar">
+    <button type="button" id="addRow">+ Agregar actividad</button>
+    <button type="button" id="addRole">+ Agregar rol</button>
+  </div>
+
+  <div class="bar">
+    <button class="btn" id="rPrint">Imprimir / PDF</button>
+    <button class="btn" id="rCopy">Copiar como texto</button>
+    <button class="btn ghost" id="rClear">Limpiar todo</button>
+    <span class="msg" id="rMsg"></span>
+  </div>
+
+  <details>
+    <summary>Cómo completarlo</summary>
+    <ul>
+      <li><b>Columnas = roles o personas;</b> filas = actividades o entregables. Escribí directo en los encabezados y en las tareas.</li>
+      <li><b>Cada celda:</b> clic para rotar entre R → A → A/R → C → I → vacío. Con el teclado: R, A, C, I y Supr para borrar.</li>
+      <li><b>Regla de oro:</b> cada actividad lleva una sola A y al menos una R. La columna “Control” te avisa si falta algo.</li>
+      <li><b>Cuidado con las C:</b> cada consulta suma demora. Si todos son C, nadie decide.</li>
+      <li>La fila “Carga (R)” muestra cuántas actividades ejecuta cada rol: sirve para detectar sobrecarga.</li>
+    </ul>
+  </details>
+</section>
+
+<script>
+(function(){
+  var root=document.getElementById('rc'), tbl=document.getElementById('tbl'), KEY='matriz-raci-v1';
+  var CYCLE=['','R','A','AR','C','I'];
+  function blank(){return {m:{},seq:8,roles:[{id:'c1',n:''},{id:'c2',n:''},{id:'c3',n:''},{id:'c4',n:''}],
+    rows:[{id:'r1',n:'',c:{}},{id:'r2',n:'',c:{}},{id:'r3',n:'',c:{}},{id:'r4',n:'',c:{}}]}}
+  var data=load();
+  function load(){try{var d=JSON.parse(localStorage.getItem(KEY));if(d&&d.roles&&d.rows)return d}catch(e){}return blank()}
+  function save(){try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){}}
+  function msg(t){var m=document.getElementById('rMsg');m.textContent=t;m.classList.add('on');setTimeout(function(){m.classList.remove('on')},1800)}
+  function lbl(v){return v==='AR'?'A/R':v}
+  function esc(s){return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;')}
+
+  function render(){
+    var h='<thead><tr><th class="task">Actividad</th>';
+    data.roles.forEach(function(r){h+='<th data-role="'+r.id+'"><span contenteditable="true" data-f="rn" data-ph="Rol / persona">'+esc(r.n)+'</span><button type="button" class="x" data-act="delrole" title="Quitar rol">×</button></th>'});
+    h+='<th class="ctl">Control</th></tr></thead><tbody>';
+    data.rows.forEach(function(row,i){
+      h+='<tr data-row="'+row.id+'"><td class="task"><div class="tk"><i>'+(i+1)+'</i><span contenteditable="true" data-f="tn" data-ph="Actividad o entregable">'+esc(row.n)+'</span><button type="button" class="x" data-act="delrow" title="Quitar actividad">×</button></div></td>';
+      data.roles.forEach(function(r){var v=row.c[r.id]||'';h+='<td><button type="button" class="cell'+(v?' v-'+v:'')+'" data-role="'+r.id+'" aria-label="Asignación">'+lbl(v)+'</button></td>'});
+      h+='<td class="ctl"></td></tr>';
+    });
+    h+='</tbody><tfoot><tr><td class="task">Carga (R)</td>';
+    data.roles.forEach(function(r){h+='<td data-load="'+r.id+'">0</td>'});
+    h+='<td></td></tr></tfoot>';
+    tbl.innerHTML=h;
+    root.querySelectorAll('[data-m]').forEach(function(i){i.value=data.m[i.dataset.m]||''});
+    status();
+  }
+  function status(){
+    data.rows.forEach(function(row){
+      var tr=tbl.querySelector('[data-row="'+row.id+'"]');if(!tr)return;
+      var a=0,r=0,any=0;
+      data.roles.forEach(function(ro){var v=row.c[ro.id];if(!v)return;any++;if(v==='A'||v==='AR')a++;if(v==='R'||v==='AR')r++});
+      var td=tr.querySelector('td.ctl'),p=[];
+      if(!any){td.textContent='—';td.className='ctl';return}
+      if(a===0)p.push('Falta A');if(a>1)p.push('Más de una A');if(r===0)p.push('Falta R');
+      td.textContent=p.length?p.join(' · '):'✓ Completa';td.className='ctl '+(p.length?'bad':'ok');
+    });
+    data.roles.forEach(function(ro){
+      var n=0;data.rows.forEach(function(row){var v=row.c[ro.id];if(v==='R'||v==='AR')n++});
+      var c=tbl.querySelector('[data-load="'+ro.id+'"]');if(c)c.textContent=n;
+    });
+  }
+  function collect(){
+    tbl.querySelectorAll('[data-f=rn]').forEach(function(s){var id=s.closest('th').dataset.role;data.roles.forEach(function(r){if(r.id===id)r.n=s.textContent.trim()})});
+    tbl.querySelectorAll('[data-f=tn]').forEach(function(s){var id=s.closest('tr').dataset.row;data.rows.forEach(function(r){if(r.id===id)r.n=s.textContent.trim()})});
+    root.querySelectorAll('[data-m]').forEach(function(i){data.m[i.dataset.m]=i.value});
+    save();
+  }
+  function setCell(btn,v){
+    var rid=btn.closest('tr').dataset.row,cid=btn.dataset.role;
+    data.rows.forEach(function(r){if(r.id===rid){if(v)r.c[cid]=v;else delete r.c[cid]}});
+    btn.className='cell'+(v?' v-'+v:'');btn.textContent=lbl(v);save();status();
+  }
+  function cur(btn){var rid=btn.closest('tr').dataset.row,cid=btn.dataset.role,v='';data.rows.forEach(function(r){if(r.id===rid)v=r.c[cid]||''});return v}
+
+  tbl.addEventListener('click',function(e){
+    var b=e.target.closest('.cell');
+    if(b){var v=cur(b);setCell(b,CYCLE[(CYCLE.indexOf(v)+1)%CYCLE.length]);return}
+    var x=e.target.closest('[data-act]');if(!x)return;collect();
+    if(x.dataset.act==='delrole'&&data.roles.length>1){var id=x.closest('th').dataset.role;data.roles=data.roles.filter(function(r){return r.id!==id});data.rows.forEach(function(r){delete r.c[id]})}
+    if(x.dataset.act==='delrow'&&data.rows.length>1){var rid=x.closest('tr').dataset.row;data.rows=data.rows.filter(function(r){return r.id!==rid})}
+    save();render();
+  });
+  tbl.addEventListener('keydown',function(e){
+    if(e.target.matches('[contenteditable]')&&e.key==='Enter'){e.preventDefault();e.target.blur();return}
+    var b=e.target.closest&&e.target.closest('.cell');if(!b)return;
+    var k=e.key.toLowerCase();
+    if(k==='r'||k==='a'||k==='c'||k==='i'){e.preventDefault();var up=k.toUpperCase();setCell(b,(up==='A'&&cur(b)==='R')||(up==='R'&&cur(b)==='A')?'AR':up)}
+    if(k==='delete'||k==='backspace'||k==='x'){e.preventDefault();setCell(b,'')}
+  });
+  tbl.addEventListener('paste',function(e){if(e.target.matches('[contenteditable]')){e.preventDefault();document.execCommand('insertText',false,(e.clipboardData||window.clipboardData).getData('text').replace(/\s+/g,' '))}});
+  tbl.addEventListener('input',collect);
+  root.querySelectorAll('[data-m]').forEach(function(i){i.addEventListener('input',collect)});
+
+  document.getElementById('addRow').onclick=function(){collect();data.seq++;data.rows.push({id:'r'+data.seq,n:'',c:{}});save();render();var s=tbl.querySelectorAll('[data-f=tn]');s[s.length-1].focus()};
+  document.getElementById('addRole').onclick=function(){collect();data.seq++;data.roles.push({id:'c'+data.seq,n:''});save();render();var s=tbl.querySelectorAll('[data-f=rn]');s[s.length-1].focus()};
+  document.getElementById('rPrint').onclick=function(){window.print()};
+  document.getElementById('rClear').onclick=function(){if(!confirm('¿Borrar todo el contenido de esta plantilla?'))return;data=blank();save();render()};
+  document.getElementById('rCopy').onclick=function(){
+    collect();
+    var t='MATRIZ RACI — '+(data.m.proy||'(sin nombre)')+'\nResponsable: '+(data.m.resp||'-')+' | '+(data.m.ver||'-')+'\n\n';
+    t+=['Actividad'].concat(data.roles.map(function(r){return r.n||'(rol)'})).join('\t')+'\n';
+    data.rows.forEach(function(row){t+=[row.n||'(sin título)'].concat(data.roles.map(function(r){return lbl(row.c[r.id]||'')})).join('\t')+'\n'});
+    (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){msg('Copiado (se pega bien en una planilla)')},function(){msg('No se pudo copiar')});
+  };
+  render();
+})();
+</script>
+</body>
+</html>
