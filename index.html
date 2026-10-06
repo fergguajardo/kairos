@@ -358,6 +358,7 @@ small,.muted,.count,.weekday,.calendar-hint,.field,.balance-native .cat-footer,.
 .redes-month{margin:0 2vw 28px}.redes-month-bar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px}.redes-month-bar h2{margin:0}.redes-month-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}.redes-weekday{text-align:center;font-size:13px;color:var(--muted);padding:8px 0}.redes-date{min-height:44px;font-size:14px;font-weight:400;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px}.redes-date.crossed{color:var(--gold-light);border-color:var(--gold);background:rgba(229,185,92,.09);text-decoration:line-through;text-decoration-color:var(--gold);text-decoration-thickness:2px}.redes-month-count{font-size:13px;color:var(--muted);margin:12px 0 0}
 .redes-calendars{display:flex;flex-wrap:wrap;align-items:flex-start;gap:28px}.redes-calendar-card{width:560px;max-width:100%;min-width:0}.redes-calendar-tools{display:flex;gap:10px;margin:0 0 12px}.redes-calendar-tools input{flex:1;min-width:0;font-size:14px!important}.redes-calendar-tools button,.redes-calendar-add{font-size:14px!important}.redes-calendar-add{margin-top:20px}.redes-month-bar h2{text-align:center;overflow-wrap:anywhere}
 .app-link{font-size:14px!important}
+.redes-calendar-tools .redes-calendar-icon{display:inline-flex;align-items:center;justify-content:center;flex:0 0 40px;width:40px;min-height:40px;padding:8px;color:var(--ink)}.redes-calendar-icon svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 </style></head><body>
 <header><div><img class="kairos-logo" src="assets/kairos-manrope.svg" alt="KAIROS" width="120" height="40"><h1 hidden><span>·</span> Procesos</h1></div></header>
 <div class="backup-tools" role="group" aria-label="Respaldo de Kairos"><button id="exportbackup" class="iconbutton" title="Descargar JSON" aria-label="Descargar JSON"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v14m-5-5 5 5 5-5M4 16v5h16v-5"/></svg></button><button id="importbackup" class="iconbutton" title="Importar JSON" aria-label="Importar JSON"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17V3m-5 5 5-5 5 5M4 16v5h16v-5"/></svg></button><input id="backupfile" type="file" accept=".json,application/json" hidden></div>
@@ -609,10 +610,10 @@ function renderRedesMonth(){
  bar.append(prev,title,next);card.append(bar);
  const tools=el('div','redes-calendar-tools'),name=el('input','');name.value=calendar.name;name.setAttribute('aria-label','Nombre de la categoría '+calendar.name);
  name.onchange=()=>{const value=name.value.trim();if(!value){name.value=calendar.name;return}rPush();calendar.name=value;rSave();renderRedesMonth();refreshRedesButtons()};
- const duplicate=el('button','','Duplicar');
+ const duplicate=el('button','redes-calendar-icon');duplicate.title='Duplicar';duplicate.append(lineIcon('<rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 3H5a2 2 0 0 0-2 2v11"/>'));
  duplicate.setAttribute('aria-label','Duplicar calendario de '+calendar.name);
  duplicate.onclick=()=>{rPush();const copy=JSON.parse(JSON.stringify(calendar));copy.id=uid();copy.name=calendar.name+' (copia)';rCalendars.push(copy);rCalendarDates[copy.id]=new Date(year,month,1);rSave();renderRedesMonth();refreshRedesButtons()};
- tools.append(name,duplicate);card.append(tools);
+ const remove=el('button','redes-calendar-icon');remove.title='Eliminar';remove.setAttribute('aria-label','Eliminar calendario de '+calendar.name);remove.append(lineIcon('<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/>'));remove.onclick=()=>{rPush();rCalendars=rCalendars.filter(c=>c.id!==calendar.id);rSave();renderRedesMonth();refreshRedesButtons()};tools.append(name,duplicate,remove);card.append(tools);
  const grid=el('div','redes-month-grid');grid.setAttribute('role','group');grid.setAttribute('aria-label','Días de '+calendar.name);
  ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'].forEach(name=>grid.append(el('span','redes-weekday',name)));
  for(let blank=0;blank<(new Date(year,month,1).getDay()+6)%7;blank++)grid.append(el('span',''));
