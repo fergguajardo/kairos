@@ -355,7 +355,8 @@ small,.muted,.count,.weekday,.calendar-hint,.field,.balance-native .cat-footer,.
 .project-category-symbol{display:inline-flex;width:10px;height:10px;margin-right:8px;vertical-align:middle;color:inherit}.project-category-symbol svg{display:block;width:100%;height:100%;fill:currentColor}
 .balance-native:not(.redes-native) .item-name{font-size:14px!important}
 .project-tool{font-size:14px!important}
-.redes-month{max-width:560px;margin:0 2vw 28px}.redes-month-bar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px}.redes-month-bar h2{margin:0}.redes-month-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}.redes-weekday{text-align:center;font-size:13px;color:var(--muted);padding:8px 0}.redes-date{min-height:44px;font-size:14px;font-weight:400;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px}.redes-date.crossed{color:var(--gold-light);border-color:var(--gold);background:rgba(229,185,92,.09);text-decoration:line-through;text-decoration-color:var(--gold);text-decoration-thickness:2px}.redes-month-count{font-size:13px;color:var(--muted);margin:12px 0 0}
+.redes-month{margin:0 2vw 28px}.redes-month-bar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px}.redes-month-bar h2{margin:0}.redes-month-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}.redes-weekday{text-align:center;font-size:13px;color:var(--muted);padding:8px 0}.redes-date{min-height:44px;font-size:14px;font-weight:400;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px}.redes-date.crossed{color:var(--gold-light);border-color:var(--gold);background:rgba(229,185,92,.09);text-decoration:line-through;text-decoration-color:var(--gold);text-decoration-thickness:2px}.redes-month-count{font-size:13px;color:var(--muted);margin:12px 0 0}
+.redes-calendars{display:flex;flex-wrap:wrap;align-items:flex-start;gap:28px}.redes-calendar-card{width:560px;max-width:100%;min-width:0}.redes-calendar-tools{display:flex;gap:10px;margin:0 0 12px}.redes-calendar-tools input{flex:1;min-width:0;font-size:14px!important}.redes-calendar-tools button,.redes-calendar-add{font-size:14px!important}.redes-calendar-add{margin-top:20px}.redes-month-bar h2{text-align:center;overflow-wrap:anywhere}
 </style></head><body>
 <header><div><img class="kairos-logo" src="assets/kairos-manrope.svg" alt="KAIROS" width="120" height="40"><h1 hidden><span>·</span> Procesos</h1></div></header>
 <div class="backup-tools" role="group" aria-label="Respaldo de Kairos"><button id="exportbackup" class="iconbutton" title="Descargar JSON" aria-label="Descargar JSON"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v14m-5-5 5 5 5-5M4 16v5h16v-5"/></svg></button><button id="importbackup" class="iconbutton" title="Importar JSON" aria-label="Importar JSON"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17V3m-5 5 5-5 5 5M4 16v5h16v-5"/></svg></button><input id="backupfile" type="file" accept=".json,application/json" hidden></div>
@@ -497,11 +498,12 @@ if(data.balance){const taskBoard=boards.find(b=>!b.data.balance);if(taskBoard){b
 const RDIAS = new Date(new Date().getFullYear(), new Date().getMonth()+1, 0).getDate();
 let rboard;
 let rTitulo = 'Redes', rDrag = null;
+let rCalendars=[],rCalendarDates={};
 let rMonths={},rMonthDate=new Date(new Date().getFullYear(),new Date().getMonth(),1);
 const REDES_KEY=KEY+'-redes';let rUndo=[],rRedo=[];let redesData={titulo:'Redes',categorias:[]};try{const saved=JSON.parse(localStorage.getItem(REDES_KEY)||'null');if(saved&&Array.isArray(saved.categorias))redesData=saved}catch{};const rEntry=()=>({data:redesData});function saveTableros(){try{redesData=rCollect();localStorage.setItem(REDES_KEY,JSON.stringify(redesData))}catch{toast('No se pudo guardar Redes. Exportá una copia.')}}function refreshRedesButtons(){if(currentPage==='redes'){$('undo').disabled=!rUndo.length;$('redo').disabled=!rRedo.length;const empty=!rCollect().categorias.length;$('duplicateboard').disabled=empty;$('deleteboard').disabled=empty}}
 const rDias = it => [...it.querySelectorAll('.day-cell.on')].map(x=>+x.dataset.day);
 function rCollect(){
-  return { titulo: rTitulo, meses:JSON.parse(JSON.stringify(rMonths)), categorias: [...rboard.querySelectorAll('.cat')].map(c=>({
+  return { titulo: rTitulo, calendarios:JSON.parse(JSON.stringify(rCalendars)), categorias: [...rboard.querySelectorAll('.cat')].map(c=>({
     name: c.querySelector('.cat-name').textContent,
     items: [...c.querySelectorAll('.item')].map(it=>({ name: it.querySelector('.item-name').value, days: rDias(it) })) })) };
 }
@@ -510,7 +512,7 @@ function rSave(){saveTableros();if(typeof window.REDES.onSave==='function'){try{
 window.REDES.get=()=>JSON.parse(JSON.stringify(currentPage==='redes'&&rboard?rCollect():redesData));
 window.REDES.load=d=>{
   if(!d||!Array.isArray(d.categorias)||d.categorias.some(c=>!c||typeof c.name!=='string'||!Array.isArray(c.items)||c.items.some(i=>!i||typeof i.name!=='string'||!Array.isArray(i.days)||i.days.some(day=>!Number.isInteger(day)||day<1||day>31))))throw new TypeError('Datos de Redes inválidos');
-  validRedesMonths(d.meses);const next=JSON.parse(JSON.stringify(d));
+  validRedesMonths(d.meses);validRedesCalendars(d.calendarios);const next=JSON.parse(JSON.stringify(d));
   localStorage.setItem(REDES_KEY,JSON.stringify(next));
   redesData=next;rUndo=[];rRedo=[];
   if(currentPage==='redes'){renderRedes(redesData);refreshRedesButtons()}
@@ -565,7 +567,7 @@ function rCat(name, items){
   return cat;
 }
 function renderRedes(d){
-  rMonths=JSON.parse(JSON.stringify(d?.meses||{}));renderRedesMonth();rTitulo = (d && d.titulo) || 'Redes'; rboard.innerHTML = '';
+  rCalendars=JSON.parse(JSON.stringify(d?.calendarios||[{id:'redes-calendar',name:'Nueva categoría',meses:d?.meses||{}}]));renderRedesMonth();rTitulo = (d && d.titulo) || 'Redes'; rboard.innerHTML = '';
   ((d && d.categorias) || []).forEach(c=>rboard.appendChild(rCat(c.name, c.items)));
   const add = document.createElement('button'); add.className = 'add-cat'; add.textContent = '+ Añadir categoría';
   add.onclick = ()=>{ rPush(); rboard.insertBefore(rCat('✦ NUEVA', []), add); rTotals(); };
@@ -582,27 +584,47 @@ function validRedesMonths(months){
   if(days.some(day=>!Number.isInteger(day)||day<1||day>limit))throw Error('Día inválido');
  });
 }
+
+function validRedesCalendars(value){
+ if(value===undefined)return;
+ if(!Array.isArray(value)||value.some(c=>!c||typeof c.id!=='string'||typeof c.name!=='string'))throw Error('Categorías inválidas');
+ if(new Set(value.map(c=>c.id)).size!==value.length)throw Error('Categorías duplicadas');
+ value.forEach(c=>validRedesMonths(c.meses));
+}
+function redesCalendarTotal(calendar){return Object.values(calendar.meses||{}).reduce((total,days)=>total+new Set(days).size,0)}
 function renderRedesMonth(){
- const host=document.querySelector('.redes-month');if(!host)return;
- host.replaceChildren();
- const year=rMonthDate.getFullYear(),month=rMonthDate.getMonth(),key=year+'-'+String(month+1).padStart(2,'0'),days=new Date(year,month+1,0).getDate();
- const selected=rMonths[key]||[],bar=el('div','redes-month-bar'),prev=el('button','','‹'),next=el('button','','›');
- prev.setAttribute('aria-label','Mes anterior');next.setAttribute('aria-label','Mes siguiente');
- const title=el('h2','',rMonthDate.toLocaleDateString('es-AR',{month:'short'}).replace('.','')+' '+year);
- prev.onclick=()=>{rMonthDate=new Date(year,month-1,1);renderRedesMonth()};
- next.onclick=()=>{rMonthDate=new Date(year,month+1,1);renderRedesMonth()};
- bar.append(prev,title,next);host.append(bar);
- const grid=el('div','redes-month-grid');grid.setAttribute('role','group');grid.setAttribute('aria-label','Días del mes');
+ const host=document.querySelector('.redes-month');if(!host)return;host.replaceChildren();
+ const cards=el('div','redes-calendars');
+ rCalendars.forEach(calendar=>{
+ const date=rCalendarDates[calendar.id]||rMonthDate;
+ const year=date.getFullYear(),month=date.getMonth(),key=year+'-'+String(month+1).padStart(2,'0'),days=new Date(year,month+1,0).getDate();
+ calendar.meses=calendar.meses||{};
+ const selected=calendar.meses[key]||[],card=el('section','redes-calendar-card'),bar=el('div','redes-month-bar'),prev=el('button','','‹'),next=el('button','','›');
+ card.setAttribute('aria-label','Calendario de '+calendar.name);
+ prev.setAttribute('aria-label','Mes anterior de '+calendar.name);next.setAttribute('aria-label','Mes siguiente de '+calendar.name);
+ const title=el('h2','',date.toLocaleDateString('es-AR',{month:'short'}).replace('.','')+' '+year+' - '+calendar.name);
+ prev.onclick=()=>{rCalendarDates[calendar.id]=new Date(year,month-1,1);renderRedesMonth()};
+ next.onclick=()=>{rCalendarDates[calendar.id]=new Date(year,month+1,1);renderRedesMonth()};
+ bar.append(prev,title,next);card.append(bar);
+ const tools=el('div','redes-calendar-tools'),name=el('input','');name.value=calendar.name;name.setAttribute('aria-label','Nombre de la categoría '+calendar.name);
+ name.onchange=()=>{const value=name.value.trim();if(!value){name.value=calendar.name;return}rPush();calendar.name=value;rSave();renderRedesMonth();refreshRedesButtons()};
+ const duplicate=el('button','','Duplicar');
+ duplicate.setAttribute('aria-label','Duplicar calendario de '+calendar.name);
+ duplicate.onclick=()=>{rPush();const copy=JSON.parse(JSON.stringify(calendar));copy.id=uid();copy.name=calendar.name+' (copia)';rCalendars.push(copy);rCalendarDates[copy.id]=new Date(year,month,1);rSave();renderRedesMonth();refreshRedesButtons()};
+ tools.append(name,duplicate);card.append(tools);
+ const grid=el('div','redes-month-grid');grid.setAttribute('role','group');grid.setAttribute('aria-label','Días de '+calendar.name);
  ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'].forEach(name=>grid.append(el('span','redes-weekday',name)));
  for(let blank=0;blank<(new Date(year,month,1).getDay()+6)%7;blank++)grid.append(el('span',''));
  for(let day=1;day<=days;day++){
-  const marked=selected.includes(day),button=el('button','redes-date'+(marked?' crossed':''),String(day));
-  button.setAttribute('aria-label',day+' de '+rMonthDate.toLocaleDateString('es-AR',{month:'long',year:'numeric'}));
-  button.setAttribute('aria-pressed',String(marked));
-  button.onclick=()=>{rPush();rMonths[key]=marked?selected.filter(value=>value!==day):[...selected,day].sort((a,b)=>a-b);rSave();renderRedesMonth();refreshRedesButtons()};
-  grid.append(button);
+ const marked=selected.includes(day),button=el('button','redes-date'+(marked?' crossed':''),String(day));
+ button.setAttribute('aria-label',day+' de '+date.toLocaleDateString('es-AR',{month:'long',year:'numeric'})+' - '+calendar.name);button.setAttribute('aria-pressed',String(marked));
+ button.onclick=()=>{rPush();calendar.meses[key]=marked?selected.filter(value=>value!==day):[...selected,day].sort((a,b)=>a-b);rSave();renderRedesMonth();refreshRedesButtons()};grid.append(button)
  }
- host.append(grid,el('p','redes-month-count',selected.length+' / '+days+' días'));
+ card.append(grid,el('p','redes-month-count','Total acumulado: '+redesCalendarTotal(calendar)+' días'));cards.append(card)
+ });
+ const add=el('button','redes-calendar-add','+ Añadir calendario');
+ add.onclick=()=>{rPush();rCalendars.push({id:uid(),name:'Nueva categoría',meses:{}});rSave();renderRedesMonth();refreshRedesButtons()};
+ host.append(cards,add)
 }
 
 function renderRedesPage(page){page.classList.add('balance-native','redes-native');page.append(el('section','redes-month'));rboard=el('div','budget-board');rboard.id='rboard';page.append(rboard);const footer=el('footer','total'),total=el('b');total.id='r-total';footer.append(document.createTextNode('Total del mes: '),total,document.createTextNode(' días sin uso'));page.append(footer);renderRedes(redesData);refreshRedesButtons();}
@@ -610,7 +632,7 @@ function renderConsulting(page){const navigation=el('div','task-sections'),conte
 
 
 function kairosBackup(){const current=boards.find(b=>b.id===boardId);if(current)current.data=data;return JSON.parse(JSON.stringify({format:'kairos-backup',version:1,exportedAt:new Date().toISOString(),active:boardId,boards,redes:window.REDES.get()}))}
-function validBackupRedes(value){validRedesMonths(value?.meses);if(!value||typeof value.titulo!=='string'||!Array.isArray(value.categorias)||value.categorias.some(c=>!c||typeof c.name!=='string'||!Array.isArray(c.items)||c.items.some(i=>!i||typeof i.name!=='string'||!Array.isArray(i.days)||i.days.some(d=>!Number.isInteger(d)||d<1||d>31))))throw Error('Redes inválidas');return JSON.parse(JSON.stringify(value))}
+function validBackupRedes(value){validRedesMonths(value?.meses);validRedesCalendars(value?.calendarios);if(!value||typeof value.titulo!=='string'||!Array.isArray(value.categorias)||value.categorias.some(c=>!c||typeof c.name!=='string'||!Array.isArray(c.items)||c.items.some(i=>!i||typeof i.name!=='string'||!Array.isArray(i.days)||i.days.some(d=>!Number.isInteger(d)||d<1||d>31))))throw Error('Redes inválidas');return JSON.parse(JSON.stringify(value))}
 function validBackupBalance(value){if(!value||!Array.isArray(value.categorias)||value.categorias.some(c=>!c||typeof c.name!=='string'||!Array.isArray(c.items)||c.items.some(r=>!Array.isArray(r)||r.length<3))||['ingresos','inversion'].some(k=>value[k]!=null&&(!Array.isArray(value[k])||value[k].some(r=>!Array.isArray(r)||r.length<2))))throw Error('Balance inválido');return JSON.parse(JSON.stringify(value))}
 function prepareKairosImport(raw){if(raw?.format==='kairos-backup'){if(raw.version!==1||!Array.isArray(raw.boards)||!raw.boards.length)throw Error('Respaldo inválido');const nextBoards=raw.boards.map(b=>{if(!b||typeof b.id!=='string'||typeof b.name!=='string')throw Error('Tablero inválido');const next=normalize(b.data);if(next.balance)next.balance=validBackupBalance(next.balance);return {...b,data:next}});if(new Set(nextBoards.map(b=>b.id)).size!==nextBoards.length)throw Error('Tableros duplicados');return {boards:nextBoards,active:nextBoards.some(b=>b.id===raw.active)?raw.active:nextBoards[0].id,redes:validBackupRedes(raw.redes)}}const balance=validBackupBalance(raw);const nextBoards=JSON.parse(JSON.stringify(boards));let target=nextBoards.find(b=>b.data.balance);if(!target){target={id:uid(),name:'Sistemas',data:{version:1,cards:[],events:[]}};nextBoards.push(target)}target.data.balance=balance;return {boards:nextBoards,active:boardId,redes:window.REDES.get()}}
 function restoreKairosBackup(next){const previous=kairosBackup(),values=[[BOARDS_KEY,JSON.stringify({active:next.active,boards:next.boards})],[KEY,JSON.stringify(next.boards.find(b=>b.id===next.active).data)],[REDES_KEY,JSON.stringify(next.redes)]],before=values.map(([k])=>[k,localStorage.getItem(k)]);try{localStorage.setItem(KEY+'-before-import',JSON.stringify(previous));values.forEach(([k,v])=>localStorage.setItem(k,v))}catch(error){before.forEach(([k,v])=>{try{if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,v)}catch{}});throw error}boards=next.boards;boardId=next.active;data=boards.find(b=>b.id===boardId).data;redesData=next.redes;rUndo=[];rRedo=[];undoStack=[];redoStack=[];lastSnapshot=historyState();switchPage(currentPage);toast('Respaldo importado')}
