@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diagrama de árbol</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  body{margin:0;background:#0a0a0a;padding:24px;font-family:'Outfit',system-ui,sans-serif}
+  .tr{--bg:#111;--card:#171717;--line:#2a2418;--gold:#c9a24b;--dim:#6b5524;--gold-soft:rgba(201,162,75,.14);--txt:#f3f3f3;--mut:#a8a8a8;--bad:#e5a0a0;
+    background:var(--bg);border:1px solid #3a2e14;border-radius:18px;padding:28px 30px;color:var(--txt);max-width:1400px;margin:0 auto}
+  .tr *{box-sizing:border-box}
+  .tr h3{margin:0 0 4px;font-size:22px;font-weight:600}
+  .tr .sub{margin:0 0 20px;color:var(--mut);font-size:14px;font-weight:500}
+  .lab{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);margin-bottom:5px;font-weight:600}
+  .meta{display:grid;grid-template-columns:2fr 1.5fr 1fr;gap:12px;margin-bottom:18px}
+  .meta input{width:100%;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--txt);font:inherit;font-size:14px;outline:none}
+  .meta input:focus{border-color:var(--gold)}
+  .stats{display:flex;flex-wrap:wrap;gap:8px 20px;margin-bottom:14px;font-size:12.5px;color:var(--mut)}
+  .stats b{color:var(--gold);font-weight:600;font-size:15px;margin-right:4px}
+
+  .canvas{overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px 22px 26px}
+  .tn{display:flex;align-items:center;width:max-content}
+  .kids{display:flex;flex-direction:column;margin-left:34px;position:relative}
+  .kids::before{content:"";position:absolute;left:-34px;top:50%;width:34px;border-top:2px solid var(--dim)}
+  .kid{position:relative;padding:6px 0 6px 34px;display:flex;align-items:center}
+  .kid::before{content:"";position:absolute;left:0;top:50%;width:34px;border-top:2px solid var(--dim)}
+  .kid::after{content:"";position:absolute;left:0;top:0;bottom:0;border-left:2px solid var(--dim)}
+  .kid:first-child::after{top:50%}.kid:last-child::after{bottom:50%}.kid:only-child::after{display:none}
+
+  .tbox{position:relative;width:210px;background:#0f0f0f;border:1px solid #2e2e2e;border-radius:11px;padding:9px 12px 8px;flex:none}
+  .tbox.lv0{background:linear-gradient(180deg,#1c1710,#171717);border-color:#5a4720;width:230px;padding:12px 14px}
+  .tbox.lv1{border-color:#4a3c1c}
+  .tbox:focus-within{border-color:var(--gold)}
+  .tr [contenteditable]{outline:none;word-break:break-word;line-height:1.3;min-height:1.3em}
+  .tr [contenteditable]:empty::before{content:attr(data-ph);color:#5e5e5e;font-weight:400}
+  .tt{font-size:13.5px;font-weight:500}
+  .lv0 .tt{font-size:15px;font-weight:600}
+  .nt{margin-top:4px;font-size:11.5px;color:var(--gold)}
+  .nt:empty{opacity:0;transition:.15s}
+  .tbox:hover .nt:empty,.tbox:focus-within .nt:empty{opacity:1}
+  .ctl{position:absolute;top:-12px;right:8px;display:flex;gap:3px;background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:2px;opacity:0;transition:.15s;z-index:3}
+  .tbox:hover .ctl,.tbox:focus-within .ctl{opacity:1}
+  .ctl button{background:transparent;border:0;color:var(--mut);cursor:pointer;font-size:12px;line-height:1;padding:4px 6px;border-radius:5px;font-family:inherit}
+  .ctl button:hover{background:var(--gold-soft);color:var(--gold)}
+  .ctl button.del:hover{background:#2a1a1a;color:var(--bad)}
+  .badge{position:absolute;right:-8px;top:50%;transform:translateY(-50%);background:var(--gold);color:#111;font-size:11px;font-weight:600;border-radius:99px;padding:2px 7px;cursor:pointer}
+
+  .bar{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;align-items:center}
+  .btn{background:var(--gold-soft);border:1px solid #5a4720;color:var(--gold);border-radius:10px;padding:9px 16px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:.15s}
+  .btn:hover{background:var(--gold);color:#111}
+  .btn.ghost{background:transparent;border-color:#333;color:var(--mut)}
+  .btn.ghost:hover{border-color:#7a4a4a;color:var(--bad);background:transparent}
+  .msg{font-size:12px;color:var(--gold);opacity:0;transition:.3s}.msg.on{opacity:1}
+  .tr details{margin-top:18px;border-top:1px solid var(--line);padding-top:14px}
+  .tr summary{cursor:pointer;color:var(--gold);font-size:13px;font-weight:600}
+  .tr details ul{margin:10px 0 0;padding-left:20px;color:var(--mut);font-size:13px;line-height:1.6}
+  .tr details b{color:var(--txt);font-weight:600}
+  @media(max-width:700px){.tr{padding:20px 16px}.meta{grid-template-columns:1fr}.ctl{opacity:1}}
+  @page{size:landscape;margin:12mm}
+  @media print{
+    body{background:#fff;padding:0}
+    .tr{--bg:#fff;--card:#fff;--line:#ccc;--txt:#111;--mut:#555;--gold:#8a6a1f;--dim:#999;--bad:#a33;background:#fff;border:0;color:#111;max-width:none}
+    .canvas{overflow:visible;border:0;padding:0}
+    .tbox,.tbox.lv0{background:#fff;border-color:#999}.tbox.lv0{border-color:#8a6a1f}
+    .kids::before,.kid::before,.kid::after{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .ctl,.bar,.tr details{display:none}.nt:empty{display:none}
+    .meta input{background:#fff;border-color:#bbb;color:#111}
+  }
+</style>
+</head>
+<body>
+
+<section class="tr" id="tr">
+  <h3>• Diagrama de árbol</h3>
+  <p class="sub">Desglosá un objetivo en medios y acciones concretas, nivel por nivel, hasta llegar a lo que se puede ejecutar.</p>
+
+  <div class="meta">
+    <div><label class="lab">Tema / proyecto</label><input data-m="tema" placeholder="Qué se está desglosando"></div>
+    <div><label class="lab">Participantes</label><input data-m="part" placeholder="Quiénes lo elaboran"></div>
+    <div><label class="lab">Fecha</label><input data-m="fecha" placeholder="Ej.: 06/10/2026"></div>
+  </div>
+
+  <div class="stats" id="stats"></div>
+  <div class="canvas"><div id="tree"></div></div>
+
+  <div class="bar">
+    <button class="btn" id="tPrint">Imprimir / PDF</button>
+    <button class="btn" id="tCopy">Copiar como texto</button>
+    <button class="btn ghost" id="tClear">Limpiar todo</button>
+    <span class="msg" id="tMsg"></span>
+  </div>
+
+  <details>
+    <summary>Cómo completarlo</summary>
+    <ul>
+      <li><b>Raíz (izquierda):</b> el objetivo o problema general, formulado con claridad. De ahí nace todo el árbol.</li>
+      <li><b>Cada nivel responde “¿cómo?”:</b> los hijos de un nodo son los medios para lograrlo. Seguí abriendo hasta que cada rama termine en una acción concreta y asignable.</li>
+      <li><b>Controles</b> (al pasar el mouse sobre un nodo): ＋ agrega un hijo, ↓ agrega un hermano debajo, ▾ pliega la rama, × elimina el nodo con todo lo que cuelga.</li>
+      <li><b>Línea de nota</b> (debajo del texto): responsable, plazo o indicador de ese nodo.</li>
+      <li><b>Prueba de lectura:</b> de derecha a izquierda, ¿las acciones de una rama realmente logran su nodo padre? Si no, falta un medio o sobra uno.</li>
+    </ul>
+  </details>
+</section>
+
+<script>
+(function(){
+  var root=document.getElementById('tr'), host=document.getElementById('tree'), KEY='diagrama-arbol-v1', focusId=null;
+  var PH=['Objetivo o problema principal','Medio / subobjetivo','Acción concreta'];
+  function N(id,ch){return {id:id,n:'',r:'',col:false,ch:ch||[]}}
+  function blank(){return {m:{},seq:20,root:N('n0',[N('n1',[N('n2'),N('n3')]),N('n4',[N('n5'),N('n6')]),N('n7',[N('n8'),N('n9')])])}}
+  var data=load();
+  function load(){try{var d=JSON.parse(localStorage.getItem(KEY));if(d&&d.root)return d}catch(e){}return blank()}
+  function save(){try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){}}
+  function msg(t){var m=document.getElementById('tMsg');m.textContent=t;m.classList.add('on');setTimeout(function(){m.classList.remove('on')},1800)}
+  function esc(s){return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;')}
+  function nid(){data.seq++;return 'n'+data.seq}
+  function find(id,node,parent){node=node||data.root;if(node.id===id)return {node:node,parent:parent||null};
+    for(var i=0;i<node.ch.length;i++){var r=find(id,node.ch[i],node);if(r)return r}return null}
+  function count(n){var c=1;n.ch.forEach(function(x){c+=count(x)});return c}
+  function leaves(n){return n.ch.length?n.ch.reduce(function(a,x){return a+leaves(x)},0):1}
+  function depth(n){return 1+(n.ch.length?Math.max.apply(null,n.ch.map(depth)):0)}
+
+  function build(n,lv){
+    var tn=document.createElement('div');tn.className='tn';
+    var box=document.createElement('div');box.className='tbox lv'+Math.min(lv,2);box.dataset.id=n.id;
+    var ctl='<div class="ctl">'+(n.ch.length?'<button type="button" data-act="col" title="Plegar / desplegar">'+(n.col?'▸':'▾')+'</button>':'')+'<button type="button" data-act="child" title="Agregar hijo">＋</button>'+(lv>0?'<button type="button" data-act="sib" title="Agregar hermano debajo">↓</button><button type="button" class="del" data-act="del" title="Eliminar nodo y su rama">×</button>':'')+'</div>';
+    box.innerHTML=ctl+'<div class="tt" contenteditable="true" data-f="n" data-ph="'+PH[Math.min(lv,2)]+'">'+esc(n.n)+'</div><div class="nt" contenteditable="true" data-f="r" data-ph="Responsable / plazo / indicador">'+esc(n.r)+'</div>'+(n.col&&n.ch.length?'<span class="badge" data-act="col" title="Rama plegada">+'+(count(n)-1)+'</span>':'');
+    tn.appendChild(box);
+    if(n.ch.length&&!n.col){
+      var kids=document.createElement('div');kids.className='kids';
+      n.ch.forEach(function(c){var k=document.createElement('div');k.className='kid';k.appendChild(build(c,lv+1));kids.appendChild(k)});
+      tn.appendChild(kids);
+    }
+    return tn;
+  }
+  function stats(){
+    document.getElementById('stats').innerHTML='<span><b>'+count(data.root)+'</b>nodos</span><span><b>'+depth(data.root)+'</b>niveles</span><span><b>'+leaves(data.root)+'</b>acciones (extremos de rama)</span>';
+  }
+  function render(){
+    host.innerHTML='';host.appendChild(build(data.root,0));stats();
+    root.querySelectorAll('[data-m]').forEach(function(i){i.value=data.m[i.dataset.m]||''});
+    if(focusId){var f=host.querySelector('[data-id="'+focusId+'"] [data-f=n]');if(f)f.focus();focusId=null}
+  }
+  function collect(){
+    host.querySelectorAll('.tbox').forEach(function(b){
+      var f=find(b.dataset.id);if(!f)return;
+      f.node.n=b.querySelector('[data-f=n]').textContent.trim();f.node.r=b.querySelector('[data-f=r]').textContent.trim();
+    });
+    root.querySelectorAll('[data-m]').forEach(function(i){data.m[i.dataset.m]=i.value});
+    save();
+  }
+  host.addEventListener('input',collect);
+  host.addEventListener('paste',function(e){if(e.target.matches('[contenteditable]')){e.preventDefault();document.execCommand('insertText',false,(e.clipboardData||window.clipboardData).getData('text').replace(/\s+/g,' '))}});
+  host.addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.matches('[contenteditable]')){e.preventDefault();e.target.blur()}});
+  host.addEventListener('click',function(e){
+    var b=e.target.closest('[data-act]');if(!b)return;collect();
+    var id=b.closest('.tbox').dataset.id,f=find(id),a=b.dataset.act;
+    if(a==='col')f.node.col=!f.node.col;
+    if(a==='child'){var c=N(nid());f.node.ch.push(c);f.node.col=false;focusId=c.id}
+    if(a==='sib'&&f.parent){var s=N(nid()),i=f.parent.ch.indexOf(f.node);f.parent.ch.splice(i+1,0,s);focusId=s.id}
+    if(a==='del'&&f.parent){if(count(f.node)>1&&!confirm('Se elimina este nodo y todo lo que cuelga de él. ¿Continuar?'))return;f.parent.ch.splice(f.parent.ch.indexOf(f.node),1)}
+    save();render();
+  });
+  root.querySelectorAll('[data-m]').forEach(function(i){i.addEventListener('input',collect)});
+  document.getElementById('tPrint').onclick=function(){window.print()};
+  document.getElementById('tClear').onclick=function(){if(!confirm('¿Borrar todo el contenido de esta plantilla?'))return;data=blank();save();render()};
+  document.getElementById('tCopy').onclick=function(){
+    collect();var s='DIAGRAMA DE ÁRBOL — '+(data.m.tema||'(sin nombre)')+'\nParticipantes: '+(data.m.part||'-')+' | '+(data.m.fecha||'-')+'\n\n';
+    (function walk(n,lv){s+=new Array(lv+1).join('    ')+(lv?'- ':'')+(n.n||'(vacío)')+(n.r?' ['+n.r+']':'')+'\n';n.ch.forEach(function(c){walk(c,lv+1)})})(data.root,0);
+    (navigator.clipboard?navigator.clipboard.writeText(s):Promise.reject()).then(function(){msg('Copiado')},function(){msg('No se pudo copiar')});
+  };
+  render();
+})();
+</script>
+</body>
+</html>
