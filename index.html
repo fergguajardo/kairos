@@ -605,7 +605,7 @@ function renderRedesMonth(){
  const selected=calendar.meses[key]||[],card=el('section','redes-calendar-card'),bar=el('div','redes-month-bar'),prev=el('button','','‹'),next=el('button','','›');
  card.setAttribute('aria-label','Calendario de '+calendar.name);
  prev.setAttribute('aria-label','Mes anterior de '+calendar.name);next.setAttribute('aria-label','Mes siguiente de '+calendar.name);
- const title=el('h2','',date.toLocaleDateString('es-AR',{month:'short'}).replace('.','')+' '+year+' - • '+calendar.name);
+ const title=el('h2','',date.toLocaleDateString('es-AR',{month:'short'}).replace('.','')+' '+year+' • '+calendar.name);
  prev.onclick=()=>{rCalendarDates[calendar.id]=new Date(year,month-1,1);renderRedesMonth()};
  next.onclick=()=>{rCalendarDates[calendar.id]=new Date(year,month+1,1);renderRedesMonth()};
  bar.append(prev,title,next);card.append(bar);
