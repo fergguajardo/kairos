@@ -567,7 +567,7 @@ function renderRedes(d){
 }
 
 function renderRedesPage(page){page.classList.add('balance-native','redes-native');rboard=el('div','budget-board');rboard.id='rboard';page.append(rboard);const footer=el('footer','total'),total=el('b');total.id='r-total';footer.append(document.createTextNode('Total del mes: '),total,document.createTextNode(' días sin uso'));page.append(footer);renderRedes(redesData);refreshRedesButtons();}
-function renderConsulting(page){page.append(el('h2','','• Tus herramientas consultivas'),el('p','muted','Este espacio queda disponible para las plantillas que diseñes.'))}
+function renderConsulting(page){const links=el('div','calendar-tools');[["SIPOC","herramientas/sipoc.html"],["Mapa de Procesos","herramientas/mapa-de-procesos.html"],["Diagrama de Flujo","herramientas/diagrama-de-flujo.html"],["RACI","herramientas/raci.html"],["Análisis de Puesto","herramientas/analisis-de-puesto.html"],["Análisis de Competencias","herramientas/analisis-de-competencias.html"],["Diagrama de Ishikawa","herramientas/diagrama-de-ishikawa.html"],["Diagrama de Árbol","herramientas/diagrama-de-arbol.html"]].forEach(([name,url])=>{const link=el('a','mail-link',name);link.href=url;link.target='_blank';link.rel='noopener noreferrer';links.append(link)});page.append(links)}
 
 
 function kairosBackup(){const current=boards.find(b=>b.id===boardId);if(current)current.data=data;return JSON.parse(JSON.stringify({format:'kairos-backup',version:1,exportedAt:new Date().toISOString(),active:boardId,boards,redes:window.REDES.get()}))}
