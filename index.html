@@ -348,6 +348,7 @@ small,.muted,.count,.weekday,.calendar-hint,.field,.balance-native .cat-footer,.
  .task-number{flex-shrink:0;font-size:14px;font-weight:400}.additem .task-number{align-self:center}
 .card.drop-target{border-color:var(--gold-light)!important;box-shadow:inset 0 0 0 1px var(--gold-light),0 0 12px rgba(229,185,92,.2)}
 .balance-native .item.drop-target{border-color:var(--gold-light)!important;box-shadow:inset 0 0 0 1px var(--gold-light),0 0 12px rgba(229,185,92,.2)}
+.balance-native:not(.redes-native) .item{transition:transform .15s,background .15s,border-color .15s}.balance-native:not(.redes-native) .item:hover{transform:translateY(-2px);background:rgba(229,185,92,.09);border-color:var(--gold-light)}
 </style></head><body>
 <header><div><img class="kairos-logo" src="assets/kairos-manrope.svg" alt="KAIROS" width="120" height="40"><h1 hidden><span>·</span> Procesos</h1></div></header>
 <div class="backup-tools" role="group" aria-label="Respaldo de Kairos"><button id="exportbackup" class="iconbutton" title="Exportar JSON" aria-label="Exportar JSON"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17V3m-5 5 5-5 5 5M4 16v5h16v-5"/></svg></button><button id="importbackup" class="iconbutton" title="Importar JSON" aria-label="Importar JSON"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v14m-5-5 5 5 5-5M4 16v5h16v-5"/></svg></button><input id="backupfile" type="file" accept=".json,application/json" hidden></div>
