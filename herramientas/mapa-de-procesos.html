@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mapa de procesos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  body{margin:0;background:#0a0a0a;padding:24px;font-family:'Outfit',system-ui,sans-serif}
+  .pmap{--bg:#111;--card:#171717;--line:#2a2418;--gold:#c9a24b;--gold-soft:rgba(201,162,75,.14);--txt:#f3f3f3;--mut:#a8a8a8;
+    background:var(--bg);border:1px solid #3a2e14;border-radius:18px;padding:28px 30px;color:var(--txt);max-width:1400px;margin:0 auto}
+  .pmap *{box-sizing:border-box}
+  .pmap h3{margin:0 0 4px;font-size:22px;font-weight:600}
+  .pmap .sub{margin:0 0 20px;color:var(--mut);font-size:14px;font-weight:500}
+  .pmap-meta{display:grid;grid-template-columns:2fr 2fr 1.2fr;gap:12px;margin-bottom:20px}
+  .pmap-meta label{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);margin-bottom:5px;font-weight:600}
+  .pmap-meta input{width:100%;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--txt);font:inherit;font-size:14px;outline:none}
+  .pmap-meta input:focus{border-color:var(--gold)}
+
+  .band{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:12px}
+  .band.core{border-color:#5a4720;background:linear-gradient(180deg,#1c1710,#171717)}
+  .band-head{display:flex;align-items:baseline;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+  .band-title{font-weight:600;font-size:15px;color:var(--gold);letter-spacing:.04em;text-transform:uppercase}
+  .band-hint{font-size:12px;color:var(--mut)}
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;counter-reset:n}
+  .core .cards{display:flex;flex-wrap:wrap;gap:0;align-items:stretch}
+  .core .card{flex:1 1 170px;min-width:170px;margin-right:26px;position:relative}
+  .core .card::after{content:"›";position:absolute;right:-22px;top:50%;transform:translateY(-50%);color:var(--gold);font-size:26px;font-weight:600}
+  .core .card:last-of-type{margin-right:0}
+  .core .card:last-of-type::after{display:none}
+  .core .card{counter-increment:n;padding-left:38px}
+  .core .card::before{content:counter(n);position:absolute;left:10px;top:12px;width:20px;height:20px;border-radius:50%;background:var(--gold);color:#111;font-size:11px;font-weight:600;display:grid;place-items:center}
+  .core-wrap{display:grid;grid-template-columns:110px 1fr 110px;gap:12px;align-items:stretch}
+  .side{border:1px dashed #5a4720;border-radius:12px;padding:10px;display:flex;flex-direction:column;justify-content:center;text-align:center}
+  .side b{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);font-weight:600;margin-bottom:6px}
+  .side span{font-size:13px;line-height:1.3;outline:none;display:block;min-height:1.3em}
+  .card{position:relative;background:#0f0f0f;border:1px solid #232323;border-radius:10px;padding:10px 26px 10px 12px}
+  .card:focus-within{border-color:var(--gold)}
+  .card .n{font-size:14px;font-weight:600;line-height:1.3}
+  .card .r{font-size:12px;color:var(--mut);margin-top:4px}
+  .card span[contenteditable]{display:block;outline:none;min-height:1.2em;word-break:break-word}
+  .card span:empty::before,.side span:empty::before{content:attr(data-ph);color:#5e5e5e}
+  .card .x{position:absolute;top:6px;right:6px;width:18px;height:18px;border:0;border-radius:5px;background:transparent;color:#666;cursor:pointer;font-size:14px;line-height:1;padding:0;opacity:0;transition:.15s}
+  .card:hover .x,.card:focus-within .x{opacity:1}
+  .card .x:hover{color:#e5a0a0;background:#2a1a1a}
+  .add{margin-top:12px;background:transparent;border:1px dashed #3a3a3a;border-radius:9px;color:var(--mut);font:inherit;font-size:13px;padding:8px 14px;cursor:pointer;transition:.15s}
+  .add:hover{border-color:var(--gold);color:var(--gold)}
+  .bar{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;align-items:center}
+  .btn{background:var(--gold-soft);border:1px solid #5a4720;color:var(--gold);border-radius:10px;padding:9px 16px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:.15s}
+  .btn:hover{background:var(--gold);color:#111}
+  .btn.ghost{background:transparent;border-color:#333;color:var(--mut)}
+  .btn.ghost:hover{border-color:#7a4a4a;color:#e5a0a0;background:transparent}
+  .msg{font-size:12px;color:var(--gold);opacity:0;transition:.3s}
+  .msg.on{opacity:1}
+  .pmap details{margin-top:18px;border-top:1px solid var(--line);padding-top:14px}
+  .pmap summary{cursor:pointer;color:var(--gold);font-size:13px;font-weight:600}
+  .pmap details ul{margin:10px 0 0;padding-left:20px;color:var(--mut);font-size:13px;line-height:1.6}
+  .pmap details b{color:var(--txt);font-weight:600}
+  @media(max-width:900px){.core-wrap{grid-template-columns:1fr}.pmap-meta{grid-template-columns:1fr}
+    .core .card{margin-right:0;margin-bottom:22px;flex-basis:100%}.core .card::after{content:"⌄";right:50%;top:auto;bottom:-26px;transform:translateX(50%)}}
+  @media(max-width:640px){.pmap{padding:20px 16px}}
+  @media print{
+    body{background:#fff;padding:0}
+    .pmap{--bg:#fff;--card:#fff;--line:#ccc;--txt:#111;--mut:#555;--gold:#8a6a1f;background:#fff;border:0;color:#111}
+    .band,.band.core{background:#fff;border-color:#bbb}.card{background:#fff;border-color:#ccc}
+    .add,.bar,.pmap details,.card .x{display:none}
+    .pmap-meta input{background:#fff;border-color:#bbb;color:#111}
+    .band,.card{break-inside:avoid}
+  }
+</style>
+</head>
+<body>
+
+<section class="pmap" id="pmap">
+  <h3>• Mapa de procesos</h3>
+  <p class="sub">Vista de conjunto de la organización: qué la dirige, qué entrega valor y qué lo sostiene.</p>
+
+  <div class="pmap-meta">
+    <div><label>Organización</label><input data-m="org" placeholder="Nombre de la organización"></div>
+    <div><label>Alcance</label><input data-m="alc" placeholder="Área, unidad o empresa completa"></div>
+    <div><label>Fecha / versión</label><input data-m="ver" placeholder="Ej.: 06/10/2026 · v1"></div>
+  </div>
+
+  <div id="bands"></div>
+
+  <div class="bar">
+    <button class="btn" id="pmPrint">Imprimir / PDF</button>
+    <button class="btn" id="pmCopy">Copiar como texto</button>
+    <button class="btn ghost" id="pmClear">Limpiar todo</button>
+    <span class="msg" id="pmMsg"></span>
+  </div>
+
+  <details>
+    <summary>Cómo completarlo</summary>
+    <ul>
+      <li><b>Empezá por el Core:</b> los procesos que transforman la necesidad del cliente en lo que la organización entrega. Ordenalos en secuencia.</li>
+      <li><b>Estratégicos:</b> los que orientan y controlan (planificación, calidad, mejora, gestión del cambio). No generan el producto, pero lo dirigen.</li>
+      <li><b>De apoyo:</b> los que proveen recursos a todos los demás (personas, compras, finanzas, tecnología, mantenimiento).</li>
+      <li>Nombrá cada proceso con sustantivo + complemento (“Gestión de pedidos”) y asignale un responsable.</li>
+      <li>Pregunta de control: si este proceso dejara de existir, ¿se detiene la entrega al cliente (core), se pierde el rumbo (estratégico) o se queda sin recursos (apoyo)?</li>
+    </ul>
+  </details>
+</section>
+
+<script>
+(function(){
+  var root=document.getElementById('pmap'), box=document.getElementById('bands'), KEY='mapa-procesos-v1';
+  var BANDS=[
+    {k:'est',t:'Procesos estratégicos',h:'Dirigen y controlan la organización',ph:'Ej.: Planificación estratégica'},
+    {k:'core',t:'Procesos core',h:'Generan y entregan valor al cliente, en secuencia',ph:'Ej.: Gestión comercial',core:true},
+    {k:'apo',t:'Procesos de apoyo',h:'Proveen recursos a todos los procesos',ph:'Ej.: Gestión de personas'}
+  ];
+  function blank(){return {m:{},side:{l:'',r:''},b:{est:[{n:'',r:''},{n:'',r:''}],core:[{n:'',r:''},{n:'',r:''},{n:'',r:''}],apo:[{n:'',r:''},{n:'',r:''}]}}}
+  var data=load();
+  function load(){try{var d=JSON.parse(localStorage.getItem(KEY));if(d&&d.b)return d}catch(e){}return blank()}
+  function save(){try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){}}
+  function msg(t){var m=document.getElementById('pmMsg');m.textContent=t;m.classList.add('on');setTimeout(function(){m.classList.remove('on')},1800)}
+
+  function card(b,it){
+    var d=document.createElement('div');d.className='card';
+    d.innerHTML='<div class="n"><span contenteditable="true" data-f="n" data-ph="'+b.ph+'"></span></div><div class="r"><span contenteditable="true" data-f="r" data-ph="Responsable"></span></div><button type="button" class="x" title="Quitar">×</button>';
+    d.querySelector('[data-f=n]').textContent=it.n||'';d.querySelector('[data-f=r]').textContent=it.r||'';
+    return d;
+  }
+  function build(){
+    box.innerHTML='';
+    BANDS.forEach(function(b){
+      var w=document.createElement('div');w.className='band'+(b.core?' core':'');w.dataset.k=b.k;
+      w.innerHTML='<div class="band-head"><span class="band-title">'+b.t+'</span><span class="band-hint">'+b.h+'</span></div>';
+      var cards=document.createElement('div');cards.className='cards';
+      (data.b[b.k].length?data.b[b.k]:[{n:'',r:''}]).forEach(function(it){cards.appendChild(card(b,it))});
+      var add=document.createElement('button');add.type='button';add.className='add';add.textContent='+ Agregar proceso';
+      if(b.core){
+        var cw=document.createElement('div');cw.className='core-wrap';
+        cw.innerHTML='<div class="side"><b>Entrada</b><span contenteditable="true" data-s="l" data-ph="Necesidad del cliente"></span></div>';
+        var mid=document.createElement('div');mid.appendChild(cards);mid.appendChild(add);cw.appendChild(mid);
+        var r=document.createElement('div');r.className='side';r.innerHTML='<b>Salida</b><span contenteditable="true" data-s="r" data-ph="Cliente satisfecho"></span>';cw.appendChild(r);
+        cw.querySelector('[data-s=l]').textContent=data.side.l||'';r.querySelector('[data-s=r]').textContent=data.side.r||'';
+        w.appendChild(cw);
+      }else{w.appendChild(cards);w.appendChild(add)}
+      box.appendChild(w);
+    });
+    root.querySelectorAll('[data-m]').forEach(function(i){i.value=data.m[i.dataset.m]||''});
+  }
+  function collect(){
+    BANDS.forEach(function(b){
+      var w=box.querySelector('[data-k="'+b.k+'"]');
+      data.b[b.k]=[].map.call(w.querySelectorAll('.card'),function(c){return {n:c.querySelector('[data-f=n]').textContent.trim(),r:c.querySelector('[data-f=r]').textContent.trim()}});
+    });
+    data.side.l=box.querySelector('[data-s=l]').textContent.trim();data.side.r=box.querySelector('[data-s=r]').textContent.trim();
+    root.querySelectorAll('[data-m]').forEach(function(i){data.m[i.dataset.m]=i.value});
+    save();
+  }
+  function bandOf(el){var w=el.closest('.band');return BANDS.filter(function(b){return b.k===w.dataset.k})[0]}
+
+  box.addEventListener('click',function(e){
+    var w=e.target.closest('.band');if(!w)return;var b=bandOf(w);
+    if(e.target.classList.contains('add')){var c=card(b,{});w.querySelector('.cards').appendChild(c);c.querySelector('[data-f=n]').focus();collect()}
+    if(e.target.classList.contains('x')){var cs=w.querySelector('.cards');e.target.closest('.card').remove();if(!cs.children.length)cs.appendChild(card(b,{}));collect()}
+  });
+  box.addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.matches('[contenteditable]')){e.preventDefault();e.target.blur()}});
+  box.addEventListener('paste',function(e){if(e.target.matches('[contenteditable]')){e.preventDefault();document.execCommand('insertText',false,(e.clipboardData||window.clipboardData).getData('text').replace(/\s+/g,' '))}});
+  box.addEventListener('input',collect);
+  root.querySelectorAll('[data-m]').forEach(function(i){i.addEventListener('input',collect)});
+
+  document.getElementById('pmPrint').onclick=function(){window.print()};
+  document.getElementById('pmClear').onclick=function(){if(!confirm('¿Borrar todo el contenido de esta plantilla?'))return;data=blank();save();build()};
+  document.getElementById('pmCopy').onclick=function(){
+    collect();
+    var t='MAPA DE PROCESOS — '+(data.m.org||'(sin nombre)')+'\nAlcance: '+(data.m.alc||'-')+' | '+(data.m.ver||'-')+'\n';
+    BANDS.forEach(function(b){
+      t+='\n'+b.t.toUpperCase()+'\n';
+      if(b.core)t+='Entrada: '+(data.side.l||'-')+'\n';
+      data.b[b.k].filter(function(x){return x.n}).forEach(function(x,i){t+=(b.core?(i+1)+'. ':'- ')+x.n+(x.r?' ('+x.r+')':'')+'\n'});
+      if(b.core)t+='Salida: '+(data.side.r||'-')+'\n';
+    });
+    (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){msg('Copiado')},function(){msg('No se pudo copiar')});
+  };
+  build();
+})();
+</script>
+</body>
+</html>
