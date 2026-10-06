@@ -289,6 +289,17 @@ body,button,input,textarea,select,.nav button{font-family:"Jost",sans-serif}.boa
 /* Ocultar leyendas de ayuda conservando los elementos usados por la navegación y el guardado. */
 .footer{display:none!important}
 .agenda-bar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 3vw 24px}.agenda-bar[hidden]{display:none}.agenda-bar .task-sections{margin:0;align-items:center}.agenda-bar .tools{margin-left:auto;flex-shrink:0}@media(max-width:600px){.agenda-bar{flex-wrap:wrap;margin:0 22px 24px}}
+
+/* Paleta Kairos: negro, dorado y blanco. */
+:root{--gold:#d4b374;--red:var(--gold);--orange:var(--gold);--gray:var(--gold);--green:var(--gold);--ink:#fff;--muted:rgba(255,255,255,.68)}
+.balance-native{--panel:rgba(0,0,0,.58);--text:#fff;--text-dim:rgba(255,255,255,.68);--accent:var(--gold);--accent-dim:rgba(212,179,116,.28);--good:var(--gold);--ingreso:var(--gold);--expense:var(--gold)}
+.balance-native:not(.redes-native) .cat,.balance-native:not(.redes-native) .cat.has-gasto{border-color:transparent;box-shadow:none}
+.balance-native .item.has-gasto{box-shadow:inset 0 0 0 1px var(--gold)}
+.balance-native .ing-card,.balance-native .egr-card,.balance-native .mar-card{border-top-color:var(--gold)}
+.balance-native .cat-actions .del-cat:hover,.balance-native .item-del:hover{color:var(--gold)}
+.board .column{--color:var(--gold)!important}
+.primary{background:var(--gold);border-color:var(--gold);color:#000}.primary:hover{background:#e5c995}
+.redes-native .day-cell.on{color:#000}.redes-native .streak-badge{background:rgba(212,179,116,.18)}
 </style></head><body>
 <header><div><img class="kairos-logo" src="assets/kairos.png" alt="KAIROS" width="120" height="40"><h1 hidden><span>·</span> Procesos</h1></div></header>
 <div id="agenda-bar" class="agenda-bar"><div id="task-sections" class="task-sections" role="group" aria-label="Secciones de Agenda"></div><div class="tools"><div class="board-tools" role="group" aria-label="Acciones del tablero"><button class="iconbutton" id="undo" title="Deshacer" aria-label="Deshacer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5 3 11l6 6M3 11h11a6 6 0 0 1 6 6"/></svg></button><button class="iconbutton" id="redo" title="Rehacer" aria-label="Rehacer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5 6 6-6 6M21 11H10a6 6 0 0 0-6 6"/></svg></button><button class="iconbutton" id="duplicateboard" title="Duplicar tablero" aria-label="Duplicar tablero"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 3H5a2 2 0 0 0-2 2v11"/></svg></button><button class="iconbutton" id="deleteboard" title="Eliminar tablero" aria-label="Eliminar tablero"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg></button></div></div></div><main id="board" class="board" aria-label="Tablero Kanban"></main><footer class="footer"><span>Arrastrá las tarjetas. Clic en ☑ para ver sus tareas.</span><span id="saved" role="status">Guardado en este navegador</span></footer>
