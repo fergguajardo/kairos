@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Análisis de puesto · Carga de trabajo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  body{margin:0;background:#0a0a0a;padding:24px;font-family:'Outfit',system-ui,sans-serif}
+  .wl{--bg:#111;--card:#171717;--line:#2a2418;--gold:#c9a24b;--gold-soft:rgba(201,162,75,.14);--txt:#f3f3f3;--mut:#a8a8a8;--bad:#e5a0a0;
+    background:var(--bg);border:1px solid #3a2e14;border-radius:18px;padding:28px 30px;color:var(--txt);max-width:1200px;margin:0 auto}
+  .wl *{box-sizing:border-box}
+  .wl h3{margin:0 0 4px;font-size:22px;font-weight:600}
+  .wl .sub{margin:0 0 20px;color:var(--mut);font-size:14px;font-weight:500}
+  .lab{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);margin-bottom:5px;font-weight:600}
+  .wl input,.wl select{background:var(--card);border:1px solid var(--line);border-radius:10px;color:var(--txt);font:inherit;font-size:14px;outline:none}
+  .wl input:focus,.wl select:focus{border-color:var(--gold)}
+  .meta{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+  .meta input{width:100%;padding:10px 12px}
+  .params{display:grid;grid-template-columns:repeat(3,1fr) 1.3fr;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:20px;align-items:end}
+  .params input{width:100%;padding:9px 12px;background:#0f0f0f}
+  .cap{font-size:13px;color:var(--mut);line-height:1.35}
+  .cap b{display:block;font-size:20px;color:var(--txt);font-weight:600}
+  .wrap{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--card)}
+  table{border-collapse:collapse;width:100%;min-width:760px}
+  th{background:#1c1710;color:var(--gold);font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;text-align:left;padding:11px 10px}
+  td{padding:8px 10px;border-top:1px solid #222;vertical-align:middle;font-size:13.5px}
+  td.tk{min-width:220px}
+  .tkw{display:flex;gap:8px;align-items:center}
+  .tkw i{font-style:normal;color:var(--gold);font-size:12px;font-weight:600;width:20px;flex:none}
+  .wl [contenteditable]{outline:none;flex:1;min-height:1.3em;word-break:break-word;font-weight:500;line-height:1.3}
+  .wl [contenteditable]:empty::before{content:attr(data-ph);color:#5e5e5e;font-weight:400}
+  .fq,.du{display:flex;gap:6px;align-items:center;white-space:nowrap;color:var(--mut);font-size:12px}
+  td input[type=number]{width:70px;padding:7px 8px;background:#0f0f0f;border-radius:8px;font-size:13px}
+  td select{padding:7px 6px;background:#0f0f0f;border-radius:8px;font-size:12.5px}
+  td.out{font-weight:600;color:var(--txt);white-space:nowrap}
+  td.out small{color:var(--mut);font-weight:500}
+  .x{background:transparent;border:0;color:#666;cursor:pointer;font-size:15px;line-height:1;padding:3px 6px;border-radius:5px;opacity:0;transition:.15s}
+  tr:hover .x,.x:focus{opacity:1}.x:hover{color:var(--bad);background:#2a1a1a}
+  .addbar{margin-top:14px}
+  .addbar button{background:transparent;border:1px dashed #3a3a3a;border-radius:9px;color:var(--mut);font:inherit;font-size:13px;padding:8px 14px;cursor:pointer;transition:.15s}
+  .addbar button:hover{border-color:var(--gold);color:var(--gold)}
+
+  .res{margin-top:22px;display:grid;grid-template-columns:1.1fr 1fr;gap:14px}
+  .box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+  .box.main{border-color:#5a4720;background:linear-gradient(180deg,#1c1710,#171717)}
+  .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}
+  .kpi small{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin-bottom:4px}
+  .kpi b{font-size:24px;font-weight:600}
+  .kpi b em{font-style:normal;font-size:13px;color:var(--mut);font-weight:500;margin-left:3px}
+  .gauge{position:relative;height:12px;border-radius:99px;display:flex;overflow:hidden;margin:26px 0 6px}
+  .gauge i{display:block;height:100%}
+  .z1{width:46.67%;background:#3a3a3a}.z2{width:20%;background:var(--gold)}.z3{width:33.33%;background:#8a4a4a}
+  .gwrap{position:relative}
+  .mark{position:absolute;top:-2px;width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-top:9px solid #fff;transform:translateX(-50%);transition:left .25s}
+  .scale{display:flex;justify-content:space-between;font-size:10.5px;color:var(--mut)}
+  .stat{margin-top:14px;font-size:14px;font-weight:600}
+  .stat.ok{color:var(--gold)}.stat.bad{color:var(--bad)}.stat.low{color:var(--mut)}
+  .stat span{display:block;font-weight:400;color:var(--mut);font-size:12.5px;margin-top:3px}
+  .bk{display:grid;grid-template-columns:110px 1fr 70px;gap:10px;align-items:center;font-size:12.5px;margin-bottom:10px;color:var(--mut)}
+  .bk div.b{height:8px;border-radius:99px;background:#222;overflow:hidden}
+  .bk div.b i{display:block;height:100%;background:var(--gold);width:0;transition:width .25s}
+  .bk span:last-child{text-align:right;color:var(--txt);font-weight:600}
+  .box h4{margin:0 0 14px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);font-weight:600}
+  .bar{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;align-items:center}
+  .btn{background:var(--gold-soft);border:1px solid #5a4720;color:var(--gold);border-radius:10px;padding:9px 16px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:.15s}
+  .btn:hover{background:var(--gold);color:#111}
+  .btn.ghost{background:transparent;border-color:#333;color:var(--mut)}
+  .btn.ghost:hover{border-color:#7a4a4a;color:var(--bad);background:transparent}
+  .msg{font-size:12px;color:var(--gold);opacity:0;transition:.3s}.msg.on{opacity:1}
+  .wl details{margin-top:18px;border-top:1px solid var(--line);padding-top:14px}
+  .wl summary{cursor:pointer;color:var(--gold);font-size:13px;font-weight:600}
+  .wl details ul{margin:10px 0 0;padding-left:20px;color:var(--mut);font-size:13px;line-height:1.6}
+  .wl details b{color:var(--txt);font-weight:600}
+  @media(max-width:900px){.meta{grid-template-columns:1fr 1fr}.params{grid-template-columns:1fr 1fr}.res{grid-template-columns:1fr}}
+  @media(max-width:560px){.wl{padding:20px 16px}.meta,.params{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}}
+  @media print{
+    body{background:#fff;padding:0}
+    .wl{--bg:#fff;--card:#fff;--line:#ccc;--txt:#111;--mut:#555;--gold:#8a6a1f;--bad:#a33;background:#fff;border:0;color:#111;max-width:none}
+    .wl input,.wl select{background:#fff!important;border-color:#ddd;color:#111}
+    th{background:#f3efe4;color:#5a4410}.box,.box.main{background:#fff;border-color:#bbb}.wrap{overflow:visible}
+    .x,.addbar,.bar,.wl details{display:none}.z1{background:#ccc}.z2{background:#c9a24b}.z3{background:#c98a8a}
+    .gauge i,.bk div.b i{-webkit-print-color-adjust:exact;print-color-adjust:exact}.mark{border-top-color:#111}
+  }
+</style>
+</head>
+<body>
+
+<section class="wl" id="wl">
+  <h3>• Análisis de puesto · Carga de trabajo</h3>
+  <p class="sub">Relevá las tareas del puesto, cuánto tiempo consumen y contrastalo con el tiempo realmente disponible.</p>
+
+  <div class="meta">
+    <div><label class="lab">Puesto</label><input data-m="puesto" placeholder="Ej.: Analista administrativo"></div>
+    <div><label class="lab">Área</label><input data-m="area" placeholder="Área o sector"></div>
+    <div><label class="lab">Ocupante / fuente</label><input data-m="ocu" placeholder="Quién aporta el dato"></div>
+    <div><label class="lab">Fecha</label><input data-m="fecha" placeholder="Ej.: 06/10/2026"></div>
+  </div>
+
+  <div class="params">
+    <div><label class="lab">Horas semanales</label><input type="number" min="0" step="any" data-p="hs"></div>
+    <div><label class="lab">Días laborables / mes</label><input type="number" min="0" step="any" data-p="dias"></div>
+    <div><label class="lab">Productividad efectiva (%)</label><input type="number" min="1" max="100" step="any" data-p="prod"></div>
+    <div class="cap">Capacidad disponible<b id="capH">0 h/mes</b></div>
+  </div>
+
+  <div class="wrap"><table>
+    <thead><tr><th>Tarea</th><th>Frecuencia</th><th>Duración por vez</th><th>Tipo</th><th>Horas/mes</th><th>% del total</th><th></th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table></div>
+  <div class="addbar"><button type="button" id="addRow">+ Agregar tarea</button></div>
+
+  <div class="res">
+    <div class="box main">
+      <div class="kpis">
+        <div class="kpi"><small>Horas requeridas</small><b id="kReq">0<em>h/mes</em></b></div>
+        <div class="kpi"><small>Carga del puesto</small><b id="kLoad">0<em>%</em></b></div>
+        <div class="kpi"><small>Equivale a</small><b id="kFte">0<em>puestos</em></b></div>
+      </div>
+      <div class="gwrap">
+        <div class="mark" id="mark" style="left:0%"></div>
+        <div class="gauge"><i class="z1"></i><i class="z2"></i><i class="z3"></i></div>
+        <div class="scale"><span>0%</span><span>70%</span><span>100%</span><span>150%+</span></div>
+      </div>
+      <div class="stat" id="stat"></div>
+    </div>
+    <div class="box">
+      <h4>Distribución por tipo de tarea</h4>
+      <div id="bk"></div>
+    </div>
+  </div>
+
+  <div class="bar">
+    <button class="btn" id="wPrint">Imprimir / PDF</button>
+    <button class="btn" id="wCopy">Copiar como texto</button>
+    <button class="btn ghost" id="wClear">Limpiar todo</button>
+    <span class="msg" id="wMsg"></span>
+  </div>
+
+  <details>
+    <summary>Cómo completarlo</summary>
+    <ul>
+      <li><b>Parámetros:</b> cargá la jornada contratada, los días laborables del mes y la productividad efectiva (descuenta pausas, reuniones y tiempos muertos; 80–90% es un rango habitual).</li>
+      <li><b>Tareas:</b> una por fila, con verbo. Indicá cuántas veces se hace en un período y cuánto lleva cada vez (promedio real, no el ideal).</li>
+      <li><b>Tipo:</b> sirve para ver en qué se va el tiempo; si lo operativo es mínimo y lo administrativo domina, hay un hallazgo.</li>
+      <li><b>Lectura de la carga:</b> bajo 70% sugiere subutilización; entre 70% y 100%, carga adecuada; sobre 100%, sobrecarga. Son referencias orientativas: contrastalas con el ocupante.</li>
+      <li>Tareas eventuales (auditorías, cierres): cargalas con su frecuencia real, aunque sea anual o trimestral.</li>
+    </ul>
+  </details>
+</section>
+
+<script>
+(function(){
+  var root=document.getElementById('wl'), body=document.getElementById('rows'), KEY='analisis-puesto-v1';
+  var PER=[['d','por día'],['w','por semana'],['m','por mes'],['q','por trimestre'],['y','por año']];
+  var TIPOS=[['op','Operativa'],['ad','Administrativa'],['ge','Gestión'],['ot','Otras']];
+  function blank(){var r=[];for(var i=1;i<=5;i++)r.push({id:'t'+i,n:'',q:'',per:'d',d:'',u:'min',t:'op'});return {m:{},seq:5,p:{hs:40,dias:21,prod:85},rows:r}}
+  var data=load();
+  function load(){try{var d=JSON.parse(localStorage.getItem(KEY));if(d&&d.rows&&d.p)return d}catch(e){}return blank()}
+  function save(){try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){}}
+  function msg(t){var m=document.getElementById('wMsg');m.textContent=t;m.classList.add('on');setTimeout(function(){m.classList.remove('on')},1800)}
+  function esc(s){return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;')}
+  function opts(a,v){return a.map(function(o){return '<option value="'+o[0]+'"'+(o[0]===v?' selected':'')+'>'+o[1]+'</option>'}).join('')}
+  function f1(n){return (Math.round(n*10)/10).toLocaleString('es-AR')}
+  function fac(per){var d=+data.p.dias||0;return per==='d'?d:per==='w'?d/5:per==='m'?1:per==='q'?1/3:1/12}
+  function hrs(r){return (+r.q||0)*fac(r.per)*(+r.d||0)*(r.u==='h'?60:1)/60}
+  function cap(){var p=data.p;return (+p.hs||0)*((+p.dias||0)/5)*((+p.prod||0)/100)}
+
+  function render(){
+    var h='';
+    data.rows.forEach(function(r,i){
+      h+='<tr data-id="'+r.id+'"><td class="tk"><div class="tkw"><i>'+(i+1)+'</i><span contenteditable="true" data-f="n" data-ph="Tarea (verbo + objeto)">'+esc(r.n)+'</span></div></td>'+
+      '<td><div class="fq"><input type="number" min="0" step="any" data-f="q" value="'+esc(r.q)+'"><select data-f="per">'+opts(PER,r.per)+'</select></div></td>'+
+      '<td><div class="du"><input type="number" min="0" step="any" data-f="d" value="'+esc(r.d)+'"><select data-f="u">'+opts([['min','min'],['h','horas']],r.u)+'</select></div></td>'+
+      '<td><select data-f="t">'+opts(TIPOS,r.t)+'</select></td>'+
+      '<td class="out" data-o="h"></td><td class="out" data-o="p"></td><td><button type="button" class="x" title="Quitar tarea">×</button></td></tr>';
+    });
+    body.innerHTML=h;
+    root.querySelectorAll('[data-m]').forEach(function(i){i.value=data.m[i.dataset.m]||''});
+    root.querySelectorAll('[data-p]').forEach(function(i){i.value=data.p[i.dataset.p]});
+    calc();
+  }
+  function calc(){
+    var tot=0,by={op:0,ad:0,ge:0,ot:0},hs={};
+    data.rows.forEach(function(r){var h=hrs(r);hs[r.id]=h;tot+=h;by[r.t]=(by[r.t]||0)+h});
+    data.rows.forEach(function(r){
+      var tr=body.querySelector('[data-id="'+r.id+'"]');if(!tr)return;
+      tr.querySelector('[data-o=h]').textContent=hs[r.id]?f1(hs[r.id])+' h':'—';
+      tr.querySelector('[data-o=p]').textContent=tot&&hs[r.id]?Math.round(hs[r.id]/tot*100)+'%':'—';
+    });
+    var c=cap(),load=c>0?tot/c*100:0;
+    document.getElementById('capH').textContent=f1(c)+' h/mes';
+    document.getElementById('kReq').innerHTML=f1(tot)+'<em>h/mes</em>';
+    document.getElementById('kLoad').innerHTML=Math.round(load)+'<em>%</em>';
+    document.getElementById('kFte').innerHTML=(Math.round(load)/100).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'<em>puestos</em>';
+    document.getElementById('mark').style.left=Math.min(load,150)/150*100+'%';
+    var st=document.getElementById('stat'),cls,t,s;
+    if(!tot||!c){cls='low';t='Cargá tareas y parámetros para ver el resultado.';s=''}
+    else if(load<70){cls='low';t='Subutilización';s='El puesto requiere menos del 70% del tiempo disponible: revisá si hay tareas sin relevar o espacio para reasignar funciones.'}
+    else if(load<=100){cls='ok';t='Carga adecuada';s='Las tareas relevadas caben dentro del tiempo efectivo del puesto.'}
+    else{cls='bad';t='Sobrecarga';s='Faltan aprox. '+f1(tot-c)+' h/mes de capacidad: revisá redistribución, automatización o ampliación de dotación.'}
+    st.className='stat '+cls;st.innerHTML=t+(s?'<span>'+s+'</span>':'');
+    var bk='';TIPOS.forEach(function(t){var v=by[t[0]]||0,pc=tot?v/tot*100:0;
+      bk+='<div class="bk"><span>'+t[1]+'</span><div class="b"><i style="width:'+pc+'%"></i></div><span>'+f1(v)+' h</span></div>'});
+    document.getElementById('bk').innerHTML=bk;
+  }
+  function collect(){
+    body.querySelectorAll('tr').forEach(function(tr){
+      var r=data.rows.filter(function(x){return x.id===tr.dataset.id})[0];if(!r)return;
+      tr.querySelectorAll('[data-f]').forEach(function(el){r[el.dataset.f]=el.matches('[contenteditable]')?el.textContent.trim():el.value});
+    });
+    root.querySelectorAll('[data-m]').forEach(function(i){data.m[i.dataset.m]=i.value});
+    root.querySelectorAll('[data-p]').forEach(function(i){data.p[i.dataset.p]=i.value});
+    save();calc();
+  }
+  body.addEventListener('input',collect);body.addEventListener('change',collect);
+  body.addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.matches('[contenteditable]')){e.preventDefault();e.target.blur()}});
+  body.addEventListener('paste',function(e){if(e.target.matches('[contenteditable]')){e.preventDefault();document.execCommand('insertText',false,(e.clipboardData||window.clipboardData).getData('text').replace(/\s+/g,' '))}});
+  body.addEventListener('click',function(e){
+    if(!e.target.classList.contains('x'))return;collect();
+    var id=e.target.closest('tr').dataset.id;if(data.rows.length>1)data.rows=data.rows.filter(function(r){return r.id!==id});save();render();
+  });
+  root.querySelectorAll('[data-m],[data-p]').forEach(function(i){i.addEventListener('input',collect)});
+  document.getElementById('addRow').onclick=function(){collect();data.seq++;data.rows.push({id:'t'+data.seq,n:'',q:'',per:'d',d:'',u:'min',t:'op'});save();render();var s=body.querySelectorAll('[data-f=n]');s[s.length-1].focus()};
+  document.getElementById('wPrint').onclick=function(){window.print()};
+  document.getElementById('wClear').onclick=function(){if(!confirm('¿Borrar todo el contenido de esta plantilla?'))return;data=blank();save();render()};
+  document.getElementById('wCopy').onclick=function(){
+    collect();var tot=0;data.rows.forEach(function(r){tot+=hrs(r)});var c=cap();
+    var t='ANÁLISIS DE PUESTO — '+(data.m.puesto||'(sin nombre)')+'\nÁrea: '+(data.m.area||'-')+' | Fuente: '+(data.m.ocu||'-')+' | '+(data.m.fecha||'-')+'\n';
+    t+='Jornada: '+data.p.hs+' h/sem · '+data.p.dias+' días/mes · productividad '+data.p.prod+'%\n\nTarea\tFrecuencia\tDuración\tTipo\tHoras/mes\n';
+    data.rows.forEach(function(r){if(!r.n&&!r.q&&!r.d)return;
+      var per=PER.filter(function(p){return p[0]===r.per})[0][1],ti=TIPOS.filter(function(p){return p[0]===r.t})[0][1];
+      t+=(r.n||'(sin título)')+'\t'+(r.q||0)+' '+per+'\t'+(r.d||0)+' '+r.u+'\t'+ti+'\t'+f1(hrs(r))+'\n'});
+    t+='\nHoras requeridas: '+f1(tot)+' h/mes\nCapacidad disponible: '+f1(c)+' h/mes\nCarga: '+(c?Math.round(tot/c*100):0)+'%\n';
+    (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){msg('Copiado')},function(){msg('No se pudo copiar')});
+  };
+  render();
+})();
+</script>
+</body>
+</html>
