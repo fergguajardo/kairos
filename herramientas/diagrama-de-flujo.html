@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diagrama de flujo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  body{margin:0;background:#0a0a0a;padding:24px;font-family:'Outfit',system-ui,sans-serif}
+  .flw{--bg:#111;--card:#171717;--line:#2a2418;--gold:#c9a24b;--dim:#6b5524;--gold-soft:rgba(201,162,75,.14);--txt:#f3f3f3;--mut:#a8a8a8;
+    background:var(--bg);border:1px solid #3a2e14;border-radius:18px;padding:28px 30px;color:var(--txt);max-width:1100px;margin:0 auto}
+  .flw *{box-sizing:border-box}
+  .flw h3{margin:0 0 4px;font-size:22px;font-weight:600}
+  .flw .sub{margin:0 0 20px;color:var(--mut);font-size:14px;font-weight:500}
+  .meta{display:grid;grid-template-columns:2fr 1.5fr 1.2fr;gap:12px;margin-bottom:24px}
+  .meta label{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);margin-bottom:5px;font-weight:600}
+  .meta input{width:100%;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--txt);font:inherit;font-size:14px;outline:none}
+  .meta input:focus{border-color:var(--gold)}
+
+  .row{display:grid;grid-template-columns:34px 1fr 118px;gap:10px;align-items:start}
+  .num{padding-top:20px}
+  .num span{width:24px;height:24px;border-radius:50%;background:var(--gold-soft);color:var(--gold);font-size:12px;font-weight:600;display:grid;place-items:center}
+  .mid{display:flex;flex-direction:column;align-items:center}
+  .shapewrap{position:relative;width:100%;max-width:320px}
+  .shape{position:relative;min-height:64px;display:flex;align-items:center;justify-content:center;text-align:center;padding:10px 18px}
+  .t-term{border:1px solid #5a4720;background:#1c1710;border-radius:999px}
+  .t-proc{border:1px solid #3a3a3a;background:#0f0f0f;border-radius:8px}
+  .t-dec{min-height:124px;padding:12px 60px}
+  .t-io{padding:10px 36px}
+  .shape svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+  .shape svg polygon{fill:#0f0f0f;stroke:var(--dim);stroke-width:1.2;vector-effect:non-scaling-stroke}
+  .shape svg polygon{vector-effect:non-scaling-stroke}
+  .t-term:focus-within,.t-proc:focus-within{border-color:var(--gold)}
+  .shape:focus-within svg polygon{stroke:var(--gold)}
+  .txt{position:relative;z-index:1;width:100%}
+  .txt span{display:block;outline:none;word-break:break-word;min-height:1.3em;font-size:14px;font-weight:500;line-height:1.3}
+  .txt span:empty::before{content:attr(data-ph);color:#5e5e5e}
+  .txt .own{margin-top:5px;font-size:11.5px;font-weight:400;color:var(--gold);min-height:1.2em}
+  .txt .own:empty::before{color:#4a4a4a}
+  .arrow{position:relative;width:2px;height:30px;background:var(--dim);margin:0 auto}
+  .arrow::after{content:"";position:absolute;bottom:-1px;left:50%;transform:translateX(-50%);border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid var(--dim)}
+  .arrow.yes::before{content:"Sí";position:absolute;left:10px;top:5px;font-size:11px;font-weight:600;color:var(--gold)}
+  .nobranch{position:absolute;left:100%;top:50%;transform:translateY(-50%);width:230px;display:flex;align-items:center;gap:6px}
+  .nobranch i{flex:0 0 26px;height:2px;background:var(--dim);display:block}
+  .nobranch b{font-size:11px;font-weight:600;color:var(--gold)}
+  .nobranch select{flex:1;min-width:0}
+  .flw select{background:var(--card);border:1px solid var(--line);border-radius:8px;color:var(--txt);font:inherit;font-size:12px;padding:6px 8px;outline:none}
+  .flw select:focus{border-color:var(--gold)}
+  .ctl{display:flex;flex-direction:column;gap:6px;opacity:0;transition:.15s;padding-top:12px}
+  .row:hover .ctl,.row:focus-within .ctl{opacity:1}
+  .ctl .ib{display:flex;gap:4px}
+  .ctl button{flex:1;background:transparent;border:1px solid #333;border-radius:7px;color:var(--mut);cursor:pointer;font:inherit;font-size:13px;padding:4px 0;transition:.15s}
+  .ctl button:hover{border-color:var(--gold);color:var(--gold)}
+  .ctl button.del:hover{border-color:#7a4a4a;color:#e5a0a0}
+
+  .addbar{margin-top:22px;padding-top:16px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .addbar span{font-size:12px;color:var(--mut);margin-right:4px}
+  .addbar button,.btn{background:transparent;border:1px dashed #3a3a3a;border-radius:9px;color:var(--mut);font:inherit;font-size:13px;padding:8px 14px;cursor:pointer;transition:.15s}
+  .addbar button:hover{border-color:var(--gold);color:var(--gold)}
+  .bar{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;align-items:center}
+  .btn{background:var(--gold-soft);border:1px solid #5a4720;color:var(--gold);font-weight:600}
+  .btn:hover{background:var(--gold);color:#111}
+  .btn.ghost{background:transparent;border-color:#333;color:var(--mut);font-weight:600}
+  .btn.ghost:hover{border-color:#7a4a4a;color:#e5a0a0;background:transparent}
+  .msg{font-size:12px;color:var(--gold);opacity:0;transition:.3s}.msg.on{opacity:1}
+  .flw details{margin-top:18px;border-top:1px solid var(--line);padding-top:14px}
+  .flw summary{cursor:pointer;color:var(--gold);font-size:13px;font-weight:600}
+  .flw details ul{margin:10px 0 0;padding-left:20px;color:var(--mut);font-size:13px;line-height:1.6}
+  .flw details b{color:var(--txt);font-weight:600}
+  @media(hover:none){.ctl{opacity:1}}
+  @media(max-width:860px){
+    .row{grid-template-columns:30px 1fr}.ctl{grid-column:2;flex-direction:row;opacity:1;padding:8px 0 0}.ctl select{flex:1}.ctl .ib{flex:1}
+    .nobranch{position:static;transform:none;width:100%;margin-top:8px}.meta{grid-template-columns:1fr}
+  }
+  @media(max-width:640px){.flw{padding:20px 16px}}
+  @media print{
+    body{background:#fff;padding:0}
+    .flw{--bg:#fff;--card:#fff;--line:#ccc;--txt:#111;--mut:#555;--gold:#8a6a1f;--dim:#888;background:#fff;border:0;color:#111;max-width:none}
+    .t-term{background:#fff;border-color:#888}.t-proc{background:#fff;border-color:#888}.shape svg polygon{fill:#fff}
+    .ctl,.addbar,.bar,.flw details{display:none}
+    .meta input{background:#fff;border-color:#bbb;color:#111}
+    .nobranch select{appearance:none;-webkit-appearance:none;border:0;background:transparent;color:#111;padding:0}
+    .row{break-inside:avoid}.row{grid-template-columns:34px 1fr 0}
+  }
+</style>
+</head>
+<body>
+
+<section class="flw" id="flw">
+  <h3>• Diagrama de flujo</h3>
+  <p class="sub">Secuencia paso a paso de un proceso, con sus puntos de decisión y sus responsables.</p>
+
+  <div class="meta">
+    <div><label>Proceso</label><input data-m="proc" placeholder="Ej.: Alta de nuevo cliente"></div>
+    <div><label>Responsable</label><input data-m="resp" placeholder="Dueño del proceso"></div>
+    <div><label>Fecha / versión</label><input data-m="ver" placeholder="Ej.: 06/10/2026 · v1"></div>
+  </div>
+
+  <div id="flow"></div>
+
+  <div class="addbar">
+    <span>Agregar al final:</span>
+    <button type="button" data-add="proc">▭ Proceso</button>
+    <button type="button" data-add="dec">◇ Decisión</button>
+    <button type="button" data-add="io">▱ Entrada / Salida</button>
+    <button type="button" data-add="term">⬭ Inicio / Fin</button>
+  </div>
+
+  <div class="bar">
+    <button class="btn" id="fPrint">Imprimir / PDF</button>
+    <button class="btn" id="fCopy">Copiar como texto</button>
+    <button class="btn ghost" id="fClear">Limpiar todo</button>
+    <span class="msg" id="fMsg"></span>
+  </div>
+
+  <details>
+    <summary>Cómo completarlo</summary>
+    <ul>
+      <li><b>Inicio / Fin:</b> todo flujo abre y cierra con uno. Si hay más de un final posible, agregá otro.</li>
+      <li><b>Proceso:</b> una acción concreta, con verbo (“Registrar pedido”). Un paso, una acción.</li>
+      <li><b>Decisión:</b> una pregunta con dos salidas. El “Sí” sigue hacia abajo; en “No” elegí a qué paso va (un reproceso, una alternativa o el cierre).</li>
+      <li><b>Entrada / Salida:</b> un dato, documento o formulario que entra o se genera.</li>
+      <li>Con ↑ ↓ reordenás, con ⊕ insertás un paso debajo y con × lo quitás (aparecen al pasar el mouse).</li>
+      <li>Control final: ¿todo camino termina en un Fin? ¿Alguna decisión quedó sin su “No”?</li>
+    </ul>
+  </details>
+</section>
+
+<script>
+(function(){
+  var root=document.getElementById('flw'), flow=document.getElementById('flow'), KEY='diagrama-flujo-v1';
+  var TY={term:{l:'Inicio / Fin',ph:'Inicio / Fin'},proc:{l:'Proceso',ph:'Actividad (verbo + objeto)'},dec:{l:'Decisión',ph:'¿Condición?'},io:{l:'Entrada / Salida',ph:'Dato o documento'}};
+  function blank(){return {m:{},seq:5,steps:[
+    {id:'s1',t:'term',n:'Inicio',r:''},{id:'s2',t:'proc',n:'',r:''},{id:'s3',t:'dec',n:'',no:''},{id:'s4',t:'proc',n:'',r:''},{id:'s5',t:'term',n:'Fin',r:''}]}}
+  var data=load();
+  function load(){try{var d=JSON.parse(localStorage.getItem(KEY));if(d&&d.steps&&d.steps.length)return d}catch(e){}return blank()}
+  function save(){try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){}}
+  function msg(t){var m=document.getElementById('fMsg');m.textContent=t;m.classList.add('on');setTimeout(function(){m.classList.remove('on')},1800)}
+  function el(tag,cls,html){var e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e}
+  function newStep(t){data.seq++;var s={id:'s'+data.seq,t:t,n:'',r:''};if(t==='dec')s.no='';if(t==='term')s.n='Fin';return s}
+  function idx(id){for(var i=0;i<data.steps.length;i++)if(data.steps[i].id===id)return i;return -1}
+
+  var POLY={dec:'50,1 99,50 50,99 1,50',io:'10,1 99,1 90,99 1,99'};
+  function render(){
+    flow.innerHTML='';
+    data.steps.forEach(function(s,i){
+      var row=el('div','row');row.dataset.id=s.id;
+      row.appendChild(el('div','num','<span>'+(i+1)+'</span>'));
+      var mid=el('div','mid'),wrap=el('div','shapewrap'),sh=el('div','shape t-'+s.t);
+      if(POLY[s.t])sh.innerHTML='<svg viewBox="0 0 100 100" preserveAspectRatio="none"><polygon points="'+POLY[s.t]+'"/></svg>';
+      var tx=el('div','txt'),sp=el('span');sp.contentEditable='true';sp.dataset.f='n';sp.dataset.ph=TY[s.t].ph;sp.textContent=s.n||'';tx.appendChild(sp);
+      if(s.t!=='dec'){var ow=el('span','own');ow.contentEditable='true';ow.dataset.f='r';ow.dataset.ph='Responsable';ow.textContent=s.r||'';tx.appendChild(ow)}
+      sh.appendChild(tx);wrap.appendChild(sh);
+      if(s.t==='dec')wrap.appendChild(el('div','nobranch','<i></i><b>No</b><select data-f="no"></select>'));
+      mid.appendChild(wrap);
+      if(i<data.steps.length-1)mid.appendChild(el('div','arrow'+(s.t==='dec'?' yes':'')));
+      row.appendChild(mid);
+      var opts=Object.keys(TY).map(function(k){return '<option value="'+k+'"'+(k===s.t?' selected':'')+'>'+TY[k].l+'</option>'}).join('');
+      row.appendChild(el('div','ctl','<select data-f="t" title="Tipo de paso">'+opts+'</select><div class="ib"><button type="button" data-act="up" title="Subir">↑</button><button type="button" data-act="down" title="Bajar">↓</button><button type="button" data-act="ins" title="Insertar paso debajo">⊕</button><button type="button" class="del" data-act="del" title="Quitar">×</button></div>'));
+      flow.appendChild(row);
+    });
+    refreshSelects();
+    root.querySelectorAll('[data-m]').forEach(function(i){i.value=data.m[i.dataset.m]||''});
+  }
+  function refreshSelects(){
+    data.steps.forEach(function(s){
+      if(s.t!=='dec')return;
+      var sel=flow.querySelector('[data-id="'+s.id+'"] select[data-f="no"]');if(!sel)return;
+      var h='<option value="">Va al paso…</option>';
+      data.steps.forEach(function(o,i){if(o.id===s.id)return;
+        var lb=(o.n||'').trim().slice(0,26)||'(sin título)';
+        h+='<option value="'+o.id+'"'+(s.no===o.id?' selected':'')+'>'+(i+1)+'. '+lb.replace(/</g,'&lt;')+'</option>'});
+      sel.innerHTML=h;
+    });
+  }
+  function collect(){
+    flow.querySelectorAll('.row').forEach(function(r){
+      var s=data.steps[idx(r.dataset.id)];if(!s)return;
+      var n=r.querySelector('[data-f=n]'),o=r.querySelector('[data-f=r]');
+      s.n=n.textContent.trim();if(o)s.r=o.textContent.trim();
+    });
+    root.querySelectorAll('[data-m]').forEach(function(i){data.m[i.dataset.m]=i.value});
+    save();
+  }
+
+  flow.addEventListener('input',collect);
+  flow.addEventListener('focusout',function(e){if(e.target.matches('[data-f=n]'))refreshSelects()});
+  flow.addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.matches('[contenteditable]')){e.preventDefault();e.target.blur()}});
+  flow.addEventListener('paste',function(e){if(e.target.matches('[contenteditable]')){e.preventDefault();document.execCommand('insertText',false,(e.clipboardData||window.clipboardData).getData('text').replace(/\s+/g,' '))}});
+  flow.addEventListener('change',function(e){
+    var row=e.target.closest('.row');if(!row)return;var i=idx(row.dataset.id),s=data.steps[i];
+    if(e.target.dataset.f==='no'){s.no=e.target.value;save()}
+    if(e.target.dataset.f==='t'){collect();var t=e.target.value;s.t=t;if(t==='dec'&&s.no===undefined)s.no='';
+      if(t==='term'&&!s.n)s.n='Fin';save();render()}
+  });
+  flow.addEventListener('click',function(e){
+    var b=e.target.closest('[data-act]');if(!b)return;var row=b.closest('.row'),i=idx(row.dataset.id);collect();
+    var a=b.dataset.act,st=data.steps;
+    if(a==='up'&&i>0){var t=st[i];st[i]=st[i-1];st[i-1]=t}
+    if(a==='down'&&i<st.length-1){var u=st[i];st[i]=st[i+1];st[i+1]=u}
+    if(a==='ins'){st.splice(i+1,0,newStep('proc'))}
+    if(a==='del'&&st.length>1){var id=st[i].id;st.splice(i,1);st.forEach(function(x){if(x.no===id)x.no=''})}
+    save();render();
+  });
+  root.querySelectorAll('[data-add]').forEach(function(b){b.onclick=function(){collect();data.steps.push(newStep(b.dataset.add));save();render()}});
+  root.querySelectorAll('[data-m]').forEach(function(i){i.addEventListener('input',collect)});
+
+  document.getElementById('fPrint').onclick=function(){window.print()};
+  document.getElementById('fClear').onclick=function(){if(!confirm('¿Borrar todo el contenido de esta plantilla?'))return;data=blank();save();render()};
+  document.getElementById('fCopy').onclick=function(){
+    collect();
+    var t='DIAGRAMA DE FLUJO — '+(data.m.proc||'(sin nombre)')+'\nResponsable: '+(data.m.resp||'-')+' | '+(data.m.ver||'-')+'\n\n';
+    data.steps.forEach(function(s,i){
+      t+=(i+1)+'. ['+TY[s.t].l+'] '+(s.n||'(sin título)');
+      if(s.t==='dec'){var k=idx(s.no);t+=' → Sí: paso '+(i+2)+' · No: '+(k>=0?'paso '+(k+1):'(sin definir)')}
+      else if(s.r)t+=' ('+s.r+')';
+      t+='\n';
+    });
+    (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){msg('Copiado')},function(){msg('No se pudo copiar')});
+  };
+  render();
+})();
+</script>
+</body>
+</html>
