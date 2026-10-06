@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plantilla SIPOC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  body{margin:0;background:#0a0a0a;padding:24px;font-family:'Outfit',system-ui,sans-serif}
+
+  /* ===== SIPOC · inicio del bloque (copiar desde acá) ===== */
+  .sipoc{--bg:#111;--card:#171717;--line:#2a2418;--gold:#c9a24b;--gold-soft:rgba(201,162,75,.14);--txt:#f3f3f3;--mut:#a8a8a8;
+    background:var(--bg);border:1px solid #3a2e14;border-radius:18px;padding:28px 30px;color:var(--txt);font-family:'Outfit',system-ui,sans-serif;max-width:1400px;margin:0 auto}
+  .sipoc *{box-sizing:border-box}
+  .sipoc h3{margin:0 0 4px;font-size:22px;font-weight:600}
+  .sipoc .sub{margin:0 0 20px;color:var(--mut);font-size:14px;font-weight:500}
+  .sipoc-meta{display:grid;grid-template-columns:2fr 1.2fr 1.5fr 1.5fr;gap:12px;margin-bottom:20px}
+  .sipoc-meta label{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);margin-bottom:5px;font-weight:600}
+  .sipoc-meta input{width:100%;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--txt);font:inherit;font-size:14px;outline:none}
+  .sipoc-meta input:focus{border-color:var(--gold)}
+  .sipoc-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;align-items:stretch}
+  .sipoc-col{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 14px;display:flex;flex-direction:column}
+  .sipoc-col.main{border-color:#5a4720;background:linear-gradient(180deg,#1c1710,#171717)}
+  .sipoc-head{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+  .sipoc-letter{width:34px;height:34px;border-radius:9px;background:var(--gold-soft);color:var(--gold);display:grid;place-items:center;font-weight:600;font-size:18px;flex:none}
+  .sipoc-name{font-weight:600;font-size:15px;line-height:1.1}
+  .sipoc-name small{display:block;font-weight:500;color:var(--mut);font-size:11px;margin-top:2px}
+  .sipoc-hint{color:var(--mut);font-size:12px;line-height:1.35;margin:8px 0 12px;min-height:32px}
+  .sipoc-col ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px;counter-reset:paso;flex:1}
+  .sipoc-col li{position:relative;background:#0f0f0f;border:1px solid #232323;border-radius:9px;padding:8px 26px 8px 10px;font-size:13.5px;line-height:1.35}
+  .sipoc-col li span{display:block;outline:none;min-height:1.35em;word-break:break-word}
+  .sipoc-col li span:empty::before{content:attr(data-ph);color:#5e5e5e}
+  .sipoc-col li:focus-within{border-color:var(--gold)}
+  .sipoc-col li .x{position:absolute;top:6px;right:6px;width:18px;height:18px;border:0;border-radius:5px;background:transparent;color:#666;cursor:pointer;font-size:14px;line-height:1;padding:0;opacity:0;transition:.15s}
+  .sipoc-col li:hover .x,.sipoc-col li:focus-within .x{opacity:1}
+  .sipoc-col li .x:hover{color:#e5a0a0;background:#2a1a1a}
+  .sipoc-col.main li{padding-left:34px}
+  .sipoc-col.main li::before{counter-increment:paso;content:counter(paso);position:absolute;left:9px;top:8px;width:18px;height:18px;border-radius:50%;background:var(--gold);color:#111;font-size:11px;font-weight:600;display:grid;place-items:center}
+  .sipoc-add{margin-top:10px;background:transparent;border:1px dashed #3a3a3a;border-radius:9px;color:var(--mut);font:inherit;font-size:13px;padding:8px;cursor:pointer;transition:.15s}
+  .sipoc-add:hover{border-color:var(--gold);color:var(--gold)}
+  .sipoc-bar{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px;align-items:center}
+  .sipoc-btn{background:var(--gold-soft);border:1px solid #5a4720;color:var(--gold);border-radius:10px;padding:9px 16px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:.15s}
+  .sipoc-btn:hover{background:var(--gold);color:#111}
+  .sipoc-btn.ghost{background:transparent;border-color:#333;color:var(--mut)}
+  .sipoc-btn.ghost:hover{border-color:#7a4a4a;color:#e5a0a0;background:transparent}
+  .sipoc-msg{font-size:12px;color:var(--gold);opacity:0;transition:.3s}
+  .sipoc-msg.on{opacity:1}
+  .sipoc details{margin-top:20px;border-top:1px solid var(--line);padding-top:14px}
+  .sipoc summary{cursor:pointer;color:var(--gold);font-size:13px;font-weight:600}
+  .sipoc details ol{margin:10px 0 0;padding-left:20px;color:var(--mut);font-size:13px;line-height:1.6}
+  .sipoc details b{color:var(--txt);font-weight:600}
+  @media(max-width:1100px){.sipoc-grid{grid-template-columns:repeat(2,1fr)}.sipoc-meta{grid-template-columns:1fr 1fr}}
+  @media(max-width:640px){.sipoc{padding:20px 16px}.sipoc-grid,.sipoc-meta{grid-template-columns:1fr}}
+  @media print{
+    body{background:#fff;padding:0}
+    .sipoc{--bg:#fff;--card:#fff;--line:#ccc;--txt:#111;--mut:#555;--gold:#8a6a1f;background:#fff;border:0;color:#111}
+    .sipoc-col,.sipoc-col.main{background:#fff;border-color:#bbb}
+    .sipoc-col li{background:#fff;border-color:#ccc}
+    .sipoc-add,.sipoc-bar,.sipoc details,.sipoc li .x{display:none}
+    .sipoc-meta input{background:#fff;border-color:#bbb;color:#111}
+    .sipoc-grid{grid-template-columns:repeat(5,1fr)}
+  }
+</style>
+</head>
+<body>
+
+<section class="sipoc" id="sipoc">
+  <h3>• Diagrama SIPOC</h3>
+  <p class="sub">Mapa de alto nivel de cómo fluye el valor en un proceso: de quién lo proveen hasta quién lo recibe.</p>
+
+  <div class="sipoc-meta">
+    <div><label>Proceso</label><input data-m="proceso" placeholder="Ej.: Gestión de pedidos"></div>
+    <div><label>Responsable</label><input data-m="resp" placeholder="Dueño del proceso"></div>
+    <div><label>Dónde empieza</label><input data-m="inicio" placeholder="Disparador / primer paso"></div>
+    <div><label>Dónde termina</label><input data-m="fin" placeholder="Último paso / entrega"></div>
+  </div>
+
+  <div class="sipoc-grid" id="sipocGrid"></div>
+
+  <div class="sipoc-bar">
+    <button class="sipoc-btn" id="sipocPrint">Imprimir / PDF</button>
+    <button class="sipoc-btn" id="sipocCopy">Copiar como texto</button>
+    <button class="sipoc-btn ghost" id="sipocClear">Limpiar todo</button>
+    <span class="sipoc-msg" id="sipocMsg"></span>
+  </div>
+
+  <details>
+    <summary>Cómo completarlo</summary>
+    <ol>
+      <li><b>Definí el proceso</b> y sus límites: dónde empieza y dónde termina.</li>
+      <li><b>P · Proceso:</b> listá de 4 a 7 pasos de alto nivel, en verbo (no el detalle operativo).</li>
+      <li><b>O · Salidas:</b> qué produce el proceso (producto, servicio, información).</li>
+      <li><b>C · Clientes:</b> quién recibe cada salida, interno o externo.</li>
+      <li><b>I · Entradas:</b> qué necesita el proceso para arrancar.</li>
+      <li><b>S · Proveedores:</b> quién aporta cada entrada.</li>
+      <li>Al final revisá la coherencia: cada entrada con su proveedor, cada salida con su cliente.</li>
+    </ol>
+  </details>
+</section>
+
+<script>
+(function(){
+  var root=document.getElementById('sipoc'), grid=document.getElementById('sipocGrid'), KEY='sipoc-v1';
+  var COLS=[
+    {k:'s',l:'S',n:'Proveedores',e:'Suppliers',h:'¿Quién aporta lo que el proceso necesita?',ph:'Proveedor o área',main:false},
+    {k:'i',l:'I',n:'Entradas',e:'Inputs',h:'¿Qué recibe el proceso para poder arrancar?',ph:'Insumo, dato, recurso',main:false},
+    {k:'p',l:'P',n:'Proceso',e:'Process',h:'Pasos de alto nivel que transforman entradas en salidas.',ph:'Verbo + objeto',main:true},
+    {k:'o',l:'O',n:'Salidas',e:'Outputs',h:'¿Qué produce o entrega el proceso?',ph:'Producto, servicio, informe',main:false},
+    {k:'c',l:'C',n:'Clientes',e:'Customers',h:'¿Quién recibe esas salidas?',ph:'Cliente interno o externo',main:false}
+  ];
+  var data=load();
+
+  function load(){try{var d=JSON.parse(localStorage.getItem(KEY));if(d&&d.c)return d}catch(e){}
+    return {m:{},c:{s:[''],i:[''],p:['','',''],o:[''],c:['']}}}
+  function save(){try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){}}
+  function msg(t){var m=document.getElementById('sipocMsg');m.textContent=t;m.classList.add('on');setTimeout(function(){m.classList.remove('on')},1800)}
+
+  function liEl(col,val){
+    var li=document.createElement('li'), sp=document.createElement('span'), x=document.createElement('button');
+    sp.contentEditable='true';sp.dataset.ph=col.ph;sp.textContent=val||'';
+    x.className='x';x.type='button';x.title='Quitar';x.textContent='×';
+    li.appendChild(sp);li.appendChild(x);return li;
+  }
+  function build(){
+    grid.innerHTML='';
+    COLS.forEach(function(col){
+      var box=document.createElement('div');box.className='sipoc-col'+(col.main?' main':'');box.dataset.k=col.k;
+      box.innerHTML='<div class="sipoc-head"><div class="sipoc-letter">'+col.l+'</div><div class="sipoc-name">'+col.n+'<small>'+col.e+'</small></div></div><p class="sipoc-hint">'+col.h+'</p><ul></ul><button type="button" class="sipoc-add">+ Agregar</button>';
+      var ul=box.querySelector('ul');
+      (data.c[col.k].length?data.c[col.k]:['']).forEach(function(v){ul.appendChild(liEl(col,v))});
+      grid.appendChild(box);
+    });
+    root.querySelectorAll('[data-m]').forEach(function(i){i.value=data.m[i.dataset.m]||''});
+  }
+  function collect(){
+    COLS.forEach(function(col){
+      var ul=grid.querySelector('[data-k="'+col.k+'"] ul');
+      data.c[col.k]=[].map.call(ul.querySelectorAll('span'),function(s){return s.textContent.trim()});
+    });
+    root.querySelectorAll('[data-m]').forEach(function(i){data.m[i.dataset.m]=i.value});
+    save();
+  }
+  function colOf(el){var b=el.closest('.sipoc-col');return COLS.filter(function(c){return c.k===b.dataset.k})[0]}
+
+  grid.addEventListener('click',function(e){
+    var box=e.target.closest('.sipoc-col');if(!box)return;var col=colOf(box);
+    if(e.target.classList.contains('sipoc-add')){var li=liEl(col,'');box.querySelector('ul').appendChild(li);li.querySelector('span').focus();collect()}
+    if(e.target.classList.contains('x')){var ul=box.querySelector('ul');e.target.parentNode.remove();if(!ul.children.length)ul.appendChild(liEl(col,''));collect()}
+  });
+  grid.addEventListener('keydown',function(e){
+    if(e.key==='Enter'&&e.target.matches('span')){e.preventDefault();
+      var box=e.target.closest('.sipoc-col'),col=colOf(box),li=liEl(col,'');
+      e.target.parentNode.after(li);li.querySelector('span').focus();collect()}
+  });
+  grid.addEventListener('paste',function(e){
+    if(e.target.matches('span')){e.preventDefault();document.execCommand('insertText',false,(e.clipboardData||window.clipboardData).getData('text').replace(/\s+/g,' '))}
+  });
+  grid.addEventListener('input',collect);
+  root.querySelectorAll('[data-m]').forEach(function(i){i.addEventListener('input',collect)});
+
+  document.getElementById('sipocPrint').onclick=function(){window.print()};
+  document.getElementById('sipocClear').onclick=function(){
+    if(!confirm('¿Borrar todo el contenido de esta plantilla?'))return;
+    data={m:{},c:{s:[''],i:[''],p:['','',''],o:[''],c:['']}};save();build();
+  };
+  document.getElementById('sipocCopy').onclick=function(){
+    collect();
+    var t='SIPOC — '+(data.m.proceso||'(sin nombre)')+'\nResponsable: '+(data.m.resp||'-')+'\nInicio: '+(data.m.inicio||'-')+' | Fin: '+(data.m.fin||'-')+'\n';
+    COLS.forEach(function(col){
+      t+='\n'+col.l+' · '+col.n+'\n';
+      data.c[col.k].filter(Boolean).forEach(function(v,i){t+=(col.main?(i+1)+'. ':'- ')+v+'\n'});
+    });
+    (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){msg('Copiado')},function(){msg('No se pudo copiar')});
+  };
+  build();
+})();
+</script>
+</body>
+</html>
