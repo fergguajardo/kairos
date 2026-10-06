@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diagrama de Ishikawa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  body{margin:0;background:#0a0a0a;padding:24px;font-family:'Outfit',system-ui,sans-serif}
+  .ish{--bg:#111;--card:#171717;--line:#2a2418;--gold:#c9a24b;--dim:#6b5524;--gold-soft:rgba(201,162,75,.14);--txt:#f3f3f3;--mut:#a8a8a8;--bad:#e5a0a0;
+    background:var(--bg);border:1px solid #3a2e14;border-radius:18px;padding:28px 30px;color:var(--txt);max-width:1400px;margin:0 auto}
+  .ish *{box-sizing:border-box}
+  .ish h3{margin:0 0 4px;font-size:22px;font-weight:600}
+  .ish .sub{margin:0 0 20px;color:var(--mut);font-size:14px;font-weight:500}
+  .lab{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);margin-bottom:5px;font-weight:600}
+  .meta{display:grid;grid-template-columns:1.6fr 1.6fr 1fr;gap:12px;margin-bottom:22px}
+  .meta input{width:100%;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--txt);font:inherit;font-size:14px;outline:none}
+  .meta input:focus{border-color:var(--gold)}
+
+  .fishwrap{overflow-x:auto;padding-bottom:6px}
+  .fish{display:grid;grid-template-columns:1fr 210px;align-items:center;min-width:760px}
+  .body{display:grid;grid-template-rows:1fr auto 1fr;padding-right:6px}
+  .row{display:grid;grid-template-columns:repeat(var(--cols),1fr);gap:14px}
+  .row.top{align-items:end}.row.bot{align-items:start}
+  .spine{position:relative;height:3px;background:var(--gold);border-radius:2px;margin-right:2px}
+  .spine::after{content:"";position:absolute;right:-8px;top:-6px;border-top:7.5px solid transparent;border-bottom:7.5px solid transparent;border-left:12px solid var(--gold)}
+  .cat{display:flex;flex-direction:column;min-width:0}
+  .ctitle{display:flex;align-items:center;gap:6px;background:var(--gold-soft);border:1px solid #5a4720;border-radius:10px;padding:7px 10px;margin-bottom:8px}
+  .ctitle [contenteditable]{flex:1;font-weight:600;font-size:13.5px;color:var(--gold);text-align:center}
+  .causes{list-style:none;margin:0 0 6px;padding:0;display:flex;flex-direction:column;gap:5px}
+  .causes li{display:flex;align-items:flex-start;gap:5px;background:var(--card);border:1px solid #232323;border-radius:8px;padding:5px 6px}
+  .causes li:focus-within{border-color:var(--gold)}
+  .causes li.sub{margin-left:18px;background:transparent;border-style:dashed}
+  .causes li.sub [contenteditable]{font-size:12px;color:var(--mut)}
+  .ish [contenteditable]{outline:none;min-height:1.3em;word-break:break-word;line-height:1.3}
+  .ish [contenteditable]:empty::before{content:attr(data-ph);color:#5e5e5e;font-weight:400}
+  .causes [contenteditable]{flex:1;font-size:13px}
+  .star{background:transparent;border:0;color:#444;cursor:pointer;font-size:13px;padding:0 2px;line-height:1.4;transition:.15s}
+  .star:hover{color:var(--gold)}.star.on{color:var(--gold)}
+  .cb{display:flex;opacity:0;transition:.15s}
+  li:hover .cb,li:focus-within .cb{opacity:1}
+  .cb button,.ctitle .x{background:transparent;border:0;color:#666;cursor:pointer;font-size:13px;line-height:1;padding:3px 4px;border-radius:5px}
+  .cb button:hover,.ctitle .x:hover{color:var(--bad);background:#2a1a1a}
+  .cb button[data-act=sub]:hover{color:var(--gold);background:var(--gold-soft)}
+  .ctitle .x{opacity:0}.ctitle:hover .x{opacity:1}
+  .addc{align-self:flex-start;background:transparent;border:1px dashed #3a3a3a;border-radius:8px;color:var(--mut);font:inherit;font-size:12px;padding:4px 10px;cursor:pointer;transition:.15s}
+  .addc:hover{border-color:var(--gold);color:var(--gold)}
+  .bone{height:46px;width:3px;background:var(--gold);margin:6px auto 0;border-radius:2px}
+  .bone.t{transform:skewX(26deg);transform-origin:top}
+  .bone.b{transform:skewX(-26deg);transform-origin:bottom;margin:0 auto 6px}
+  .head{background:linear-gradient(180deg,#1c1710,#171717);border:1px solid #5a4720;border-radius:14px;padding:14px 14px 12px}
+  .head [contenteditable]{font-size:15px;font-weight:600;min-height:3.9em}
+
+  .roots{margin-top:20px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+  .roots h4{margin:0 0 10px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);font-weight:600}
+  .roots ol{margin:0;padding-left:20px;font-size:13.5px;line-height:1.6}
+  .roots ol li span{color:var(--mut);font-size:12px}
+  .roots p{margin:0;font-size:13px;color:var(--mut)}
+  .addbar{margin-top:14px}
+  .addbar button{background:transparent;border:1px dashed #3a3a3a;border-radius:9px;color:var(--mut);font:inherit;font-size:13px;padding:8px 14px;cursor:pointer;transition:.15s}
+  .addbar button:hover{border-color:var(--gold);color:var(--gold)}
+  .bar{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;align-items:center}
+  .btn{background:var(--gold-soft);border:1px solid #5a4720;color:var(--gold);border-radius:10px;padding:9px 16px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:.15s}
+  .btn:hover{background:var(--gold);color:#111}
+  .btn.ghost{background:transparent;border-color:#333;color:var(--mut)}
+  .btn.ghost:hover{border-color:#7a4a4a;color:var(--bad);background:transparent}
+  .msg{font-size:12px;color:var(--gold);opacity:0;transition:.3s}.msg.on{opacity:1}
+  .ish details{margin-top:18px;border-top:1px solid var(--line);padding-top:14px}
+  .ish summary{cursor:pointer;color:var(--gold);font-size:13px;font-weight:600}
+  .ish details ul{margin:10px 0 0;padding-left:20px;color:var(--mut);font-size:13px;line-height:1.6}
+  .ish details b{color:var(--txt);font-weight:600}
+  @media(max-width:860px){
+    .ish{padding:20px 16px}.meta{grid-template-columns:1fr}
+    .fish{grid-template-columns:1fr;min-width:0}.head{order:-1;margin-bottom:14px}
+    .row{grid-template-columns:1fr}.bone,.spine{display:none}.body{grid-template-rows:auto}.row.bot{margin-top:14px}
+    .cb{opacity:1}
+  }
+  @page{size:landscape;margin:12mm}
+  @media print{
+    body{background:#fff;padding:0}
+    .ish{--bg:#fff;--card:#fff;--line:#ccc;--txt:#111;--mut:#555;--gold:#8a6a1f;--dim:#999;--bad:#a33;background:#fff;border:0;color:#111;max-width:none}
+    .fishwrap{overflow:visible}
+    .ctitle{background:#f3efe4;border-color:#bbb}.causes li{background:#fff;border-color:#ccc}
+    .head,.roots{background:#fff;border-color:#bbb}
+    .spine,.bone,.spine::after{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .cb,.addc,.addbar,.bar,.ish details,.ctitle .x{display:none}
+    .star:not(.on){display:none}
+    .meta input{background:#fff;border-color:#bbb;color:#111}
+  }
+</style>
+</head>
+<body>
+
+<section class="ish" id="ish">
+  <h3>• Diagrama de Ishikawa</h3>
+  <p class="sub">Análisis de causa-efecto: ordená las posibles causas de un problema por categoría para llegar a su raíz.</p>
+
+  <div class="meta">
+    <div><label class="lab">Proceso / área</label><input data-m="area" placeholder="Donde ocurre el problema"></div>
+    <div><label class="lab">Participantes</label><input data-m="part" placeholder="Quiénes participan del análisis"></div>
+    <div><label class="lab">Fecha</label><input data-m="fecha" placeholder="Ej.: 06/10/2026"></div>
+  </div>
+
+  <div class="fishwrap">
+    <div class="fish">
+      <div class="body" id="body"></div>
+      <div class="head"><label class="lab">Problema / efecto</label><span contenteditable="true" id="prob" data-ph="Describilo con un hecho concreto y medible"></span></div>
+    </div>
+  </div>
+
+  <div class="addbar"><button type="button" id="addCat">+ Agregar categoría</button></div>
+
+  <div class="roots"><h4>★ Causas raíz probables</h4><div id="roots"></div></div>
+
+  <div class="bar">
+    <button class="btn" id="iPrint">Imprimir / PDF</button>
+    <button class="btn" id="iCopy">Copiar como texto</button>
+    <button class="btn ghost" id="iClear">Limpiar todo</button>
+    <span class="msg" id="iMsg"></span>
+  </div>
+
+  <details>
+    <summary>Cómo completarlo</summary>
+    <ul>
+      <li><b>Primero el problema:</b> escribilo como hecho observable (“12% de pedidos entregados con demora”), no como opinión.</li>
+      <li><b>Categorías:</b> vienen las 6M clásicas (mano de obra, método, máquina, material, medición, medio ambiente). Renombralas, quitalas o agregá otras (hasta 8) según el caso; en servicios suelen servir Personas, Procesos, Políticas, Plataformas.</li>
+      <li><b>Causas:</b> una por línea. Enter agrega otra; ↳ la convierte en sub-causa (el porqué de la causa).</li>
+      <li><b>Priorizá:</b> marcá con ★ las que el grupo considere raíz probable; se juntan abajo para llevarlas a verificación con datos.</li>
+      <li>Esto es una hipótesis estructurada: lo marcado en ★ todavía hay que comprobarlo con hechos.</li>
+    </ul>
+  </details>
+</section>
+
+<script>
+(function(){
+  var root=document.getElementById('ish'), body=document.getElementById('body'), KEY='ishikawa-v1', focusSel=null;
+  function C(id,n,k){var c=[];for(var i=0;i<k;i++)c.push({id:id+'_'+i,n:'',sub:false,star:false});return {id:id,n:n,causes:c}}
+  function blank(){return {m:{},prob:'',seq:20,cats:[C('k1','Mano de obra',2),C('k2','Método',2),C('k3','Máquina',2),C('k4','Material',2),C('k5','Medición',2),C('k6','Medio ambiente',2)]}}
+  var data=load();
+  function load(){try{var d=JSON.parse(localStorage.getItem(KEY));if(d&&d.cats&&d.cats.length)return d}catch(e){}return blank()}
+  function save(){try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){}}
+  function msg(t){var m=document.getElementById('iMsg');m.textContent=t;m.classList.add('on');setTimeout(function(){m.classList.remove('on')},1800)}
+  function esc(s){return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;')}
+  function nid(){data.seq++;return 'x'+data.seq}
+
+  function catHTML(c,pos){
+    var h='<div class="cat" data-cat="'+c.id+'">';
+    if(pos==='b')h+='<div class="bone b"></div>';
+    h+='<div class="ctitle"><span contenteditable="true" data-f="cn" data-ph="Categoría">'+esc(c.n)+'</span><button type="button" class="x" data-act="delcat" title="Quitar categoría">×</button></div><ul class="causes">';
+    c.causes.forEach(function(k){
+      h+='<li class="'+(k.sub?'sub':'')+'" data-cid="'+k.id+'"><button type="button" class="star'+(k.star?' on':'')+'" data-act="star" title="Marcar como causa raíz probable">★</button><span contenteditable="true" data-f="cc" data-ph="'+(k.sub?'Sub-causa (¿por qué?)':'Causa')+'">'+esc(k.n)+'</span><span class="cb"><button type="button" data-act="sub" title="Alternar sub-causa">↳</button><button type="button" data-act="delcause" title="Quitar">×</button></span></li>';
+    });
+    h+='</ul><button type="button" class="addc" data-act="addcause">+ causa</button>';
+    if(pos==='t')h+='<div class="bone t"></div>';
+    return h+'</div>';
+  }
+  function render(){
+    var n=data.cats.length,tn=Math.ceil(n/2),top=data.cats.slice(0,tn),bot=data.cats.slice(tn);
+    var h='<div class="row top" style="--cols:'+tn+'">'+top.map(function(c){return catHTML(c,'t')}).join('')+'</div><div class="spine"></div><div class="row bot" style="--cols:'+tn+'">'+bot.map(function(c){return catHTML(c,'b')}).join('')+'</div>';
+    body.innerHTML=h;
+    document.getElementById('prob').textContent=data.prob||'';
+    root.querySelectorAll('[data-m]').forEach(function(i){i.value=data.m[i.dataset.m]||''});
+    document.getElementById('addCat').style.display=n>=8?'none':'';
+    roots();
+    if(focusSel){var f=root.querySelector(focusSel);if(f)f.focus();focusSel=null}
+  }
+  function roots(){
+    var items=[];data.cats.forEach(function(c){c.causes.forEach(function(k){if(k.star)items.push({c:c.n||'(categoría)',n:k.n||'(sin texto)'})})});
+    document.getElementById('roots').innerHTML=items.length?'<ol>'+items.map(function(i){return '<li>'+esc(i.n)+' <span>· '+esc(i.c)+'</span></li>'}).join('')+'</ol>':'<p>Marcá con ★ las causas que el grupo considere raíz probable y se listan acá.</p>';
+  }
+  function cat(id){return data.cats.filter(function(c){return c.id===id})[0]}
+  function collect(){
+    body.querySelectorAll('.cat').forEach(function(el){
+      var c=cat(el.dataset.cat);if(!c)return;
+      c.n=el.querySelector('[data-f=cn]').textContent.trim();
+      el.querySelectorAll('li').forEach(function(li){var k=c.causes.filter(function(x){return x.id===li.dataset.cid})[0];if(k)k.n=li.querySelector('[data-f=cc]').textContent.trim()});
+    });
+    data.prob=document.getElementById('prob').textContent.trim();
+    root.querySelectorAll('[data-m]').forEach(function(i){data.m[i.dataset.m]=i.value});
+    save();roots();
+  }
+  root.addEventListener('input',collect);
+  root.addEventListener('paste',function(e){if(e.target.matches('[contenteditable]')){e.preventDefault();document.execCommand('insertText',false,(e.clipboardData||window.clipboardData).getData('text').replace(/\s+/g,' '))}});
+  root.addEventListener('keydown',function(e){
+    if(e.key!=='Enter'||!e.target.matches('[contenteditable]'))return;e.preventDefault();
+    if(e.target.dataset.f==='cc'){
+      collect();var li=e.target.closest('li'),c=cat(li.closest('.cat').dataset.cat),i=c.causes.map(function(x){return x.id}).indexOf(li.dataset.cid),cur=c.causes[i],k={id:nid(),n:'',sub:cur.sub,star:false};
+      c.causes.splice(i+1,0,k);save();focusSel='[data-cid="'+k.id+'"] [data-f=cc]';render();
+    }else e.target.blur();
+  });
+  root.addEventListener('click',function(e){
+    var b=e.target.closest('[data-act]');if(!b)return;collect();
+    var ce=b.closest('.cat'),c=ce?cat(ce.dataset.cat):null,li=b.closest('li'),a=b.dataset.act;
+    if(a==='addcause'){var k={id:nid(),n:'',sub:false,star:false};c.causes.push(k);focusSel='[data-cid="'+k.id+'"] [data-f=cc]'}
+    if(a==='delcat'&&data.cats.length>2)data.cats=data.cats.filter(function(x){return x.id!==c.id});
+    if(a==='star'||a==='sub'||a==='delcause'){
+      var i=c.causes.map(function(x){return x.id}).indexOf(li.dataset.cid);
+      if(a==='star')c.causes[i].star=!c.causes[i].star;
+      if(a==='sub')c.causes[i].sub=!c.causes[i].sub;
+      if(a==='delcause')c.causes.splice(i,1);
+    }
+    save();render();
+  });
+  document.getElementById('addCat').onclick=function(){collect();var c={id:nid(),n:'',causes:[{id:nid(),n:'',sub:false,star:false}]};data.cats.push(c);save();focusSel='[data-cat="'+c.id+'"] [data-f=cn]';render()};
+  root.querySelectorAll('[data-m]').forEach(function(i){i.addEventListener('input',collect)});
+  document.getElementById('iPrint').onclick=function(){window.print()};
+  document.getElementById('iClear').onclick=function(){if(!confirm('¿Borrar todo el contenido de esta plantilla?'))return;data=blank();save();render()};
+  document.getElementById('iCopy').onclick=function(){
+    collect();var s='DIAGRAMA DE ISHIKAWA\nProblema: '+(data.prob||'(sin definir)')+'\nProceso/área: '+(data.m.area||'-')+' | Participantes: '+(data.m.part||'-')+' | '+(data.m.fecha||'-')+'\n';
+    data.cats.forEach(function(c){s+='\n'+(c.n||'(categoría)').toUpperCase()+'\n';c.causes.filter(function(k){return k.n}).forEach(function(k){s+=(k.sub?'    · ':'- ')+k.n+(k.star?' ★':'')+'\n'})});
+    var r=[];data.cats.forEach(function(c){c.causes.forEach(function(k){if(k.star)r.push(k.n+' ('+c.n+')')})});
+    s+='\nCAUSAS RAÍZ PROBABLES\n'+(r.length?r.map(function(x,i){return (i+1)+'. '+x}).join('\n'):'(ninguna marcada)')+'\n';
+    (navigator.clipboard?navigator.clipboard.writeText(s):Promise.reject()).then(function(){msg('Copiado')},function(){msg('No se pudo copiar')});
+  };
+  render();
+})();
+</script>
+</body>
+</html>
