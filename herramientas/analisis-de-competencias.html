@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Análisis de competencias · Descripción de puesto</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  body{margin:0;background:#0a0a0a;padding:24px;font-family:'Outfit',system-ui,sans-serif}
+  .dp{--bg:#111;--card:#171717;--line:#2a2418;--gold:#c9a24b;--gold-soft:rgba(201,162,75,.14);--txt:#f3f3f3;--mut:#a8a8a8;--bad:#e5a0a0;
+    background:var(--bg);border:1px solid #3a2e14;border-radius:18px;padding:28px 30px;color:var(--txt);max-width:1100px;margin:0 auto}
+  .dp *{box-sizing:border-box}
+  .dp h3{margin:0 0 4px;font-size:22px;font-weight:600}
+  .dp .sub{margin:0 0 20px;color:var(--mut);font-size:14px;font-weight:500}
+  .lab{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);margin-bottom:5px;font-weight:600}
+  .dp input,.dp textarea,.dp select{background:var(--card);border:1px solid var(--line);border-radius:10px;color:var(--txt);font:inherit;font-size:14px;outline:none;width:100%}
+  .dp input,.dp select{padding:10px 12px}
+  .dp textarea{padding:10px 12px;resize:vertical;min-height:64px;line-height:1.4;overflow:hidden}
+  .dp input:focus,.dp textarea:focus,.dp select:focus{border-color:var(--gold)}
+  .g3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .g2{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  .sec{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 18px 16px;margin-top:14px}
+  .sec.main{border-color:#5a4720;background:linear-gradient(180deg,#1c1710,#171717)}
+  .sec h4{margin:0 0 4px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);font-weight:600;display:flex;gap:10px;align-items:center}
+  .sec h4 i{font-style:normal;width:22px;height:22px;border-radius:7px;background:var(--gold-soft);display:grid;place-items:center;font-size:12px}
+  .hint{margin:0 0 12px;font-size:12.5px;color:var(--mut)}
+  .sec .g3 input,.sec .g2 textarea,.sec textarea{background:#0f0f0f}
+  .lhead,.lrow{display:grid;gap:8px;align-items:start}
+  .lhead{font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--mut);margin-bottom:6px;padding-left:2px}
+  .lrow{margin-bottom:7px}
+  .cellbox{background:#0f0f0f;border:1px solid #232323;border-radius:9px;padding:8px 10px;min-height:38px}
+  .cellbox:focus-within{border-color:var(--gold)}
+  .cellbox [contenteditable]{outline:none;font-size:13.5px;line-height:1.35;min-height:1.35em;word-break:break-word}
+  .cellbox [contenteditable]:empty::before{content:attr(data-ph);color:#5e5e5e}
+  .lrow select{background:#0f0f0f;font-size:12.5px;padding:8px 8px;border-radius:9px}
+  .num{font-style:normal;color:var(--gold);font-size:12px;font-weight:600;margin-right:6px}
+  .lvl{display:flex;gap:6px;align-items:center;height:38px}
+  .lvl button{width:22px;height:22px;border-radius:50%;border:1px solid #555;background:transparent;cursor:pointer;padding:0;transition:.12s}
+  .lvl button:hover{border-color:var(--gold)}
+  .lvl button.on{background:var(--gold);border-color:var(--gold)}
+  .x{background:transparent;border:0;color:#666;cursor:pointer;font-size:15px;line-height:1;padding:8px 6px;border-radius:5px;opacity:0;transition:.15s}
+  .lrow:hover .x,.x:focus{opacity:1}.x:hover{color:var(--bad);background:#2a1a1a}
+  .add{margin-top:6px;background:transparent;border:1px dashed #3a3a3a;border-radius:9px;color:var(--mut);font:inherit;font-size:13px;padding:8px 14px;cursor:pointer;transition:.15s}
+  .add:hover{border-color:var(--gold);color:var(--gold)}
+  .scale{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:12px;color:var(--mut);margin-bottom:12px}
+  .scale b{color:var(--gold);font-weight:600;margin-right:4px}
+  .bar{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px;align-items:center}
+  .btn{background:var(--gold-soft);border:1px solid #5a4720;color:var(--gold);border-radius:10px;padding:9px 16px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:.15s;width:auto}
+  .btn:hover{background:var(--gold);color:#111}
+  .btn.ghost{background:transparent;border-color:#333;color:var(--mut)}
+  .btn.ghost:hover{border-color:#7a4a4a;color:var(--bad);background:transparent}
+  .msg{font-size:12px;color:var(--gold);opacity:0;transition:.3s}.msg.on{opacity:1}
+  .dp details{margin-top:18px;border-top:1px solid var(--line);padding-top:14px}
+  .dp summary{cursor:pointer;color:var(--gold);font-size:13px;font-weight:600}
+  .dp details ul{margin:10px 0 0;padding-left:20px;color:var(--mut);font-size:13px;line-height:1.6}
+  .dp details b{color:var(--txt);font-weight:600}
+  @media(max-width:760px){.g3,.g2{grid-template-columns:1fr}.lhead{display:none}.lrow{grid-template-columns:1fr!important}.x{opacity:1;justify-self:end}.dp{padding:20px 16px}}
+  @media print{
+    body{background:#fff;padding:0}
+    .dp{--bg:#fff;--card:#fff;--line:#ccc;--txt:#111;--mut:#555;--gold:#8a6a1f;--bad:#a33;background:#fff;border:0;color:#111;max-width:none}
+    .sec,.sec.main{background:#fff;border-color:#bbb;break-inside:avoid}
+    .dp input,.dp textarea,.dp select,.cellbox{background:#fff!important;border-color:#ddd;color:#111}
+    .dp select{appearance:none;-webkit-appearance:none}
+    .lvl button{border-color:#999}.lvl button.on{background:#8a6a1f!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .x,.add,.bar,.dp details{display:none}
+  }
+</style>
+</head>
+<body>
+
+<section class="dp" id="dp">
+  <h3>• Análisis de competencias · Descripción de puesto</h3>
+  <p class="sub">Diseñá la descripción del puesto a partir de su propósito, sus funciones y las competencias que exige.</p>
+
+  <div class="g3">
+    <div><label class="lab">Puesto</label><input data-m="puesto" placeholder="Nombre del puesto"></div>
+    <div><label class="lab">Área / departamento</label><input data-m="area" placeholder="Dónde se ubica"></div>
+    <div><label class="lab">Modalidad / lugar</label><input data-m="mod" placeholder="Presencial, híbrido, remoto…"></div>
+    <div><label class="lab">Reporta a</label><input data-m="rep" placeholder="Puesto superior directo"></div>
+    <div><label class="lab">Supervisa a</label><input data-m="sup" placeholder="Puestos a cargo (si aplica)"></div>
+    <div><label class="lab">Fecha / versión</label><input data-m="ver" placeholder="Ej.: 06/10/2026 · v1"></div>
+  </div>
+
+  <div class="sec main">
+    <h4><i>1</i>Propósito del puesto</h4>
+    <p class="hint">Una o dos frases: para qué existe este puesto y qué valor aporta a la organización.</p>
+    <textarea data-t="mision" placeholder="Ej.: Asegurar que cada pedido se registre, facture y entregue en tiempo y forma, para sostener la satisfacción del cliente."></textarea>
+  </div>
+
+  <div class="sec">
+    <h4><i>2</i>Funciones principales</h4>
+    <p class="hint">De 5 a 8 funciones, con verbo de acción, y el resultado o indicador con el que se evalúa cada una.</p>
+    <div data-list="fun"></div>
+  </div>
+
+  <div class="sec">
+    <h4><i>3</i>Autonomía y alcance</h4>
+    <p class="hint">Qué resuelve por sí mismo y qué debe elevar. Es lo que más conflictos evita después.</p>
+    <div class="g2">
+      <div><label class="lab">Decide por sí mismo</label><textarea data-t="dec" placeholder="Decisiones, montos, plazos…"></textarea></div>
+      <div><label class="lab">Debe escalar / consultar</label><textarea data-t="esc" placeholder="Lo que requiere aprobación superior…"></textarea></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h4><i>4</i>Requisitos del puesto</h4>
+    <div class="g2" style="margin-bottom:14px">
+      <div><label class="lab">Formación</label><textarea data-t="form" placeholder="Nivel educativo y titulación"></textarea></div>
+      <div><label class="lab">Experiencia</label><textarea data-t="exp" placeholder="Años y tipo de experiencia previa"></textarea></div>
+    </div>
+    <label class="lab">Conocimientos, herramientas e idiomas</label>
+    <div data-list="con"></div>
+  </div>
+
+  <div class="sec main">
+    <h4><i>5</i>Competencias requeridas</h4>
+    <p class="hint">Combiná competencias técnicas y conductuales, con el nivel que el puesto exige y cómo se observa en la práctica.</p>
+    <div class="scale"><span><b>1</b>Básico</span><span><b>2</b>Intermedio</span><span><b>3</b>Avanzado</span><span><b>4</b>Experto</span></div>
+    <div data-list="comp"></div>
+  </div>
+
+  <div class="sec">
+    <h4><i>6</i>Relaciones del puesto</h4>
+    <div class="g2">
+      <div><label class="lab">Internas</label><textarea data-t="rint" placeholder="Con qué áreas o puestos interactúa y para qué"></textarea></div>
+      <div><label class="lab">Externas</label><textarea data-t="rext" placeholder="Clientes, proveedores, organismos…"></textarea></div>
+    </div>
+  </div>
+
+  <div class="bar">
+    <button class="btn" id="dPrint">Imprimir / PDF</button>
+    <button class="btn" id="dCopy">Copiar como texto</button>
+    <button class="btn ghost" id="dClear">Limpiar todo</button>
+    <span class="msg" id="dMsg"></span>
+  </div>
+
+  <details>
+    <summary>Cómo completarlo</summary>
+    <ul>
+      <li><b>Empezá por el propósito y las funciones:</b> las competencias se derivan de lo que el puesto tiene que lograr, no al revés.</li>
+      <li><b>Funciones medibles:</b> si no podés escribir un resultado esperado, la función es demasiado vaga.</li>
+      <li><b>Nivel de competencia:</b> pedí el nivel que el puesto necesita hoy, no el ideal. Un 4 en todo es señal de perfil inflado.</li>
+      <li><b>Conducta observable:</b> describí qué hace alguien que domina esa competencia en este puesto (“Prioriza pedidos urgentes sin que se lo indiquen”), no un adjetivo.</li>
+      <li>Equilibrá: pocas competencias bien definidas (5 a 8) funcionan mejor que una lista larga.</li>
+    </ul>
+  </details>
+</section>
+
+<script>
+(function(){
+  var root=document.getElementById('dp'), KEY='analisis-competencias-v1';
+  var CFG={
+    fun:{add:'+ Agregar función',num:1,tpl:'1.3fr 1fr 26px',heads:['Función','Resultado esperado / indicador'],cols:[{f:'n',t:'text',ph:'Verbo + objeto (ej.: Registrar pedidos)'},{f:'r',t:'text',ph:'Ej.: 100% cargados en 24 h'}]},
+    con:{add:'+ Agregar',num:0,tpl:'1.3fr 1fr 26px',heads:['Conocimiento / herramienta / idioma','Nivel o detalle'],cols:[{f:'n',t:'text',ph:'Ej.: Excel, inglés, normas ISO'},{f:'r',t:'text',ph:'Ej.: intermedio (opcional)'}]},
+    comp:{add:'+ Agregar competencia',num:0,tpl:'1.1fr 112px 124px 1.6fr 26px',heads:['Competencia','Tipo','Nivel requerido','Conducta observable'],cols:[{f:'n',t:'text',ph:'Ej.: Orientación al cliente'},{f:'k',t:'sel',o:[['c','Conductual'],['t','Técnica']]},{f:'l',t:'lvl'},{f:'r',t:'text',ph:'Qué hace quien la domina en este puesto'}]}
+  };
+  function mk(n){var a=[];for(var i=0;i<n;i++)a.push({n:'',r:'',k:'c',l:0});return a}
+  function blank(){return {m:{},t:{},lists:{fun:mk(4),con:mk(3),comp:mk(4)}}}
+  var data=load();
+  function load(){try{var d=JSON.parse(localStorage.getItem(KEY));if(d&&d.lists)return d}catch(e){}return blank()}
+  function save(){try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){}}
+  function msg(t){var m=document.getElementById('dMsg');m.textContent=t;m.classList.add('on');setTimeout(function(){m.classList.remove('on')},1800)}
+  function esc(s){return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;')}
+  function grow(t){t.style.height='auto';t.style.height=(t.scrollHeight+2)+'px'}
+
+  function renderList(key){
+    var c=CFG[key],box=root.querySelector('[data-list="'+key+'"]'),h='';
+    h+='<div class="lhead" style="grid-template-columns:'+c.tpl+'">'+c.heads.map(function(x){return '<span>'+x+'</span>'}).join('')+'<span></span></div>';
+    data.lists[key].forEach(function(it,i){
+      h+='<div class="lrow" data-i="'+i+'" style="grid-template-columns:'+c.tpl+'">';
+      c.cols.forEach(function(col,j){
+        if(col.t==='text')h+='<div class="cellbox">'+(c.num&&j===0?'<i class="num">'+(i+1)+'.</i>':'')+'<span contenteditable="true" data-f="'+col.f+'" data-ph="'+col.ph+'"'+(c.num&&j===0?' style="display:inline"':'')+'>'+esc(it[col.f]||'')+'</span></div>';
+        if(col.t==='sel')h+='<select data-f="'+col.f+'">'+col.o.map(function(o){return '<option value="'+o[0]+'"'+((it[col.f]||'c')===o[0]?' selected':'')+'>'+o[1]+'</option>'}).join('')+'</select>';
+        if(col.t==='lvl'){h+='<div class="lvl">';for(var n=1;n<=4;n++)h+='<button type="button" data-l="'+n+'" class="'+(it.l>=n?'on':'')+'" title="Nivel '+n+'"></button>';h+='</div>'}
+      });
+      h+='<button type="button" class="x" title="Quitar">×</button></div>';
+    });
+    h+='<button type="button" class="add" data-add="'+key+'">'+c.add+'</button>';
+    box.innerHTML=h;
+  }
+  function renderAll(){
+    Object.keys(CFG).forEach(renderList);
+    root.querySelectorAll('[data-m]').forEach(function(i){i.value=data.m[i.dataset.m]||''});
+    root.querySelectorAll('[data-t]').forEach(function(i){i.value=data.t[i.dataset.t]||'';grow(i)});
+  }
+  function collect(){
+    Object.keys(CFG).forEach(function(key){
+      root.querySelectorAll('[data-list="'+key+'"] .lrow').forEach(function(r){
+        var it=data.lists[key][+r.dataset.i];if(!it)return;
+        r.querySelectorAll('[data-f]').forEach(function(el){it[el.dataset.f]=el.matches('[contenteditable]')?el.textContent.trim():el.value});
+      });
+    });
+    root.querySelectorAll('[data-m]').forEach(function(i){data.m[i.dataset.m]=i.value});
+    root.querySelectorAll('[data-t]').forEach(function(i){data.t[i.dataset.t]=i.value});
+    save();
+  }
+  root.addEventListener('input',function(e){if(e.target.matches('textarea'))grow(e.target);collect()});
+  root.addEventListener('change',function(e){if(e.target.matches('select'))collect()});
+  root.addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.matches('[contenteditable]')){e.preventDefault();e.target.blur()}});
+  root.addEventListener('paste',function(e){if(e.target.matches('[contenteditable]')){e.preventDefault();document.execCommand('insertText',false,(e.clipboardData||window.clipboardData).getData('text').replace(/\s+/g,' '))}});
+  root.addEventListener('click',function(e){
+    var add=e.target.closest('[data-add]');
+    if(add){collect();var k=add.dataset.add;data.lists[k].push({n:'',r:'',k:'c',l:0});save();renderList(k);var s=root.querySelectorAll('[data-list="'+k+'"] [data-f=n]');s[s.length-1].focus();return}
+    var row=e.target.closest('.lrow');if(!row)return;
+    var key=row.closest('[data-list]').dataset.list,i=+row.dataset.i;
+    if(e.target.closest('.lvl button')){collect();var n=+e.target.closest('button').dataset.l,it=data.lists[key][i];it.l=(it.l===n)?0:n;save();renderList(key);return}
+    if(e.target.classList.contains('x')){collect();if(data.lists[key].length>1)data.lists[key].splice(i,1);save();renderList(key)}
+  });
+  window.addEventListener('beforeprint',function(){root.querySelectorAll('textarea').forEach(grow)});
+  document.getElementById('dPrint').onclick=function(){window.print()};
+  document.getElementById('dClear').onclick=function(){if(!confirm('¿Borrar todo el contenido de esta plantilla?'))return;data=blank();save();renderAll()};
+  document.getElementById('dCopy').onclick=function(){
+    collect();var m=data.m,t=data.t,L=data.lists,s='DESCRIPCIÓN DE PUESTO — '+(m.puesto||'(sin nombre)')+'\n';
+    s+='Área: '+(m.area||'-')+' | Modalidad: '+(m.mod||'-')+' | Reporta a: '+(m.rep||'-')+' | Supervisa a: '+(m.sup||'-')+' | '+(m.ver||'-')+'\n';
+    s+='\nPROPÓSITO\n'+(t.mision||'-')+'\n\nFUNCIONES PRINCIPALES\n';
+    L.fun.filter(function(x){return x.n}).forEach(function(x,i){s+=(i+1)+'. '+x.n+(x.r?' → '+x.r:'')+'\n'});
+    s+='\nAUTONOMÍA Y ALCANCE\nDecide: '+(t.dec||'-')+'\nEscala: '+(t.esc||'-')+'\n';
+    s+='\nREQUISITOS\nFormación: '+(t.form||'-')+'\nExperiencia: '+(t.exp||'-')+'\n';
+    L.con.filter(function(x){return x.n}).forEach(function(x){s+='- '+x.n+(x.r?' ('+x.r+')':'')+'\n'});
+    s+='\nCOMPETENCIAS\n';
+    var NV=['','Básico','Intermedio','Avanzado','Experto'];
+    L.comp.filter(function(x){return x.n}).forEach(function(x){s+='- '+x.n+' ['+(x.k==='t'?'Técnica':'Conductual')+', nivel '+(x.l?x.l+' '+NV[x.l]:'sin definir')+']'+(x.r?': '+x.r:'')+'\n'});
+    s+='\nRELACIONES\nInternas: '+(t.rint||'-')+'\nExternas: '+(t.rext||'-')+'\n';
+    (navigator.clipboard?navigator.clipboard.writeText(s):Promise.reject()).then(function(){msg('Copiado')},function(){msg('No se pudo copiar')});
+  };
+  renderAll();
+})();
+</script>
+</body>
+</html>
