@@ -698,5 +698,5 @@ $('importbackup').onclick=()=>$('backupfile').click();
 $('backupfile').onchange=async()=>{const file=$('backupfile').files?.[0];if(!file)return;try{document.activeElement?.blur();const next=prepareKairosImport(JSON.parse(await file.text()));if(window.confirm('¿Restaurar este archivo JSON? Se reemplazarán los datos correspondientes. Se conservará una copia local del estado anterior.'))restoreKairosBackup(next)}catch(error){console.error('No se pudo importar el respaldo',error);toast('No se pudo importar: el archivo es inválido o no hay espacio para guardarlo. Tus datos actuales se conservaron.')}finally{$('backupfile').value=''}};
 
 updateHistoryButtons();render();
-</script><script src="assets/kairos-cloud.js?v=1"></script></body></html>
+</script><script src="assets/kairos-cloud.js?v=2"></script></body></html>
 
