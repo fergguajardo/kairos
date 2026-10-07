@@ -58,7 +58,30 @@ function normalizeLegacyHeadings(){
  if(tree?.textContent.trim()==='2.1.8 D.d.Árbol')tree.textContent='2.1.8 Diagrama de Árbol';
 
 }
+
+const resourceLinkLabels={"https://www.elnueve.com/programacion/historias-con-marca-el-camino-emprendedor-detras-de-cafe-bastante-de-la-pasion-al-crecimiento_20260318/":"Café Bastante: historia y crecimiento · El Nueve","https://ecocuyo.com/nota/148109/nacio-por-un-antojo-fue-la-primera-cafeteria-de-especialidad-de-mendoza-tiene-7-sucursales-y-va-por-mas/":"Café Bastante: expansión en Mendoza · Ecocuyo","https://www.mendozapost.com/negocios/un-cafe-de-especialidad-que-se-expande-en-mendoza-y-mas-alla/":"Café de especialidad: expansión · Mendoza Post","https://dfa.uci.edu/pde/cpi/lss-tools/process-flow-tools.php":"Herramientas de flujo de procesos · UC Irvine","https://www.csusb.edu/process-improvement-and-lean-operations-team/improvement-resources":"Recursos de mejora de procesos · CSUSB","https://www.cpp.edu/admin-affairs/continuous-improvement/continuous-improvement-services/measure.shtml":"Medición de procesos · Cal Poly Pomona","https://dfa.uci.edu/pde/cpi/pm-tools.php":"Herramientas de gestión de proyectos · UC Irvine","https://it.uw.edu/wp-content/uploads/2024/06/RACI_Instructions.pdf":"Guía de la matriz RACI · University of Washington","https://ecampusontario.pressbooks.pub/humanresourcesmgmt/chapter/4-2-job-analysis/":"Análisis de puestos · eCampusOntario","https://www.open.edu/openlearn/money-business/leadership-management/understanding-management-im-managing-thank-you/content-section-3.1":"Recursos de gestión: sección 3.1 · OpenLearn","https://www.open.edu/openlearn/money-business/leadership-management/understanding-management-im-managing-thank-you/content-section-4":"Recursos de gestión: sección 4 · OpenLearn","https://www.shrm.org/in/topics-tools/tools/job-descriptions":"Descripciones de puestos · SHRM","https://link.springer.com/article/10.1186/1478-4491-11-64#Abs1":"Artículo de investigación · Springer","https://opess.ethz.ch/course/section-1-2/1-2-4b-work-center-load-load-profile-capacity-utilization-work-center-efficiency-rated-capacity-resource-related-business-objects/":"Carga de trabajo y capacidad · ETH Zürich","https://pages.uoregon.edu/kimball/C%26E.htm":"Diagrama de causa y efecto · University of Oregon","https://asq.org/quality-resources/fishbone":"Diagrama de Ishikawa · ASQ","https://dfa.uci.edu/pde/cpi/lss-tools/root-cause-analysis.php":"Análisis de causa raíz · UC Irvine","https://www.unm.edu/~soc101/tree.htm":"Diagrama de árbol · University of New Mexico","https://www.open.edu/openlearn/money-business/leadership-management/project-management-the-start-the-project-journey/content-section-3.1":"Gestión de proyectos: sección 3.1 · OpenLearn"};
+function labelResourceLinks(){
+ const links=Array.from(main.querySelectorAll('a[href]'));
+ for(let i=0;i<links.length;i++){
+  const link=links[i],url=link.getAttribute('href'),label=resourceLinkLabels[url];
+  if(!label||!/^https?:\/\//.test(link.textContent.trim()))continue;
+  let raw=link.textContent.trim(),j=i+1;
+  while(j<links.length&&links[j].getAttribute('href')===url){
+   const fragment=links[j].textContent.trim();
+   if(!fragment||/^https?:\/\//.test(fragment)||!url.startsWith(raw+fragment))break;
+   raw+=fragment;
+   const block=links[j].closest('.doc-block');
+   links[j].remove();
+   if(block&&!block.textContent.trim()&&!block.querySelector('img'))block.remove();
+   j++;
+  }
+  link.textContent=label;link.title=url;
+  i=j-1;
+ }
+}
+
 function refreshLayout(){
+ labelResourceLinks();
 
  main.querySelectorAll('.sheet').forEach(sheet=>{
   const content=sheet.querySelector('.page-content');
