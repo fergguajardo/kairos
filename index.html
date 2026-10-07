@@ -360,6 +360,7 @@ small,.muted,.count,.weekday,.calendar-hint,.field,.balance-native .cat-footer,.
 .app-link{font-size:14px!important}
 .redes-calendar-tools .redes-calendar-icon{display:inline-flex;align-items:center;justify-content:center;flex:0 0 40px;width:40px;min-height:40px;padding:8px;color:var(--ink)}.redes-calendar-icon svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 .redes-native #rboard[hidden],.redes-native footer[hidden]{display:none!important}.redes-calendar-name{display:flex;align-items:center;gap:8px;flex:1;min-width:0;border:1px solid var(--line);border-radius:8px;padding:0 12px}.redes-calendar-name>span{font-size:14px;color:var(--ink)}.redes-calendar-name input{border:0!important;background:transparent!important;padding-left:0!important;width:100%}
+.redes-calendar-card .redes-month-bar{cursor:grab}.redes-calendar-card .redes-month-bar:active{cursor:grabbing}.redes-calendar-card.dragging{opacity:.55}.redes-calendar-card.drop-target{outline:2px solid var(--gold-light);outline-offset:6px;box-shadow:0 0 16px rgba(229,185,92,.2)}
 </style></head><body>
 <header><div><img class="kairos-logo" src="assets/kairos-manrope.svg" alt="KAIROS" width="120" height="40"><h1 hidden><span>·</span> Procesos</h1></div></header>
 <div class="backup-tools" role="group" aria-label="Respaldo de Kairos"><button id="exportbackup" class="iconbutton" title="Descargar JSON" aria-label="Descargar JSON"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v14m-5-5 5 5 5-5M4 16v5h16v-5"/></svg></button><button id="importbackup" class="iconbutton" title="Importar JSON" aria-label="Importar JSON"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17V3m-5 5 5-5 5 5M4 16v5h16v-5"/></svg></button><input id="backupfile" type="file" accept=".json,application/json" hidden></div>
@@ -501,7 +502,7 @@ if(data.balance){const taskBoard=boards.find(b=>!b.data.balance);if(taskBoard){b
 const RDIAS = new Date(new Date().getFullYear(), new Date().getMonth()+1, 0).getDate();
 let rboard;
 let rTitulo = 'Redes', rDrag = null;
-let rCalendars=[],rCalendarDates={};
+let rCalendars=[],rCalendarDates={},rCalendarDrag=null;
 let rMonths={},rMonthDate=new Date(new Date().getFullYear(),new Date().getMonth(),1);
 const REDES_KEY=KEY+'-redes';let rUndo=[],rRedo=[];let redesData={titulo:'Redes',categorias:[]};try{const saved=JSON.parse(localStorage.getItem(REDES_KEY)||'null');if(saved&&Array.isArray(saved.categorias))redesData=saved}catch{};const rEntry=()=>({data:redesData});function saveTableros(){try{redesData=rCollect();localStorage.setItem(REDES_KEY,JSON.stringify(redesData))}catch{toast('No se pudo guardar Redes. Exportá una copia.')}}function refreshRedesButtons(){if(currentPage==='redes'){$('undo').disabled=!rUndo.length;$('redo').disabled=!rRedo.length;const empty=!rCalendars.length;$('duplicateboard').disabled=false;$('deleteboard').disabled=empty}}
 const rDias = it => [...it.querySelectorAll('.day-cell.on')].map(x=>+x.dataset.day);
@@ -595,6 +596,37 @@ function validRedesCalendars(value){
  value.forEach(c=>validRedesMonths(c.meses));
 }
 function redesCalendarTotal(calendar){return Object.values(calendar.meses||{}).reduce((total,days)=>total+new Set(days).size,0)}
+
+function swapRedesCalendars(sourceId,targetId){
+ const source=rCalendars.findIndex(c=>c.id===sourceId),target=rCalendars.findIndex(c=>c.id===targetId);
+ if(source<0||target<0||source===target)return false;
+ rPush();[rCalendars[source],rCalendars[target]]=[rCalendars[target],rCalendars[source]];
+ rSave();renderRedesMonth();refreshRedesButtons();return true
+}
+function attachRedesCalendarDrag(card,bar,id){
+ const clear=()=>document.querySelectorAll('.redes-calendar-card.drop-target').forEach(node=>node.classList.remove('drop-target'));
+ bar.draggable=true;
+ bar.onpointerdown=event=>{bar.draggable=!event.target.closest('button,input,textarea,select')};
+ bar.ondragstart=event=>{
+  if(event.target.closest('button,input,textarea,select')){event.preventDefault();return}
+  rCalendarDrag=id;event.dataTransfer.effectAllowed='move';
+  event.dataTransfer.setData('application/x-kairos-redes-calendar',id);
+  card.classList.add('dragging')
+ };
+ bar.ondragend=()=>{rCalendarDrag=null;bar.draggable=true;card.classList.remove('dragging');clear()};
+ card.ondragover=event=>{
+  if(!rCalendarDrag||rCalendarDrag===id)return;
+  event.preventDefault();event.stopPropagation();event.dataTransfer.dropEffect='move';
+  clear();card.classList.add('drop-target')
+ };
+ card.ondragleave=event=>{if(!card.contains(event.relatedTarget))card.classList.remove('drop-target')};
+ card.ondrop=event=>{
+  const source=rCalendarDrag;if(!source||source===id)return;
+  event.preventDefault();event.stopPropagation();clear();rCalendarDrag=null;
+  swapRedesCalendars(source,id)
+ }
+}
+
 function renderRedesMonth(){
  const host=document.querySelector('.redes-month');if(!host)return;host.replaceChildren();
  const cards=el('div','redes-calendars');
@@ -608,7 +640,7 @@ function renderRedesMonth(){
  const title=el('h2','',date.toLocaleDateString('es-AR',{month:'short'}).replace('.','')+' '+year+' • '+calendar.name);
  prev.onclick=()=>{rCalendarDates[calendar.id]=new Date(year,month-1,1);renderRedesMonth()};
  next.onclick=()=>{rCalendarDates[calendar.id]=new Date(year,month+1,1);renderRedesMonth()};
- bar.append(prev,title,next);card.append(bar);
+ bar.append(prev,title,next);card.append(bar);attachRedesCalendarDrag(card,bar,calendar.id);
  const tools=el('div','redes-calendar-tools'),name=el('input','');name.value=calendar.name;name.setAttribute('aria-label','Nombre de la categoría '+calendar.name);
  name.onchange=()=>{const value=name.value.replace(/^\s*•\s*/, '').trim();if(!value){name.value=calendar.name;return}rPush();calendar.name=value;rSave();renderRedesMonth();refreshRedesButtons()};
  const duplicate=el('button','redes-calendar-icon');duplicate.title='Duplicar';duplicate.append(lineIcon('<rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 3H5a2 2 0 0 0-2 2v11"/>'));
