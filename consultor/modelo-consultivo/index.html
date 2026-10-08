@@ -354,6 +354,13 @@ function createDocumentCloud(){
  const resolve=document.createElement('button');resolve.type='button';resolve.textContent='Cargar versión guardada';resolve.hidden=true;
  controls.append(login,retry,resolve);status.after(controls);
  function report(text,canRetry=false){status.textContent=text;retry.hidden=!canRetry;}
+ function reportError(error){
+  const code=String(error?.code||'');
+  if(code==='42501')report('Supabase denegó el acceso al documento (42501). Revisá los permisos de kairos_documents.',true);
+  else if(['PGRST205','42P01'].includes(code))report('Supabase no encuentra kairos_documents. Revisá la tabla en este proyecto.',true);
+  else if(code==='PGRST301'||error?.status===401)report('La sesión venció. Ingresá en KAIROS y presioná Reintentar.',true);
+  else report('No se pudo conectar o guardar el documento'+(code?' ('+code+')':'')+'. Reintentá; tu copia local se conserva.',true);
+ }
  function setReady(value){ready=value;edit.disabled=!value;document.getElementById('import').disabled=!value;main.inert=!value;}
  function persist(){try{localStorage.setItem(META,JSON.stringify({stamp,dirty:!!pending,snapshot:pending}));return true}catch{return false}}
  function markChanged(){
@@ -378,7 +385,7 @@ function createDocumentCloud(){
    stamp=r.data.updated_at;baseline=JSON.stringify(snapshot);
    if(pending===snapshot){pending=null;dirty=false;}
    persist();report(pending?'Guardado pendiente en Supabase.':'Guardado en Supabase.');
-  }catch{report('Sin guardar en Supabase. Reintentá; conservá tu respaldo.',true)}
+  }catch(error){reportError(error)}
   finally{saving=false;if(pending&&ready&&!conflict)timer=setTimeout(flush,5000);}
  }
  async function start(){
@@ -409,7 +416,7 @@ function createDocumentCloud(){
    }
    conflict=false;setReady(true);report(pending?'Guardado pendiente en Supabase.':'Guardado en Supabase.');
    if(pending)await flush();
-  }catch{report('No se pudo conectar el documento. Reintentá; tu copia local se conserva.',true)}
+  }catch(error){reportError(error)}
   finally{loading=false;}
  }
  retry.onclick=()=>ready?flush():start();
