@@ -311,14 +311,25 @@ upload.onchange=async()=>{
   if(source.length>10000000)throw Error('El HTML es demasiado grande.');
   const imported=new DOMParser().parseFromString(source,'text/html');
   if(!imported.title.includes('Modelo consultivo'))throw Error('Seleccioná un HTML de Modelo consultivo.');
-  const contents=Array.from(imported.querySelectorAll('main .sheet > .page-content'));
-  if(contents.length!==main.querySelectorAll('.page-content').length)throw Error('El HTML no tiene las secciones esperadas de este documento.');
-  const pages=validate({format:FORMAT,version:1,pages:contents.map(node=>node.innerHTML)});
+  const sheets=Array.from(imported.querySelectorAll('main .sheet'));
+  const ids=Array.from(main.querySelectorAll('.sheet'),sheet=>sheet.id);
+  const byId=new Map();
+  if(!sheets.length)throw Error('El HTML no tiene las secciones esperadas de este documento.');
+  for(const sheet of sheets){
+   if(!ids.includes(sheet.id)||byId.has(sheet.id))throw Error('El HTML contiene secciones desconocidas o duplicadas.');
+   const contents=Array.from(sheet.children).filter(node=>node.classList.contains('page-content'));
+   if(contents.length>1)throw Error('El HTML contiene una sección duplicada.');
+   byId.set(sheet.id,contents[0]?.innerHTML||'');
+  }
+  // Las secciones eliminadas se restauran vacías, sin desplazar las restantes.
+  const pages=validate({format:FORMAT,version:1,pages:ids.map(id=>byId.get(id)||'')});
   try{localStorage.setItem(KEY+'-antes-de-importar',JSON.stringify(current()))}
   catch{throw Error('No hay espacio para conservar una copia previa. Descargá el HTML antes de importar.')}
+  try{localStorage.setItem(KEY,JSON.stringify({format:FORMAT,version:1,title:'Modelo consultivo',pages}))}
+  catch{throw Error('No se pudo guardar el respaldo importado. Tus datos actuales se conservaron.')}
   main.querySelectorAll('.page-content').forEach((p,i)=>p.innerHTML=pages[i]);
   textRange=null;copiedStyle=null;copyStyleButton.setAttribute('aria-pressed','false');
-  refreshLayout();save();
+  refreshLayout();dirty=false;status.textContent='HTML importado y guardado.';
  }catch(error){status.textContent=error.message}
  upload.value='';
 };
