@@ -689,7 +689,7 @@ function renderRedesMonth(){
  button.setAttribute('aria-label',day+' de '+date.toLocaleDateString('es-AR',{month:'long',year:'numeric'})+' - '+calendar.name);button.setAttribute('aria-pressed',String(marked));
  button.onclick=()=>{rPush();calendar.meses[key]=marked?selected.filter(value=>value!==day):[...selected,day].sort((a,b)=>a-b);rSave();renderRedesMonth();refreshRedesButtons()};grid.append(button)
  }
- card.append(grid,el('p','redes-month-count','Total acumulado: '+redesCalendarTotal(calendar)+' días'));cards.append(card)
+ card.append(grid,el('p','redes-month-count','Conteo: '+redesCalendarTotal(calendar)+' días'));cards.append(card)
  });
  const add=el('button','redes-calendar-add','+ Añadir calendario');
  add.onclick=()=>{rPush();rCalendars.push({id:uid(),name:'Nueva categoría',meses:{}});rSave();renderRedesMonth();refreshRedesButtons()};
