@@ -44,6 +44,7 @@ main.bullets-selected .bullet-selected{outline:1px dashed var(--gold);outline-of
 const KEY='kairos-modelo-consultivo-v1',FORMAT='kairos-consultive-document';
 const main=document.querySelector('main'),status=document.getElementById('status'),edit=document.getElementById('edit'),picker=document.getElementById('pages');
 let dirty=false;
+const pageIds=Array.from(main.querySelectorAll('.sheet'),sheet=>sheet.id);
 function normalizeLegacyHeadings(){
  const numbering={"4":["1.3.1","1.3"],"8":["1.1","2.1"],"9":["1.1.1","2.1.1"],"10":["1.1.2","2.1.2"],"11":["1.1.3","2.1.3"],"12":["1.1.4","2.1.4"],"14":["1.1.5","2.1.5"],"16":["1.1.6","2.1.6"],"17":["1.1.7","2.1.7"],"18":["1.1.8","2.1.8"],"20":["1.2","2.2"],"22":["1.3","2.3"],"23":["1.3","2.3"],"24":["1.4","2.4"],"25":["1.4","2.4"],"27":["1.5","2.5"],"28":["1.5","2.5"]};
  for(const [id,[from,to]] of Object.entries(numbering)){
@@ -86,6 +87,7 @@ function refreshLayout(){
 
  main.querySelectorAll('.sheet').forEach(sheet=>{
   const content=sheet.querySelector('.page-content');
+  if(!content){sheet.classList.add('empty-section');const missingOption=picker.querySelector('option[value="'+sheet.id.replace('page-','')+'"]');if(missingOption){missingOption.hidden=true;missingOption.disabled=true}return}
   const empty=!content.textContent.replace(/[\s\u200b\u00a0]/g,'');
   sheet.classList.toggle('empty-section',empty);
   const option=picker.querySelector('option[value="'+sheet.id.replace('page-','')+'"]');
@@ -106,11 +108,11 @@ function refreshLayout(){
  if(picker.selectedOptions[0]?.disabled)picker.value=Array.from(picker.options).find(option=>!option.disabled)?.value||'';
 }
 
-const current=()=>({format:FORMAT,version:1,title:'Modelo consultivo',pages:Array.from(main.querySelectorAll('.page-content'),p=>p.innerHTML)});
+const current=()=>({format:FORMAT,version:1,title:'Modelo consultivo',pages:pageIds.map(id=>main.querySelector('#'+id+' .page-content')?.innerHTML||'')});
 function sanitize(value){const template=document.createElement('template');template.innerHTML=value;const allowed=new Set(['DIV','SPAN','P','BR','STRONG','B','EM','I','U','A','UL','OL','LI','H2','H3']);for(const node of Array.from(template.content.querySelectorAll('*'))){if(!allowed.has(node.tagName)){if(['SCRIPT','STYLE','IFRAME','OBJECT','EMBED','IMG','LINK','META'].includes(node.tagName))node.remove();else node.replaceWith(...node.childNodes);continue}for(const attribute of Array.from(node.attributes)){if(attribute.name==='href'&&node.tagName==='A'){if(!/^https?:\/\//i.test(attribute.value))node.removeAttribute('href')}else if(attribute.name==='style'){const safe=Array.from(node.style).filter(k=>['font-family','font-size','font-weight','font-style','color','margin-top','margin-left','text-decoration'].includes(k)).map(k=>k+':'+node.style.getPropertyValue(k)).join(';');node.setAttribute('style',safe)}else if(attribute.name==='class'&&/^(doc-block|doc-line)$/.test(attribute.value)){}else node.removeAttribute(attribute.name)}if(node.tagName==='A'){node.target='_blank';node.rel='noopener noreferrer'}}return template.innerHTML}
 function validate(data){if(data?.format!==FORMAT||data.version!==1||!Array.isArray(data.pages)||data.pages.length!==29||data.pages.some(p=>typeof p!=='string'||p.length>1000000))throw Error('El archivo no es un respaldo de este documento.');return data.pages.map(sanitize)}
-function apply(data){const pages=validate(data);main.querySelectorAll('.page-content').forEach((node,i)=>node.innerHTML=pages[i])}
-function save(){try{localStorage.setItem(KEY,JSON.stringify(current()));dirty=false;status.textContent=''}catch{dirty=true;status.textContent='No se pudo guardar en este navegador. Descargá un respaldo.'}}
+function apply(data){const pages=validate(data);pageIds.forEach((id,i)=>{const node=main.querySelector('#'+id+' .page-content');if(node)node.innerHTML=pages[i]})}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(current()));dirty=false;status.textContent='Guardado en este navegador.'}catch{dirty=true;status.textContent='No se pudo guardar en este navegador. Descargá un respaldo.'}}
 try{const saved=localStorage.getItem(KEY);if(saved)apply(JSON.parse(saved))}catch{status.textContent='No se pudo cargar la copia local. El documento original sigue disponible.'}
 
 try{
@@ -147,7 +149,7 @@ try{
 refreshLayout();
 main.addEventListener('input',()=>{refreshLayout();save()});
 main.addEventListener('paste',event=>{if(!event.target.closest('[contenteditable=true]'))return;event.preventDefault();document.execCommand('insertText',false,event.clipboardData.getData('text/plain'))});
-edit.onclick=()=>{const enabled=edit.getAttribute('aria-pressed')!=='true';edit.setAttribute('aria-pressed',String(enabled));const label=enabled?'Terminar edición':'Editar';edit.setAttribute('aria-label',label);edit.title=label;edit.querySelector('path').setAttribute('d',enabled?'M5 12l4 4L19 6':'m14 5 5 5M4 16 16 4a2.8 2.8 0 0 1 4 4L8 20l-5 1z');main.contentEditable=String(enabled);main.querySelectorAll('.page-content').forEach(p=>p.contentEditable=enabled?'inherit':'false');formatTools.hidden=!enabled;textRange=null;copiedStyle=null;copyStyleButton.setAttribute("aria-pressed","false");if(!enabled){selectBullets(false);save()}};
+edit.onclick=()=>{const enabled=edit.getAttribute('aria-pressed')!=='true';edit.setAttribute('aria-pressed',String(enabled));const label=enabled?'Terminar edición':'Editar';edit.setAttribute('aria-label',label);edit.title=label;edit.querySelector('path').setAttribute('d',enabled?'M5 12l4 4L19 6':'m14 5 5 5M4 16 16 4a2.8 2.8 0 0 1 4 4L8 20l-5 1z');main.contentEditable='false';main.querySelectorAll('.page-content').forEach(p=>p.contentEditable=String(enabled));formatTools.hidden=!enabled;textRange=null;copiedStyle=null;copyStyleButton.setAttribute("aria-pressed","false");if(!enabled){selectBullets(false);save()}};
 
 const formatTools=document.getElementById('format-tools');
 let textRange=null;
@@ -312,7 +314,7 @@ upload.onchange=async()=>{
   const imported=new DOMParser().parseFromString(source,'text/html');
   if(!imported.title.includes('Modelo consultivo'))throw Error('Seleccioná un HTML de Modelo consultivo.');
   const sheets=Array.from(imported.querySelectorAll('main .sheet'));
-  const ids=Array.from(main.querySelectorAll('.sheet'),sheet=>sheet.id);
+  const ids=pageIds;
   const byId=new Map();
   if(!sheets.length)throw Error('El HTML no tiene las secciones esperadas de este documento.');
   for(const sheet of sheets){
@@ -333,6 +335,8 @@ upload.onchange=async()=>{
  }catch(error){status.textContent=error.message}
  upload.value='';
 };
+window.addEventListener('pagehide',()=>{if(edit.getAttribute('aria-pressed')==='true')save()});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&edit.getAttribute('aria-pressed')==='true')save()});
 window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue=''}});
 })();
 </script></body></html>
