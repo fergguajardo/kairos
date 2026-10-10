@@ -264,19 +264,35 @@ bulletsButton.onclick=()=>{
  if(edit.getAttribute('aria-pressed')!=='true')return;
  selectBullets(!bulletsSelected);
 };
+const bulletDeletionHistory=[];
+let bulletDeletionPosition=0;
+function restoreBulletDeletion(direction){
+ const index=direction==='undo'?bulletDeletionPosition-1:bulletDeletionPosition;
+ const entry=bulletDeletionHistory[index];
+ if(!entry||main.innerHTML!==(direction==='undo'?entry.after:entry.before))return false;
+ main.innerHTML=direction==='undo'?entry.before:entry.after;
+ bulletDeletionPosition+=direction==='undo'?-1:1;
+ inheritEditing();textRange=null;refreshLayout();save();return true;
+}
 function deleteSelectedBullets(){
- const selected=main.querySelectorAll('.bullet-selected');
+ const selected=Array.from(main.querySelectorAll('.bullet-selected'));
  if(!selected.length)return;
- const clone=main.cloneNode(true);
- clone.querySelectorAll('.bullet-selected').forEach(node=>node.remove());
- const range=document.createRange();range.selectNodeContents(main);
- main.focus();const selection=window.getSelection();selection.removeAllRanges();selection.addRange(range);
- // Un único cambio nativo permite recuperar todas las viñetas con Deshacer.
- if(!document.execCommand('insertHTML',false,clone.innerHTML)){status.textContent='No se pudieron borrar las viñetas.';return}
- selectBullets(false);textRange=null;refreshLayout();save();
+ selectBullets(false);
+ const before=main.innerHTML;
+ // Borrar solo el símbolo: conservar los mismos párrafos, márgenes y contenedores.
+ selected.forEach(node=>{node.textContent=''});
+ const after=main.innerHTML;
+ bulletDeletionHistory.splice(bulletDeletionPosition);
+ bulletDeletionHistory.push({before,after});bulletDeletionPosition++;
+ textRange=null;save();
 }
 document.addEventListener('keydown',event=>{
  if(event.key==='Escape'){selectBullets(false);return}
+ if(edit.getAttribute('aria-pressed')==='true'&&!main.inert&&(event.ctrlKey||event.metaKey)&&!event.altKey&&!event.target.closest('input,textarea,select')){
+  const key=event.key.toLowerCase();
+  const direction=key==='z'?(event.shiftKey?'redo':'undo'):key==='y'?'redo':null;
+  if(direction&&restoreBulletDeletion(direction)){event.preventDefault();return}
+ }
  if(!bulletsSelected||edit.getAttribute('aria-pressed')!=='true'||main.inert||!['Backspace','Delete'].includes(event.key)||event.ctrlKey||event.metaKey||event.altKey)return;
  if(event.target.closest('input,textarea,select'))return;
  event.preventDefault();deleteSelectedBullets();
@@ -330,6 +346,7 @@ formatTools.addEventListener('click',event=>{
  }
  if(bulletsSelected&&button.dataset.color){formatBullets({color:button.dataset.color});document.getElementById('selected-color').style.background=button.dataset.color;document.getElementById('color-picker').open=false;return;}
  if(['undo','redo'].includes(button.dataset.format)){
+ if(restoreBulletDeletion(button.dataset.format))return;
  const selection=window.getSelection();
  if(textRange&&main.contains(textRange.commonAncestorContainer)){selection.removeAllRanges();selection.addRange(textRange)}
  else main.focus();
