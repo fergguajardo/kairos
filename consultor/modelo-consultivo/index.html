@@ -626,7 +626,20 @@ if(!textRange||!main.contains(textRange.commonAncestorContainer)){status.textCon
  document.execCommand('styleWithCSS',false,true);
  if(button.dataset.color){document.execCommand('foreColor',false,button.dataset.color);document.getElementById('selected-color').style.background=button.dataset.color;document.getElementById('color-picker').open=false;}
  else document.execCommand(button.dataset.format,false,null);
-
+ if(['insertOrderedList','insertUnorderedList'].includes(button.dataset.format)){
+  const currentSelection=window.getSelection();
+  if(currentSelection.rangeCount){
+   const range=currentSelection.getRangeAt(0),element=range.startContainer.nodeType===1?range.startContainer:range.startContainer.parentElement;
+   const items=range.collapsed?[element.closest('li')].filter(Boolean):Array.from(main.querySelectorAll('li')).filter(item=>range.intersectsNode(item));
+   for(const item of items){
+    for(const node of [item,...item.querySelectorAll('*')]){
+     if(node.closest('.doc-marker,.marker-gap'))continue;
+     node.style.fontFamily='Outfit, sans-serif';node.style.fontWeight='300';node.style.fontStyle='normal';
+    }
+   }
+  }
+  refreshLayout();
+ }
  selectionInEditor();updateFormatButtons();save();
 });
 
