@@ -554,16 +554,30 @@ formatTools.addEventListener('change',event=>{
  if(control.id==='text-size')properties.fontSize=control.value+'pt';
  if(control.id==='text-style')Object.assign(properties,{fontFamily:'Outfit, sans-serif',fontWeight:control.value==='medium'?'500':'400',fontStyle:control.value==='italic'?'italic':'normal'});
  if(bulletsSelected){status.textContent='Los marcadores usan el formato predeterminado de 11 puntos.';return}
- const fragment=textRange.cloneContents(),walker=document.createTreeWalker(fragment,NodeFilter.SHOW_TEXT),nodes=[];
- while(walker.nextNode())nodes.push(walker.currentNode);
- for(const node of nodes){
-  const span=document.createElement('span');Object.assign(span.style,properties);
-  node.replaceWith(span);span.append(node);
+ // Cambiar solo los tramos de texto, sin reconstruir párrafos ni listas.
+ const range=textRange.cloneRange(),walker=document.createTreeWalker(main,NodeFilter.SHOW_TEXT),segments=[];
+ while(walker.nextNode()){
+  const node=walker.currentNode;
+  if(!range.intersectsNode(node)||node.parentElement.closest('.doc-marker,.marker-gap,.page-break'))continue;
+  const start=node===range.startContainer?range.startOffset:0;
+  const end=node===range.endContainer?range.endOffset:node.length;
+  if(end>start)segments.push({node,start,end});
  }
- const container=document.createElement('div');container.append(fragment);
- const selection=window.getSelection();selection.removeAllRanges();selection.addRange(textRange);
- document.execCommand('insertHTML',false,container.innerHTML);
- selectionInEditor();updateFormatButtons();refreshLayout();save();
+ const formatted=[];
+ for(const {node,start,end} of segments){
+  if(end<node.length)node.splitText(end);
+  const selected=start?node.splitText(start):node;
+  const parent=selected.parentElement;
+  if(parent.tagName==='SPAN'&&parent.childNodes.length===1)Object.assign(parent.style,properties);
+  else{const span=document.createElement('span');Object.assign(span.style,properties);selected.replaceWith(span);span.append(selected);}
+  formatted.push(selected);
+ }
+ if(formatted.length){
+  const selection=window.getSelection(),updated=document.createRange();
+  updated.setStart(formatted[0],0);updated.setEnd(formatted[formatted.length-1],formatted[formatted.length-1].length);
+  selection.removeAllRanges();selection.addRange(updated);textRange=updated.cloneRange();
+ }
+ selectionInEditor();updateFormatButtons();save();
 });
 
 formatTools.addEventListener('mousedown',event=>{if(event.target.closest('.paragraph-picker summary'))event.preventDefault()});
