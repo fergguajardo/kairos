@@ -119,7 +119,7 @@ function prepareMarkers(){
  main.querySelectorAll('ol>li,ul>li').forEach(li=>{
   if(li.dataset.markerRemoved==='true'){li.style.listStyleType='none';return;}
   const list=li.parentElement,marker=li.querySelector(':scope > .doc-marker')||document.createElement('span');marker.classList.add('doc-marker');
-  let number=Number(list.start||1);for(const item of Array.from(list.children)){if(item.hasAttribute('value'))number=Number(item.value);if(item===li)break;number++}
+  let number=Number(list.start||1);for(const item of Array.from(list.children)){if(item.dataset.markerRemoved==='true')continue;if(item.hasAttribute('value'))number=Number(item.value);if(item===li)break;number++}
   marker.textContent=list.tagName==='OL'?number+'.':'•';
   li.style.listStyleType='none';if(marker.parentElement!==li)li.prepend(marker);
   if(!marker.nextSibling)li.append(document.createTextNode('\u200b'));
@@ -437,10 +437,15 @@ main.addEventListener('keydown',event=>{
     const before=prefix.cloneContents();before.querySelectorAll('.doc-marker,.marker-gap').forEach(node=>node.remove());
     if(!before.textContent.replace(/[\s\u200b]/g,'')){
      event.preventDefault();event.stopPropagation();
+     const sequence=markersFor(marker),ordered=/^\d+[.)]$/.test(marker.textContent.trim());
      const gap=document.createElement('span');gap.className='marker-gap';gap.contentEditable='false';
      const width=marker.getBoundingClientRect().width;if(width)gap.style.width=width+'px';
      gap.append(document.createTextNode('\u200b'));marker.replaceWith(gap);
      const li=item.closest('li');if(li)li.dataset.markerRemoved='true';
+     if(ordered){
+      if(li?.parentElement.tagName==='OL'){li.parentElement.start=1;Array.from(li.parentElement.children).forEach(entry=>entry.removeAttribute('value'));}
+      let number=1;sequence.filter(entry=>entry!==marker&&main.contains(entry)).forEach(entry=>{entry.textContent=number+++(entry.textContent.trim().endsWith(')')?')':'.')});
+     }
      selectionInEditor();refreshLayout();save();return;
     }
    }
