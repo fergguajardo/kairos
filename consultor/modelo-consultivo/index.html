@@ -131,6 +131,7 @@ function prepareMarkers(){
 function refreshLayout(){
  upgradeDocument();prepareMarkers();
  labelResourceLinks();
+ main.querySelectorAll('a[href]').forEach(link=>{link.target='_blank';link.rel='noopener noreferrer';link.tabIndex=0;link.style.cursor='pointer'});
 
  main.querySelectorAll('.sheet').forEach(sheet=>{
   const content=sheet.querySelector('.page-content');
@@ -385,6 +386,18 @@ function activateBulletSelection(target){
  selectBullets(true);
 }
 
+// Activar hipervínculos con un clic aun dentro del documento editable.
+function openDocumentLink(event){
+ const link=event.target.closest('a[href]');if(!link||main.inert)return;
+ let url;try{url=new URL(link.getAttribute('href'),location.href)}catch{return}
+ if(!['https:','http:'].includes(url.protocol))return;
+ const selection=window.getSelection();
+ if(event.type==='click'&&selection&&!selection.isCollapsed&&selection.rangeCount&&link.contains(selection.getRangeAt(0).commonAncestorContainer))return;
+ event.preventDefault();event.stopPropagation();
+ window.open(url.href,'_blank','noopener,noreferrer');
+}
+main.addEventListener('click',openDocumentLink,true);
+main.addEventListener('keydown',event=>{if(event.key==='Enter'&&event.target.closest('a[href]'))openDocumentLink(event)},true);
 main.addEventListener('click',event=>{
  const pageBreak=event.target.closest('.page-break');
  if(pageBreak&&!main.inert){selectBullets(false);pageBreak.focus();}
