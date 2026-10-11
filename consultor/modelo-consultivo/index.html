@@ -431,8 +431,18 @@ main.addEventListener('keydown',event=>{
   const selection=window.getSelection();
   if(selection.rangeCount&&selection.isCollapsed){
    const range=selection.getRangeAt(0),element=range.startContainer.nodeType===1?range.startContainer:range.startContainer.parentElement;
-   const item=element.closest('li,.doc-line,p,.doc-block'),marker=item?.querySelector('.doc-marker');
-   if(marker&&!marker.contains(range.startContainer)){
+   let candidate=range.startContainer.nodeType===1?range.startContainer.childNodes[range.startOffset]:null;
+   if(!candidate&&range.startContainer.nodeType===3&&range.startOffset===range.startContainer.length){
+    let current=range.startContainer;
+    while(current&&current!==main&&!current.nextSibling)current=current.parentNode;
+    candidate=current&&current!==main?current.nextSibling:null;
+   }
+   while(candidate&&candidate.firstChild&&!candidate.matches?.('.doc-marker'))candidate=candidate.firstChild;
+   const nextMarker=candidate?.nodeType===1?candidate.closest('.doc-marker'):candidate?.parentElement?.closest('.doc-marker');
+   const item=element.closest('li,.doc-line,p,.doc-block')||nextMarker?.closest('li,.doc-line,p,.doc-block');
+   const marker=nextMarker||item?.querySelector('.doc-marker');
+   const insideAtStart=marker?.contains(range.startContainer)&&range.startOffset===0;
+   if(marker&&(!marker.contains(range.startContainer)||insideAtStart)){
     const prefix=document.createRange();prefix.selectNodeContents(item);prefix.setEnd(range.startContainer,range.startOffset);
     const before=prefix.cloneContents();before.querySelectorAll('.doc-marker,.marker-gap').forEach(node=>node.remove());
     if(!before.textContent.replace(/[\s\u200b]/g,'')){
