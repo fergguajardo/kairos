@@ -708,6 +708,15 @@ function createDocumentCloud(){
   if(pending&&JSON.stringify(pending)===saved){pending=null;dirty=false;}
   persist();return true;
  }
+ function recoverPending(remote){
+  // Conservar ambas versiones antes de continuar con la edición pendiente.
+  const recovery={date:new Date().toISOString(),local:pending,remote:remote?.data||null,remoteStamp:remote?.updated_at||null};
+  try{
+   localStorage.setItem(KEY+'-recuperacion-'+Date.now()+'-'+Math.random().toString(36).slice(2),JSON.stringify(recovery));
+  }catch{showConflict();report('No se pudo respaldar ambas versiones. Tu copia pendiente se conserva; liberá espacio y reintentá.',true);return false;}
+  stamp=remote?.updated_at||null;baseline=remote?JSON.stringify(remote.data):'';
+  conflict=false;resolve.hidden=true;persist();return true;
+ }
  async function flush(){
   clearTimeout(timer);if(!ready||!pending||saving||conflict)return;
   saving=true;const snapshot=pending;report('Guardando en Supabase…');
@@ -718,7 +727,7 @@ function createDocumentCloud(){
    const r=await query.select('updated_at').maybeSingle();
    if(r.error?.code==='23505'||!r.error&&!r.data){
     const remote=await read();
-    if(!reconcile(remote,snapshot)){showConflict();return;}
+    if(!reconcile(remote,snapshot)&&!recoverPending(remote))return;
     report(pending?'Guardado pendiente en Supabase.':'Guardado en Supabase.');return;
    }
    if(r.error)throw r.error;
@@ -746,7 +755,7 @@ function createDocumentCloud(){
     validate(meta.snapshot);pending=meta.snapshot;stamp=meta.stamp||null;baseline=typeof meta.baseline==='string'?meta.baseline:'';dirty=true;
     apply(pending);refreshLayout();pending=current();persist();
     if(remote&&remote.updated_at!==stamp||!remote&&stamp){
-     if(!reconcile(remote,meta.snapshot)&&!reconcile(remote,pending)){showConflict();return;}
+     if(!reconcile(remote,meta.snapshot)&&!reconcile(remote,pending)&&!recoverPending(remote))return;
     }
    }else if(remote){
     validate(remote.data);apply(remote.data);refreshLayout();stamp=remote.updated_at;baseline=JSON.stringify(remote.data);pending=JSON.stringify(current())!==baseline?current():null;dirty=!!pending;
