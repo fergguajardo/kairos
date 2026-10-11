@@ -690,7 +690,7 @@ function createDocumentCloud(){
   else report('No se pudo conectar o guardar el documento'+(code?' ('+code+')':'')+'. Reintentá; tu copia local se conserva.',true);
  }
  function setReady(value){ready=value;main.inert=!value;}
- function persist(){try{localStorage.setItem(META,JSON.stringify({stamp,dirty:!!pending,snapshot:pending}));return true}catch{return false}}
+ function persist(){try{localStorage.setItem(META,JSON.stringify({stamp,dirty:!!pending,snapshot:pending,baseline}));return true}catch{return false}}
  function markChanged(){
   if(!ready||conflict)return;
   const next=current();if(JSON.stringify(next)===baseline&&!pending)return;
@@ -700,6 +700,14 @@ function createDocumentCloud(){
  }
  function showConflict(){conflict=true;setReady(false);resolve.hidden=false;report('Hay otra versión en Supabase. Tu copia pendiente se conserva en este navegador.');}
  async function read(){const r=await client.from('kairos_documents').select('data,updated_at').eq('user_id',OWNER).eq('document_id',DOC).maybeSingle();if(r.error)throw r.error;return r.data;}
+ function reconcile(remote,snapshot){
+  if(!remote)return false;
+  const saved=JSON.stringify(remote.data);
+  if(saved!==JSON.stringify(snapshot)&&(!baseline||saved!==baseline))return false;
+  stamp=remote.updated_at;baseline=saved;
+  if(pending&&JSON.stringify(pending)===saved){pending=null;dirty=false;}
+  persist();return true;
+ }
  async function flush(){
   clearTimeout(timer);if(!ready||!pending||saving||conflict)return;
   saving=true;const snapshot=pending;report('Guardando en Supabase…');
@@ -708,7 +716,11 @@ function createDocumentCloud(){
    const table=client.from('kairos_documents');
    const query=stamp?table.update({data:snapshot,updated_at:nextStamp}).eq('user_id',OWNER).eq('document_id',DOC).eq('updated_at',stamp):table.insert({user_id:OWNER,document_id:DOC,data:snapshot,updated_at:nextStamp});
    const r=await query.select('updated_at').maybeSingle();
-   if(r.error?.code==='23505'||!r.error&&!r.data){showConflict();return;}
+   if(r.error?.code==='23505'||!r.error&&!r.data){
+    const remote=await read();
+    if(!reconcile(remote,snapshot)){showConflict();return;}
+    report(pending?'Guardado pendiente en Supabase.':'Guardado en Supabase.');return;
+   }
    if(r.error)throw r.error;
    stamp=r.data.updated_at;baseline=JSON.stringify(snapshot);
    if(pending===snapshot){pending=null;dirty=false;}
@@ -731,9 +743,11 @@ function createDocumentCloud(){
    let meta=null;try{meta=JSON.parse(localStorage.getItem(META)||'null')}catch{}
    const remote=await read();
    if(meta?.dirty&&meta.snapshot){
-    validate(meta.snapshot);pending=meta.snapshot;stamp=meta.stamp||null;dirty=true;
+    validate(meta.snapshot);pending=meta.snapshot;stamp=meta.stamp||null;baseline=typeof meta.baseline==='string'?meta.baseline:'';dirty=true;
     apply(pending);refreshLayout();pending=current();persist();
-    if(remote&&remote.updated_at!==stamp||!remote&&stamp){showConflict();return;}
+    if(remote&&remote.updated_at!==stamp||!remote&&stamp){
+     if(!reconcile(remote,meta.snapshot)&&!reconcile(remote,pending)){showConflict();return;}
+    }
    }else if(remote){
     validate(remote.data);apply(remote.data);refreshLayout();stamp=remote.updated_at;baseline=JSON.stringify(remote.data);pending=JSON.stringify(current())!==baseline?current():null;dirty=!!pending;
     try{localStorage.setItem(KEY,JSON.stringify(current()))}catch{}
