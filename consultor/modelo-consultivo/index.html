@@ -466,6 +466,11 @@ main.addEventListener('keydown',event=>{
   const tail=document.createRange();tail.selectNodeContents(item);tail.setStart(range.startContainer,range.startOffset);
   const fragment=tail.extractContents();fragment.querySelectorAll?.('.doc-marker').forEach(m=>m.remove());
   const next=document.createElement(item.tagName==='LI'?'li':'div');if(item.tagName!=='LI')next.className='doc-block';
+  next.style.fontFamily='Outfit, sans-serif';next.style.fontWeight='300';next.style.fontStyle='normal';
+  for(const node of fragment.querySelectorAll('*')){
+   if(node.closest('.doc-marker,.marker-gap'))continue;
+   node.style.fontFamily='Outfit, sans-serif';node.style.fontWeight='300';node.style.fontStyle='normal';
+  }
   const nextMarker=document.createElement('span');nextMarker.className='doc-marker';nextMarker.contentEditable='false';
   nextMarker.textContent=/^\d/.test(marker.textContent)?(parseInt(marker.textContent)+1)+'.':'•';
   const text=document.createTextNode('\u200b');next.append(nextMarker,text,fragment);item.after(next);
