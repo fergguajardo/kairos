@@ -563,6 +563,25 @@ formatTools.addEventListener('change',event=>{
   const end=node===range.endContainer?range.endOffset:node.length;
   if(end>start)segments.push({node,start,end});
  }
+ // Fijar la geometría horizontal calculada antes de alterar el peso o la fuente.
+ // Evita que sangrías expresadas en em/ch o heredadas cambien con la tipografía.
+ const horizontal=[];
+ const blocks=new Set(segments.flatMap(({node})=>{
+  const ancestors=[];let element=node.parentElement;
+  while(element&&element!==main){
+   if(element.matches('article,.page-content,.doc-block,.doc-line,.clipboard-block,p,li,ol,ul,blockquote,h1,h2,h3,h4,h5,h6'))ancestors.push(element);
+   element=element.parentElement;
+  }
+  return ancestors;
+ }));
+ for(const block of blocks){
+  const computed=getComputedStyle(block),properties={};
+  for(const property of ['margin-left','margin-right','padding-left','padding-right','text-indent','text-align']){
+   const value=computed.getPropertyValue(property);
+   if(value&&value!=='auto')properties[property]=value;
+  }
+  horizontal.push({block,properties});
+ }
  const formatted=[];
  for(const {node,start,end} of segments){
   if(end<node.length)node.splitText(end);
@@ -572,6 +591,7 @@ formatTools.addEventListener('change',event=>{
   else{const span=document.createElement('span');Object.assign(span.style,properties);selected.replaceWith(span);span.append(selected);}
   formatted.push(selected);
  }
+ for(const {block,properties} of horizontal){for(const [property,value] of Object.entries(properties))block.style.setProperty(property,value,'important');}
  if(formatted.length){
   const selection=window.getSelection(),updated=document.createRange();
   updated.setStart(formatted[0],0);updated.setEnd(formatted[formatted.length-1],formatted[formatted.length-1].length);
