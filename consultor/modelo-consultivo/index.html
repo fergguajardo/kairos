@@ -319,12 +319,37 @@ function deleteSelectedBullets(){
  if(!selected.length)return;
  selectBullets(false);
  const before=main.innerHTML;
- // Borrar solo el símbolo: conservar los mismos párrafos, márgenes y contenedores.
- selected.forEach(node=>{node.textContent=''});
+ // Convertir la lista seleccionada en párrafos: Enter no debe heredar su numeración.
+ const lists=new Set(selected.map(node=>node.closest('li')?.parentElement).filter(Boolean));
+ let caretBlock=null;
+ for(const list of lists){
+  const paragraphs=[];
+  for(const item of Array.from(list.children)){
+   if(item.tagName!=='LI'){paragraphs.push(item);continue}
+   const paragraph=document.createElement('div');paragraph.className='doc-block';
+   paragraph.style.cssText=item.style.cssText;
+   paragraph.style.removeProperty('list-style-type');
+   item.querySelectorAll(':scope > .doc-marker').forEach(marker=>marker.remove());
+   paragraph.append(...item.childNodes);
+   if(!paragraph.hasChildNodes())paragraph.append(document.createElement('br'));
+   paragraphs.push(paragraph);caretBlock=paragraph;
+  }
+  list.replaceWith(...paragraphs);
+ }
+ selected.forEach(marker=>{
+  if(!main.contains(marker))return;
+  caretBlock=marker.closest('.doc-block,p,.doc-line')||caretBlock;
+  marker.remove();
+ });
+ activeMarkers=[];
+ if(caretBlock){
+  const range=document.createRange();range.selectNodeContents(caretBlock);range.collapse(false);
+  main.focus();const selection=window.getSelection();selection.removeAllRanges();selection.addRange(range);
+ }
  const after=main.innerHTML;
  bulletDeletionHistory.splice(bulletDeletionPosition);
  bulletDeletionHistory.push({before,after});bulletDeletionPosition++;
- textRange=null;save();
+ selectionInEditor();refreshLayout();save();
 }
 document.addEventListener('keydown',event=>{
  if(event.key==='Escape'){selectBullets(false);return}
