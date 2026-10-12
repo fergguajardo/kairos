@@ -17,3 +17,6 @@
 .music-status{margin:12px 0 8px;color:var(--muted);font-size:13px;min-height:1.5em}
 .music-credit{margin:0;color:var(--muted);font-size:12px;line-height:1.5}
 @media(max-width:760px){.music-modes{align-self:flex-end;margin-top:-44px}.music-panel{width:320px}}
+
+.music-times{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;margin:2px 0 14px}
+.music-progress input:disabled{opacity:.4;cursor:default}

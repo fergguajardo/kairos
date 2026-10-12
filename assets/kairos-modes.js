@@ -16,6 +16,35 @@
   const status = root.querySelector('[data-status]');
   const blue = root.querySelector('[data-blue]');
   const silent = root.querySelector('[data-silent]');
+  const progress = document.createElement('div');
+  progress.className = 'music-progress';
+  progress.innerHTML = '<label for="blue-progress">Progreso</label><input id="blue-progress" type="range" min="0" max="0" step="1" value="0" disabled aria-label="Posición de la canción"><div class="music-times"><span data-elapsed>0:00</span><span data-duration>0:00</span></div>';
+  root.querySelector('.music-controls').after(progress);
+  const seek = progress.querySelector('input');
+  const elapsed = progress.querySelector('[data-elapsed]');
+  const duration = progress.querySelector('[data-duration]');
+  function clock(seconds) {
+    const total = Number.isFinite(seconds) ? Math.max(0, Math.floor(seconds)) : 0;
+    return Math.floor(total / 60) + ':' + String(total % 60).padStart(2, '0');
+  }
+  function updateProgress() {
+    const valid = Number.isFinite(audio.duration) && audio.duration > 0;
+    seek.disabled = !valid;
+    seek.max = valid ? audio.duration : 0;
+    seek.value = valid ? Math.min(audio.currentTime || 0, audio.duration) : 0;
+    elapsed.textContent = clock(valid ? audio.currentTime : 0);
+    duration.textContent = clock(valid ? audio.duration : 0);
+    seek.setAttribute('aria-valuetext', elapsed.textContent + ' de ' + duration.textContent);
+  }
+  seek.oninput = () => {
+    if (!Number.isFinite(audio.duration) || audio.duration <= 0) return;
+    audio.currentTime = Math.min(audio.duration, Math.max(0, Number(seek.value)));
+    updateProgress();
+  };
+  audio.ontimeupdate = updateProgress;
+  audio.onloadedmetadata = updateProgress;
+  audio.ondurationchange = updateProgress;
+  audio.onseeked = updateProgress;
   const storageKey = 'kairos-music-modes-v1';
   let index = 0, enabled = false, request = 0;
   try {
@@ -44,7 +73,7 @@
     picker.value = index;
     volume.setAttribute('aria-valuetext', volume.value + ' %');
   }
-  function load() { audio.src = 'assets/music/blue/' + tracks[index][1] + '.mp3'; }
+  function load() { seek.disabled = true; seek.value = 0; seek.max = 0; elapsed.textContent = duration.textContent = '0:00'; audio.src = 'assets/music/blue/' + tracks[index][1] + '.mp3'; }
   async function start() {
     const current = ++request;
     enabled = true;
@@ -86,5 +115,5 @@
   new MutationObserver(() => {
     if(app.hidden){++request;enabled=false;audio.pause();status.textContent='Silencio';update();}
   }).observe(app,{attributes:true,attributeFilter:['hidden']});
-  status.textContent = 'Elegí BLUE para escuchar'; update();
+  status.textContent = 'Elegí BLUE para escuchar'; update(); updateProgress();
 })();
