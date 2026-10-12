@@ -39,7 +39,7 @@ body {
   display: flex;
   align-items: flex-end;
   overflow: hidden;
-  background: #000;
+  background: var(--bg);
 }
 .cover img {
   position: absolute;
@@ -54,7 +54,7 @@ body {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(21,19,15,0.15) 0%, rgba(21,19,15,0.55) 55%, rgba(21,19,15,0.97) 100%);
+  background: linear-gradient(180deg, var(--bg) 0%, rgba(21,19,15,0.55) 55%, var(--bg) 100%);
 }
 .cover-content {
   position: relative;
