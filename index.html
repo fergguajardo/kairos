@@ -429,7 +429,8 @@ function showPopup(anchor,cls){closePopup();popup=el('div','popup '+cls);documen
 function fitPopup(){if(!popup)return;const r=popup.getBoundingClientRect();if(r.bottom>innerHeight-12)popup.style.top=Math.max(12,innerHeight-r.height-12)+'px'}
 function reorderEntry(list,from,to){if(!Number.isInteger(from)||from<0||from>=list.length||!Number.isInteger(to)||to<0||to>list.length)return false;if(from===to||from+1===to)return false;const moved=list.splice(from,1)[0];list.splice(to-(from<to?1:0),0,moved);return true}
 const EISENHOWER_TITLES=['HACER','PLANIFICAR','DELEGAR','ELIMINAR'];
-function taskTitles(){return ['eisenhower','impact'].includes(currentPage)?EISENHOWER_TITLES:(data.columnTitles||STATES)}
+const IMPACT_TITLES=['OBSEQUIO','PROYECTO','RELLENO','INGRATO'];
+function taskTitles(){return currentPage==='impact'?IMPACT_TITLES:currentPage==='eisenhower'?EISENHOWER_TITLES:(data.columnTitles||STATES)}
 function taskData(){
  if(typeof currentPage==='undefined'||!['eisenhower','impact'].includes(currentPage))return data;
  if(!data.eisenhowerBoard){
