@@ -435,7 +435,7 @@ function taskData(){
 function move(id,state,beforeId=null){const c=taskData().cards.find(c=>c.id===id);if(!c)return;const from=taskData().cards.indexOf(c);c.state=Number(state);const to=beforeId?taskData().cards.findIndex(card=>card.id===beforeId):taskData().cards.length;if(to>=0)reorderEntry(taskData().cards,from,to);save();render();$('live').textContent=c.title+' → '+taskTitles()[c.state]}
 function transferHogar(){
  if(data.balance||data.hogarTransferred)return;
- const source=data.cards.find(c=>c.title.replace(/^[•·\\s]+/,'').replace(/[.\\s]+$/,'').toLowerCase()==='hogar');
+ const source=data.cards.find(c=>c.title.replace(/^[•·]+/,'').trim().replace(/[.]+$/,'').trim().toLowerCase()==='hogar');
  if(!source)return;
  const items=source.checks.flatMap(g=>g.items);
  if(!items.length)return;
