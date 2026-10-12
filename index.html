@@ -549,7 +549,7 @@ function renderEisenhower(page){
  EISENHOWER_QUADRANTS.forEach((quadrant,index)=>{
   const section=el('section','eisenhower-quadrant'),head=el('div','eisenhower-head'),heading=el('h2'),tasks=eisenhowerTasks().filter(t=>t.quadrant===index),count=el('span','count',tasks.length);
   heading.id='eisenhower-quadrant-'+index;heading.append(lineIcon(quadrant.icon),document.createTextNode(quadrant.title));section.setAttribute('aria-labelledby',heading.id);count.setAttribute('aria-label',tasks.length+' tareas');head.append(heading,count);section.append(head,el('p','eisenhower-criterion',quadrant.criterion));
-  const cards=el('div','eisenhower-cards');if(!tasks.length)cards.append(el('p','eisenhower-empty','Sin tareas por ahora'));
+  const cards=el('div','eisenhower-cards');
   tasks.forEach(task=>{
    const card=el('article','card eisenhower-card');card.draggable=true;card.tabIndex=0;card.dataset.id=task.id;card.setAttribute('aria-label',task.title+' · '+quadrant.title);card.append(el('h3','',bullet(task.title)));
    if(task.description)card.append(el('p','eisenhower-description',task.description));
