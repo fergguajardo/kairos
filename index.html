@@ -313,7 +313,7 @@ body{background:var(--bg);color:var(--ink)}
 .page,dialog,.popup,.nav,.column,.mail-link,.toast{background:var(--panel);border-color:var(--line)}
 button,input:not([type=checkbox]),textarea,select,.card,.monthgrid,.dated-event{background:var(--bg);color:var(--ink)}
 .board .column{background:var(--panel)}
-.board .card{border-color:var(--gold)}
+.board .card,.eisenhower-card{border-color:var(--gold)}
 button:hover:not(:disabled),.mail-link:hover,.card:hover,.day:hover{background:rgba(229,185,92,.09);border-color:var(--gold-light)}
 button:focus-visible,a:focus-visible,[contenteditable]:focus-visible{outline-color:var(--gold-light)}
 .nav button,.task-sections button,.monthcontrols button,.calendar-options{color:var(--ink);background:transparent}
@@ -388,7 +388,7 @@ small,.muted,.count,.weekday,.calendar-hint,.field,.balance-native .cat-footer,.
 .eisenhower-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.eisenhower-head h2{display:flex;align-items:center;gap:10px;margin:0;font-size:17px;font-weight:400;color:var(--ink)}
 .eisenhower-head svg{width:20px;height:20px;color:var(--gold);fill:none;stroke:currentColor;stroke-width:1.6}
 .eisenhower-criterion{margin:8px 0 18px;color:var(--muted);font-size:14px}.eisenhower-cards{display:grid;align-content:start;gap:12px;flex:1}.eisenhower-empty{color:var(--muted);font-size:14px;margin:14px 0}
-.eisenhower-card{margin:0;padding:16px 42px 16px 16px;background:var(--bg);border-color:var(--line);min-width:0}.eisenhower-card h3{margin:0 0 6px;overflow-wrap:anywhere}.eisenhower-description{font-size:14px;color:var(--muted);margin:0 0 8px;white-space:pre-wrap;overflow-wrap:anywhere}
+.eisenhower-card{margin:0;min-width:0}.eisenhower-card:active{cursor:grabbing}.eisenhower-description{font-size:14px;color:var(--muted);margin:0 0 8px;white-space:pre-wrap;overflow-wrap:anywhere}
 .eisenhower-due,.eisenhower-progress{display:block;font-size:13px;color:var(--muted);margin-top:5px}.eisenhower-quadrant>.add{margin-top:18px;text-align:left}.eisenhower-quadrant.drop-target{border-color:var(--gold)}.eisenhower-card:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .eisenhower-dialog{max-width:560px;width:calc(100% - 32px);max-height:90vh;overflow:auto}.eisenhower-dialog h3{font-size:16px;font-weight:400}.eisenhower-subtask{display:flex;align-items:center;gap:10px;margin-bottom:8px}.eisenhower-subtask input[type=text]{flex:1;min-width:0}.eisenhower-subtask input[type=checkbox]{width:18px;height:18px;accent-color:var(--gold)}
 @media(max-width:760px){.eisenhower-grid{grid-template-columns:1fr}.eisenhower-quadrant{padding:18px;min-height:240px}}
