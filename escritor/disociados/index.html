@@ -50,11 +50,20 @@ body {
   object-position: center 30%;
   opacity: 0.75;
 }
+.cover::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 35%;
+  background: var(--bg);
+  z-index: 1;
+  pointer-events: none;
+}
 .cover::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, var(--bg) 0%, rgba(21,19,15,0.55) 55%, var(--bg) 100%);
+  background: linear-gradient(180deg, var(--bg) 35%, rgba(21,19,15,0.55) 65%, var(--bg) 100%);
 }
 .cover-content {
   position: relative;
