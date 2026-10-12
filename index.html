@@ -488,7 +488,24 @@ node.onkeydown=e=>{if(!e.altKey||!['ArrowUp','ArrowDown'].includes(e.key))return
 function groupTitle(g){return g.title+' · '+g.items.filter(i=>i.done).length+'/'+g.items.length}
 function quickView(c,anchor){const p=showPopup(anchor,'quick');populateQuick(c,p)}
 function populateQuick(c,p){p.replaceChildren();if(!c.checks.length)p.append(el('p','muted','Esta tarjeta todavía no tiene checklist.'));c.checks.forEach(g=>{const h=el('h4','',groupTitle(g));h.dataset.group=g.id;p.append(h);g.items.forEach(i=>p.append(row(c,g,i,false)));if(!g.items.length)p.append(el('p','muted','Sin tareas todavía.'))});fitPopup()}
-function renderChecks(){$('checks').replaceChildren();active.checks.forEach(g=>{const box=el('section','checkgroup'),head=el('div','grouphead'),title=el('input');title.value=g.title;title.setAttribute('aria-label','Nombre del checklist');title.onchange=()=>{g.title=title.value.trim()||'TAREAS';title.value=g.title;save()};const del=el('button','','×');del.setAttribute('aria-label','Eliminar checklist');del.onclick=()=>{active.checks=active.checks.filter(x=>x.id!==g.id);save();render();renderChecks()};head.append(title,del);box.append(head);g.items.forEach(i=>box.append(row(active,g,i,true)));const f=el('form','additem'),input=el('input');input.placeholder='Nueva tarea…';input.setAttribute('aria-label','Nueva tarea');const b=el('button','primary','Guardar tarea');b.type='submit';b.setAttribute('aria-label','Guardar tarea');const number=el('span','task-number',(g.items.length+1)+'.');f.append(number,input,b);f.onsubmit=e=>{e.preventDefault();if(!input.value.trim())return;g.items.push({id:uid(),text:input.value.trim(),done:false});save();render();renderChecks();$('checks').querySelectorAll('.additem input')[active.checks.indexOf(g)].focus()};box.append(f);$('checks').append(box)})}
+function newTaskField(box,g){
+ const form=el('form','additem'),input=el('input'),number=el('span','task-number',(g.items.length+1)+'.');
+ input.placeholder='Nueva tarea…';input.setAttribute('aria-label','Nueva tarea');form.append(number,input);
+ let draft=null;
+ input.oninput=()=>{
+  const text=input.value.trim();
+  if(!text){if(draft){g.items=g.items.filter(item=>item!==draft);draft=null;save();render()}return}
+  if(!draft){draft={id:uid(),text,done:false};g.items.push(draft)}else draft.text=text;
+  save();render()
+ };
+ input.onblur=()=>{
+  if(!draft||!form.isConnected||!g.items.includes(draft))return;
+  form.replaceWith(row(active,g,draft,true));newTaskField(box,g)
+ };
+ form.onsubmit=event=>{event.preventDefault();if(!draft)return;input.blur();box.querySelector('.additem input')?.focus()};
+ box.append(form)
+}
+function renderChecks(){$('checks').replaceChildren();active.checks.forEach(g=>{const box=el('section','checkgroup'),head=el('div','grouphead'),title=el('input');title.value=g.title;title.setAttribute('aria-label','Nombre del checklist');title.onchange=()=>{g.title=title.value.trim()||'TAREAS';title.value=g.title;save()};const del=el('button','','×');del.setAttribute('aria-label','Eliminar checklist');del.onclick=()=>{active.checks=active.checks.filter(x=>x.id!==g.id);save();render();renderChecks()};head.append(title,del);box.append(head);g.items.forEach(i=>box.append(row(active,g,i,true)));newTaskField(box,g);$('checks').append(box)})}
 STATES.forEach((s,i)=>{const o=el('option','',s);o.value=i;$('state').append(o)});$('title').oninput=()=>{active.title=bullet($('title').value);save();render()};$('title').onblur=()=>{if(!active.title.replace(/^•\s*/, '').trim()){active.title='• Sin título';$('title').value=active.title;save();render()}};$('description').oninput=()=>{active.description=$('description').value;save()};$('state').onchange=()=>move(active.id,$('state').value);$('addcheck').onclick=()=>{active.checks.push({id:uid(),title:'TAREAS',items:[]});save();renderChecks()};$('editor').querySelector('.close').onclick=()=>$('editor').close();
 for(const id of ['editor','confirm'])$(id).addEventListener('click',e=>{const r=$(id).getBoundingClientRect();if(e.target===$(id)&&(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom))$(id).close()});
 document.addEventListener('click',e=>{if(popup&&!popup.contains(e.target)&&!e.target.closest('.dots,.checkbtn'))closePopup()});document.addEventListener('keydown',e=>{if(e.key==='Escape')closePopup()});window.addEventListener('resize',closePopup);document.addEventListener('scroll',e=>{if(popup&&!popup.contains(e.target))closePopup()},true);
