@@ -78,6 +78,7 @@ main,main .page-content,main .doc-block,main .doc-line,main p,main li{color:var(
 const KEY='kairos-disociados-editable-v2',FORMAT='kairos-disociados-document';
 const main=document.querySelector('main'),status=document.getElementById('status'),picker=document.getElementById('pages');
 let dirty=false,documentCloud=null,titleSpacing=10,chapterSpacing=10,textSpacing=10;
+let documentHistory=[],historyPosition=-1,historyReady=false,historyRestoring=false,historyNeedsReset=false;
 const spacingScale=[1,3,5,7,9,10];
 const validSpacing=value=>Number.isFinite(value)?spacingScale.reduce((best,next)=>Math.abs(next-value)<Math.abs(best-value)?next:best,1):10;
 const pageIds=Array.from(main.querySelectorAll('.sheet'),sheet=>sheet.id);
@@ -274,13 +275,18 @@ function refreshLayout(){
   });
  });
  picker.replaceChildren();
+ let skipPromptIndex=false;
  main.querySelectorAll('h1,h2,h3,h4,h5,h6').forEach((heading,index)=>{
-  if(!heading.textContent.trim())return;
+  const label=heading.textContent.trim();if(!label)return;
+  if(/separaci[oó]n crom[aá]tica|plantilla.*generar|organicidad|iluminaci[oó]n cinematogr[aá]fica|continuidad.*fotogr[aá]fica/i.test(label)){skipPromptIndex=true;return}
+  const narrative=/^Cap[ií]tulo\s+\d+/i.test(label)||/^(?:[✦\s]*\d+[.)]\s*)?(?:Bela|Vela|Alma|Alikal|Principita|Principito|Eco[- ]Friendly|Boloñesa|Dildo|Trans|Sedante|TDA|Número Dos|Karaoke|Luján|Celibato|Puberto|Puerto|Gagá|Fiaca|Harry|Parboil|Mandala|Tu última tesis|Cine)\s*$/i.test(label);
+  if(narrative)skipPromptIndex=false;if(skipPromptIndex)return;
   heading.id='doc-heading-'+index;
   const option=document.createElement('option');option.value=heading.id;
   option.textContent='\u00a0'.repeat(Math.max(0,Number(heading.tagName.slice(1))-1)*4)+heading.textContent.trim();
   picker.append(option);
  });
+ if(historyReady&&historyNeedsReset&&!historyRestoring)resetDocumentHistory();
 }
 
 const current=()=>({format:FORMAT,version:2,title:'Disociados',publishedMigration,titleSpacing,chapterSpacing,textSpacing,html:main.innerHTML});
@@ -292,6 +298,7 @@ function validate(data){
  return data.pages.map(sanitize);
 }
 function apply(data){
+ if(historyReady&&!historyRestoring)historyNeedsReset=true;
  const contents=validate(data);publishedMigration=data.publishedMigration===1?1:0;
  titleSpacing=validSpacing(data.titleSpacing);
  textSpacing=validSpacing(data.textSpacing??data.chapterSpacing);
@@ -300,7 +307,33 @@ function apply(data){
  else{main.innerHTML=originalLayout;pageIds.forEach((id,i)=>{const node=main.querySelector('#'+id+' .page-content');if(node)node.innerHTML=contents[i]})}
  if(documentCloud)migratePublishedStories();inheritEditing();main.querySelectorAll('.page-break').forEach(node=>node.contentEditable="false");upgradeDocument();
 }
+function historySnapshot(){return {value:JSON.stringify(current())}}
+function resetDocumentHistory(){if(historyRestoring)return;documentHistory=[historySnapshot()];historyPosition=0;historyNeedsReset=false;updateHistoryControls()}
+function updateHistoryControls(){
+ const undo=formatTools.querySelector('[data-format="undo"]'),redo=formatTools.querySelector('[data-format="redo"]');
+ if(undo)undo.disabled=!historyReady||historyPosition<=0;
+ if(redo)redo.disabled=!historyReady||historyPosition>=documentHistory.length-1;
+}
+function recordDocumentHistory(){
+ if(!historyReady||historyRestoring)return;
+ if(historyNeedsReset){resetDocumentHistory();return}
+ const entry=historySnapshot();if(documentHistory[historyPosition]?.value===entry.value)return;
+ documentHistory.splice(historyPosition+1);documentHistory.push(entry);historyPosition++;
+ if(documentHistory.length>100){documentHistory.shift();historyPosition--}updateHistoryControls();
+}
+function navigateDocumentHistory(direction){
+ if(main.inert||!historyReady)return false;
+ recordDocumentHistory();
+ const next=historyPosition+(direction==='undo'?-1:1);if(next<0||next>=documentHistory.length)return false;
+ const value=JSON.parse(documentHistory[next].value);historyRestoring=true;
+ try{
+  main.innerHTML=value.html;titleSpacing=value.titleSpacing;textSpacing=value.textSpacing;chapterSpacing=value.chapterSpacing;publishedMigration=value.publishedMigration;
+  textRange=null;selectBullets(false);inheritEditing();refreshLayout();historyPosition=next;save();updateFormatButtons();updateHistoryControls();
+ }finally{historyRestoring=false}return true;
+}
+
 function save(){
+ recordDocumentHistory();
  let localSaved=true;
  try{localStorage.setItem(KEY,JSON.stringify(current()))}catch{localSaved=false}
  if(documentCloud){documentCloud.changed();return}
@@ -539,6 +572,7 @@ function openDocumentLink(event){
 main.addEventListener('click',openDocumentLink,true);
 for(const id of ['title-spacing','chapter-spacing','text-spacing'])document.getElementById(id).onchange=event=>balanceDocumentSpaces(event.target);
 main.addEventListener('beforeinput',event=>{
+ if(['historyUndo','historyRedo'].includes(event.inputType)){event.preventDefault();navigateDocumentHistory(event.inputType==='historyUndo'?'undo':'redo');return}
  if(!['deleteContentBackward','deleteContentForward'].includes(event.inputType)||main.inert)return;
  const selection=window.getSelection();if(!selection.rangeCount)return;
  const range=selection.getRangeAt(0);
@@ -703,7 +737,7 @@ document.addEventListener('keydown',event=>{
  if(!main.inert&&!main.inert&&(event.ctrlKey||event.metaKey)&&!event.altKey&&!event.target.closest('input,textarea,select')){
   const key=event.key.toLowerCase();
   const direction=key==='z'?(event.shiftKey?'redo':'undo'):key==='y'?'redo':null;
-  if(direction&&restoreBulletDeletion(direction)){event.preventDefault();return}
+  if(direction&&!event.target.closest('input,textarea,select')){event.preventDefault();navigateDocumentHistory(direction);return}
  }
  if(!bulletsSelected||main.inert||main.inert||!['Backspace','Delete'].includes(event.key)||event.ctrlKey||event.metaKey||event.altKey)return;
  if(event.target.closest('input,textarea,select'))return;
@@ -804,7 +838,7 @@ formatTools.addEventListener('click',event=>{
 
  if(bulletsSelected&&(button.dataset.color||['bold','italic'].includes(button.dataset.format))){status.textContent='Los marcadores usan el formato predeterminado de 11 puntos.';return;}
  if(['undo','redo'].includes(button.dataset.format)){
- if(restoreBulletDeletion(button.dataset.format))return;
+ navigateDocumentHistory(button.dataset.format);return;
  const selection=window.getSelection();
  if(textRange&&main.contains(textRange.commonAncestorContainer)){selection.removeAllRanges();selection.addRange(textRange)}
  else main.focus();
@@ -971,7 +1005,7 @@ function createDocumentCloud(){
  return {changed:markChanged,flush,start};
 }
 
-migratePublishedStories();refreshLayout();
+migratePublishedStories();refreshLayout();historyReady=true;resetDocumentHistory();
 if(location.protocol!=='file:'){documentCloud=createDocumentCloud();documentCloud.start();}
 
 window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue=''}});
