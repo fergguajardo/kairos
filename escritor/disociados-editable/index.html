@@ -152,28 +152,33 @@ function normalizeWriterPresentation(){
    node.style.setProperty('color',gold?'#E5B95C':'#F3F0EA','important');
   });
  });
- main.querySelectorAll('.sheet.story-start,.sheet.chapter-start').forEach(sheet=>{
-  const content=sheet.querySelector('.page-content');if(!content)return;
-  const first=content.querySelector('h1,h2,.doc-heading,.doc-line')||content.firstElementChild;if(!first)return;
-  const text=first.textContent.trim();
-  const isChapter=/^Capítulo\s+\d+$/i.test(text),isStory=/^[✦\s]*\d+[.)]\s*\S/.test(text);
-  if(!isChapter&&!isStory)return;
-  const tag=isChapter?'h2':'h1';
-  if(first.tagName.toLowerCase()!==tag){const heading=document.createElement(tag);heading.className='doc-heading';heading.append(...first.childNodes);first.replaceWith(heading)}
+ const storyNames=new Set(['bela','vela','alma','alikal','principita','principito','ecofriendly','bolonesa','dildo','trans','sedante','tda','numerodos','lujan','celibato','puberto','puerto','gaga','fiaca','harry','parboil','mandala']);
+ const normalizeTitle=text=>text.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/^[✦\s]*\d+[.)]\s*/,'').replace(/[^a-z]/g,'');
+ const blocks=Array.from(main.querySelectorAll('h1,h2,h3,h4,h5,h6,p,.doc-line,div')).filter(node=>{
+  if(node.closest('.page-number,.page-break'))return false;
+  return !node.querySelector('h1,h2,h3,h4,h5,h6,p,.doc-line,div')&&node.textContent.trim();
  });
- main.querySelectorAll('p.capitulo').forEach(paragraph=>{
-  if(!/^Capítulo\s+\d+$/i.test(paragraph.textContent.trim()))return;
-  const heading=document.createElement('h2');heading.className='doc-heading';heading.append(...paragraph.childNodes);paragraph.replaceWith(heading)
- });
- main.querySelectorAll('.sheet.story-start').forEach(sheet=>{
-  const title=sheet.querySelector('h1')?.textContent.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z]/g,'')||'';
-  if(!['gaga','fiaca','puberto','puerto'].includes(title))return;
-  sheet.querySelectorAll('.page-content,.doc-block,.doc-line,p,h1,h2,blockquote').forEach(node=>{
+ let activeStory='';
+ for(let block of blocks){
+  const text=block.textContent.trim(),name=normalizeTitle(text);
+  const numbered=/^[✦\s]*\d+[.)]\s*\S/.test(text);
+  const named=storyNames.has(name);
+  const chapter=/^Cap[ií]tulo\s+\d+\s*[.:]?$/i.test(text);
+  const story=named||(numbered&&block.matches('h1,.doc-heading'));
+  if(story)activeStory=name;
+  const tag=story?'h1':chapter?'h2':null;
+  if(tag&&block.tagName.toLowerCase()!==tag){
+   const heading=document.createElement(tag);heading.className='doc-heading';heading.append(...block.childNodes);block.replaceWith(heading);block=heading
+  }
+  if(!['gaga','fiaca','puberto','puerto'].includes(activeStory))continue;
+  const align=node=>{
    for(const property of ['margin-left','margin-right','padding-left','padding-right','text-indent'])node.style.removeProperty(property);
    node.style.textAlign='left';
-  });
-  sheet.querySelectorAll('.doc-line>span').forEach(node=>node.style.removeProperty('margin-left'));
- });
+  };
+  align(block);block.querySelectorAll('[style]').forEach(align);
+  for(let parent=block.parentElement;parent&&parent!==main&&!parent.classList.contains('sheet');parent=parent.parentElement)align(parent);
+ }
+
 }
 
 function refreshLayout(){
