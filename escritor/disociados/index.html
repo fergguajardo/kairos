@@ -256,9 +256,15 @@ footer {
   border-radius: 8px; padding: 12px 16px; cursor: pointer; text-decoration: none;
   display: block;
 }
-.age-yes{ background: transparent; color: var(--text); border: 1px dashed #E5B95C; font-weight: 300; }
+.age-actions .age-yes{
+  background: transparent; color: var(--accent);
+  border: 1px solid var(--accent); border-radius: 999px;
+  width: fit-content; max-width: 100%; align-self: center;
+  padding: 12px 24px; line-height: 1.4; overflow-wrap: anywhere;
+  font-weight: 300;
+}
 .age-no{ background: transparent; color: var(--text-dim); border: 1px solid var(--card-border); }
-.age-actions .age-yes,.age-actions .age-no{color:var(--text);font-weight:300}
+.age-actions .age-no{color:var(--text);font-weight:300}
 body.age-locked{ overflow: hidden; }
 
 /* Formato de lectura compartido con Disociados Editable: R 300, C 300 y M 400. */
