@@ -102,7 +102,46 @@ function labelResourceLinks(){
 }
 
 
+
+function normalizeModelIndexHeadings(){
+ const entries=[
+  {aliases:['cartera'],label:'CARTERA',level:1},
+  {aliases:['modelo'],label:'MODELO',level:1},
+  {aliases:['diagnostico'],label:'Diagnóstico',level:2,section:true},
+  {aliases:['sipoc','diagrama sipoc'],label:'Diagrama SIPOC',level:3,section:true},
+  {aliases:['mapa de procesos'],label:'Mapa de procesos',level:3,section:true},
+  {aliases:['diagrama de flujo'],label:'Diagrama de Flujo',level:3,section:true},
+  {aliases:['raci'],label:'RACI',level:3,section:true},
+  {aliases:['a.d.puesto','relevamiento de puesto'],label:'Relevamiento de Puesto',level:3,section:true},
+  {aliases:['a.d.carga','carga de puesto'],label:'Carga de Puesto',level:3,section:true},
+  {aliases:['a.d.competencias','desempeno'],label:'Desempeño',level:3,section:true},
+  {aliases:['ishikawa','diagrama de pescado'],label:'Diagrama de Pescado',level:3,section:true},
+  {aliases:['diagrama de arbol','d.d.arbol','arbol de causas'],label:'Árbol de Causas',level:3,section:true}
+ ];
+ const normalize=text=>text.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim().toLowerCase();
+ let withinModel=false;
+ for(const node of Array.from(main.querySelectorAll('h1,h2,h3,h4,h5,h6,.doc-line,p'))){
+  if(!main.contains(node)||node.closest('.page-break')||node.querySelector('h1,h2,h3,h4,h5,h6,.doc-line,p'))continue;
+  const raw=node.textContent.trim(),name=normalize(raw.replace(/^\d+(?:\.\d+)*\.?\s+/,''));
+  if(name==='modelo')withinModel=true;
+  const entry=entries.find(entry=>entry.aliases.includes(name)&&(!entry.section||withinModel));
+  if(!entry)continue;
+  let heading=node;
+  if(node.tagName!=='H'+entry.level){
+   heading=document.createElement('h'+entry.level);heading.style.cssText=node.style.cssText;
+   heading.append(...node.childNodes);node.replaceWith(heading);
+  }
+  heading.className='doc-heading';
+  if(heading.textContent.trim()!==entry.label){
+   const span=document.createElement('span'),existing=heading.querySelector('span');
+   if(existing)span.style.cssText=existing.style.cssText;
+   span.textContent=entry.label;heading.replaceChildren(span);
+  }
+ }
+}
+
 function upgradeDocument(){
+ normalizeModelIndexHeadings();
  if(main.querySelector('[data-layout-version="3"]'))return;
  const known=new Set(['1. RESUMEN','1.1 Propuesta','1.2 Concentración','1.3 Cartera','2. MODELO','2.1 Diagnóstico','2.1.1 SIPOC','2.1.2 Mapa de Procesos','2.1.3 Diagrama de flujo','2.1.4 RACI','2.1.5 A.d.Puesto','2.1.6 A.d.Competencias','2.1.7 Ishikawa','2.1.8 Diagrama de Árbol','2.2 Diseño','2.3 Selección','2.3.1 E.d.Impacto','2.3.2 E.d.Riesgo','2.3.3 A.Financiero','2.4 Implementación','2.4.1 D.d.Proyecto.','2.5 Transformación','2.5.1 Persuasión']);
  main.querySelectorAll('.page-content *').forEach(node=>{
