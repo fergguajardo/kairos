@@ -237,20 +237,17 @@ function prepareMarkers(){
 }
 
 function normalizeWriterPresentation(){
- const goldColors=new Set(['#e5b95c','#d9a441','#f1d18a','rgb(229,185,92)','rgb(217,164,65)','rgb(241,209,138)']);
- main.style.color='#F3F0EA';
- main.querySelectorAll('.page-content').forEach(content=>content.style.color='#F3F0EA');
- {
-  main.querySelectorAll('[style]').forEach(node=>{
-   const color=node.style.color;if(!color)return;
-   const gold=goldColors.has(color.toLowerCase().replace(/\s/g,''));
-   node.style.setProperty('color',gold?'#E5B95C':'#F3F0EA','important');
-  });
+ const goldColors=new Set(['#e5b95c','#d9a441','#f1d18a','#e6bb61','rgb(229,185,92)','rgb(217,164,65)','rgb(241,209,138)','rgb(230,187,97)']);
+ const palette=Array.from(main.querySelectorAll('.page-content,.page-content *')).map(node=>({
+  node,color:getComputedStyle(node).color.toLowerCase().replace(/\s/g,'')
+ }));
+ main.style.setProperty('color','#F3F0EA','important');
+ for(const {node,color} of palette){
+  const opaque=color.replace(/^rgba\((\d+,\d+,\d+),[^)]+\)$/,'rgb($1)');
+  node.style.setProperty('color',goldColors.has(opaque)?'#E5B95C':'#F3F0EA','important');
+  node.style.setProperty('-webkit-text-fill-color','currentColor');
+  node.style.setProperty('opacity','1');
  }
- main.querySelectorAll('.flashback-muted').forEach(paragraph=>{
-  paragraph.style.setProperty('color','#F3F0EA','important');
-  paragraph.querySelectorAll('[style]').forEach(node=>node.style.setProperty('color','#F3F0EA','important'));
- });
  const storyNames=new Set(['bela','vela','alma','alikal','principita','principito','ecofriendly','bolonesa','dildo','trans','sedante','tda','numerodos','lujan','celibato','puberto','puerto','gaga','fiaca','harry','parboil','mandala','karaoke','isa','tultimatesis','tuultimatesis','ultimatesis','cine']);
  const normalizeTitle=text=>text.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/^[✦\s]*\d+[.)]\s*/,'').replace(/[^a-z]/g,'');
  const blocks=Array.from(main.querySelectorAll('h1,h2,h3,h4,h5,h6,p,.doc-line,div')).filter(node=>{
