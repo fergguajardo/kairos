@@ -223,51 +223,6 @@ footer {
   .toc a { padding: 1.1rem 0.6rem; }
 }
 
-/* --- Aviso de edad --- */
-.age-gate{
-  position: fixed; inset: 0; z-index: 9999;
-  display: flex; align-items: center; justify-content: center;
-  padding: 24px;
-  background: rgba(15,13,10,0.97);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-.age-gate[hidden]{ display: none; }
-.age-box{
-  max-width: 420px; width: 100%;
-  text-align: center;
-  background: var(--bg-2);
-  border: 1px solid var(--card-border);
-  border-radius: 14px;
-  padding: 32px 26px;
-}
-.age-box h2{
-  margin: 0 0 6px; font-size: 1.5rem; font-weight: 600; color: var(--accent);
-}
-.age-box .age-badge{
-  display: inline-block; margin-bottom: 14px;
-  font-size: 0.8rem; letter-spacing: 0.12em;
-  border: 1px solid var(--accent); color: var(--accent);
-  border-radius: 999px; padding: 2px 12px;
-}
-.age-box p{ margin: 0 0 22px; color: var(--text-dim); font-size: 0.98rem; line-height: 1.6; }
-.age-actions{ display: flex; flex-direction: column; gap: 10px; }
-.age-actions button, .age-actions a{
-  font-family: 'Outfit', sans-serif; font-size: 1rem; font-weight: 600;
-  border-radius: 8px; padding: 12px 16px; cursor: pointer; text-decoration: none;
-  display: block;
-}
-.age-actions .age-yes{
-  background: transparent; color: var(--accent);
-  border: 1px solid var(--accent); border-radius: 999px;
-  width: fit-content; max-width: 100%; align-self: center;
-  padding: 12px 24px; line-height: 1.4; overflow-wrap: anywhere;
-  font-weight: 300;
-}
-.age-no{ background: transparent; color: var(--text-dim); border: 1px solid var(--card-border); }
-.age-actions .age-no{color:var(--text);font-weight:300}
-body.age-locked{ overflow: hidden; }
-
 /* Formato de lectura compartido con Disociados Editable: R 300, C 300 y M 400. */
 .chapter-body,.chapter-body p{font-family:Outfit,sans-serif;font-size:11pt;font-weight:300;line-height:1.5}
 .chapter-head h2{font-weight:400}
@@ -393,35 +348,7 @@ main,main .page-content,main .doc-block,main .doc-line,main p,main li{color:var(
 #indice .toc-chapters li{border:0}
 #indice .toc-chapters a{padding:.35rem .4rem;font-size:.9rem;color:var(--ink)}
 </style></head>
-<body class="age-locked">
-<div class="age-gate" id="ageGate" role="dialog" aria-modal="true" aria-labelledby="ageTitle">
-  <div class="age-box">
-    <span class="age-badge">+21</span>
-    <h2 id="ageTitle">Contenido para adultos</h2>
-    <p>Esta serie de cuentos contiene lenguaje explícito y temáticas sensibles. Es una obra de ficción pensada para mayores de 21 años.</p>
-    <div class="age-actions">
-      <button type="button" class="age-yes" id="ageYes">• Soy mayor de 21</button>
-      <a class="age-no" href="https://www.google.com" rel="noopener">• Salir</a>
-    </div>
-  </div>
-</div>
-<noscript><style>.age-gate{display:none}body.age-locked{overflow:auto}
-/* Formato de lectura compartido con Disociados Editable: R 300, C 300 y M 400. */
-.chapter-body,.chapter-body p{font-family:Outfit,sans-serif;font-size:11pt;font-weight:300;line-height:1.5}
-.chapter-head h2{font-weight:400}
-.chapter-subtitle{font-weight:300;font-style:italic;line-height:1.5}
-.chapter-body p.voz{color:#E5B95C;font-weight:300;font-style:italic}
-.chapter-body p.capitulo{font-size:11pt;font-weight:300;font-style:italic;text-transform:none;letter-spacing:normal}
-.chapter-body strong,.chapter-body b{font-weight:400}
-.chapter-body em,.chapter-body i{font-weight:300}
-
-/* Continuidad del texto: el cambio de párrafo no añade espacio al interlineado. */
-.chapter-body p{margin:0!important;padding-top:0!important;padding-bottom:0!important;line-height:1.5!important}
-.chapter-body p span,.chapter-body p em,.chapter-body p i,.chapter-body p strong,.chapter-body p b{line-height:inherit!important}
-.chapter-body p.capitulo{margin:1.5em 0 1em!important}
-
-.chapter-body p.capitulo,.chapter-body p.capitulo *{font-size:13pt!important;font-style:normal!important}
-</style></noscript>
+<body>
 
 
 <div class="cover">
@@ -497,17 +424,6 @@ main,main .page-content,main .doc-block,main .doc-line,main p,main li{color:var(
 
 <span style="text-align: left; color:#F3F0EA !important; margin-left: 0px !important; margin-right: 0px !important; padding-left: 0px !important; padding-right: 0px !important; text-indent: 0px !important;  opacity: 1; "><span class="clipboard-block" data-kairos-clipboard="inline" style="font-family: Outfit, sans-serif; font-size: 17.3333px; font-weight: 300; font-style: normal; text-align: left; margin-left: 0px !important; margin-right: 0px !important; padding-left: 0px !important; padding-right: 0px !important; text-indent: 0px !important; color:#F3F0EA !important;  opacity: 1; "> El fernet que pidió parece más 30/70 que 70/30.</span><br style="color:#F3F0EA !important;  opacity: 1; margin-left: 0px !important; margin-right: 0px !important; padding-left: 0px !important; padding-right: 0px !important; text-indent: 0px !important; text-align: left; "></span></div><div class="doc-line" style="font-size: 11pt; font-family: Outfit, sans-serif; font-weight: 300; font-style: normal; text-align: left; margin: 1pt 0px 0px !important; padding: 0px !important; text-indent: 0px !important; color:#F3F0EA !important;  opacity: 1; "><span style="font-family: Outfit, sans-serif; font-size: 13pt; font-weight: 300; font-style: normal; text-align: left; color:#F3F0EA !important; margin-left: 0px !important; margin-right: 0px !important; padding-left: 0px !important; padding-right: 0px !important; text-indent: 0px !important;  opacity: 1; ">—Y es que todos nacimos bi.  </span></div><div class="doc-line" style="font-size: 11pt; font-family: Outfit, sans-serif; font-weight: 300; font-style: normal; text-align: left; margin: 1pt 0px 0px !important; padding: 0px !important; text-indent: 0px !important; color:#F3F0EA !important;  opacity: 1; "><span style="font-family: Outfit, sans-serif; font-size: 13pt; font-weight: 300; font-style: normal; text-align: left; color:#F3F0EA !important; margin-left: 0px !important; margin-right: 0px !important; padding-left: 0px !important; padding-right: 0px !important; text-indent: 0px !important;  opacity: 1; ">—Tenes 31 años, Sergio, y la tesis de Ingeniería en Sistemas por entregar.  </span></div><div class="doc-line" style="font-size: 11pt; font-family: Outfit, sans-serif; font-weight: 300; font-style: normal; text-align: left; margin: 1pt 0px 0px !important; padding: 0px !important; text-indent: 0px !important; color:#F3F0EA !important;  opacity: 1; "><span style="font-family: Outfit, sans-serif; font-size: 13pt; font-weight: 300; font-style: normal; text-align: left; color:#F3F0EA !important; margin-left: 0px !important; margin-right: 0px !important; padding-left: 0px !important; padding-right: 0px !important; text-indent: 0px !important;  opacity: 1; ">Me callo para que procese lo que le acabo de decir. </span></div><div class="doc-line" style="font-size: 11pt; font-family: Outfit, sans-serif; font-weight: 300; font-style: normal; text-align: left; margin: 1pt 0px 0px !important; padding: 0px !important; text-indent: 0px !important; color:#F3F0EA !important;  opacity: 1; "><span style="font-family: Outfit, sans-serif; font-size: 13pt; font-weight: 300; font-style: normal; text-align: left; color:#F3F0EA !important; margin-left: 0px !important; margin-right: 0px !important; padding-left: 0px !important; padding-right: 0px !important; text-indent: 0px !important;  opacity: 1; ">—Dejate de romper las pelotas. </span></div><div class="doc-line" style="font-size: 11pt; font-family: Outfit, sans-serif; font-weight: 300; font-style: normal; text-align: left; margin-left: 0px !important; margin-right: 0px !important; padding-left: 0px !important; padding-right: 0px !important; text-indent: 0px !important; margin-top: 1pt !important; padding-top: 0px !important; color:#F3F0EA !important;  opacity: 1; "><span style="font-family: Outfit, sans-serif; font-size: 13pt; font-weight: 300; font-style: italic; text-align: left; color:#E5B95C !important; margin-left: 0px !important; margin-right: 0px !important; padding-left: 0px !important; padding-right: 0px !important; text-indent: 0px !important;  opacity: 1; ">Misión cumplida.</span></div><div class="page-break" style="font-size: 11pt; color:#F3F0EA !important;  opacity: 1; " tabindex="0"><br style="color:#F3F0EA !important;  opacity: 1; "></div></div></div></article></div></div></div></div></article></section></main><footer>Disociados · FG</footer>
 
-<script>
-(function(){
-  var gate = document.getElementById('ageGate');
-  var KEY = 'disociados_21';
-  function open(){ gate.hidden = true; document.body.classList.remove('age-locked'); }
-  try { if (sessionStorage.getItem(KEY) === '1') { open(); } } catch(e){}
-  document.getElementById('ageYes').addEventListener('click', function(){
-    try { sessionStorage.setItem(KEY, '1'); } catch(e){}
-    open();
-  });
-})();
-</script>
+
 </body>
 </html>
