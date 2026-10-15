@@ -298,9 +298,9 @@ function refreshLayout(){
   });
  });
  picker.replaceChildren();
- let skipPromptIndex=false;
+ let skipPromptIndex=false,indexEnded=false;
  main.querySelectorAll('h1,h2,h3,h4,h5,h6').forEach((heading,index)=>{
-  const label=heading.textContent.trim();if(!label)return;
+  const label=heading.textContent.trim();if(!label||indexEnded)return;
   if(/separaci[oó]n crom[aá]tica|plantilla.*generar|organicidad|iluminaci[oó]n cinematogr[aá]fica|continuidad.*fotogr[aá]fica/i.test(label)){skipPromptIndex=true;return}
   const narrative=/^Cap[ií]tulo\s+\d+/i.test(label)||/^(?:[✦\s]*\d+[.)]\s*)?(?:Bela|Vela|Alma|Alikal|Principita|Principito|Eco[- ]Friendly|Boloñesa|Dildo|Trans|Sedante|TDA|Número Dos|Karaoke|Luján|Celibato|Puberto|Puerto|Gagá|Fiaca|Harry|Parboil|Mandala|Tu última tesis|Cine)\s*$/i.test(label);
   if(narrative)skipPromptIndex=false;if(skipPromptIndex)return;
@@ -308,6 +308,7 @@ function refreshLayout(){
   const option=document.createElement('option');option.value=heading.id;
   option.textContent='\u00a0'.repeat(Math.max(0,Number(heading.tagName.slice(1))-1)*4)+heading.textContent.trim();
   picker.append(option);
+  if(/^(?:[✦\s]*\d+[.)]\s*)?Cine\s*$/i.test(label))indexEnded=true;
  });
  if(historyReady&&historyNeedsReset&&!historyRestoring)resetDocumentHistory();
 }
