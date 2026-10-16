@@ -657,6 +657,7 @@ body{background:#090a09;padding-bottom:120px}
 #kairos-app #task-sections .agenda-section-button,
 #kairos-app #task-sections .agenda-section-button:is([aria-pressed=true],:hover,:active,:focus-visible){border-color:transparent;background:transparent;box-shadow:none}
 
+.redes-edit-tools .redes-calendar-icon{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;padding:9px;color:var(--ink)}
 </style></head><body>
 <section id="auth-gate" aria-label="Acceso a Kairos">
 
@@ -1111,8 +1112,8 @@ function editRedesCategory(calendar){
  const close=el('button','','Cancelar');close.type='button';close.onclick=()=>dialog.close();
  const save=el('button','','Guardar');save.type='submit';actions.append(close,save);
  const tools=el('div','redes-edit-tools');
- const duplicate=el('button','','Duplicar');duplicate.type='button';duplicate.onclick=()=>{rPush();const copy={...JSON.parse(JSON.stringify(calendar)),id:uid(),name:calendar.name+' (copia)'};rCalendars.push(copy);rSelectedCalendar=copy.id;rSave();dialog.close();renderRedesMonth();refreshRedesButtons()};
- const remove=el('button','','Eliminar');remove.type='button';remove.onclick=()=>{if(!confirm('¿Eliminar '+calendar.name+' y sus registros? Podés recuperarlos con Deshacer.'))return;rPush();rCalendars=rCalendars.filter(c=>c.id!==calendar.id);rSave();dialog.close();renderRedesMonth();refreshRedesButtons()};
+ const duplicate=el('button','redes-calendar-icon');duplicate.type='button';duplicate.title='Duplicar';duplicate.setAttribute('aria-label','Duplicar categoría');duplicate.append(lineIcon('<rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 3H5a2 2 0 0 0-2 2v11"/>'));duplicate.onclick=()=>{rPush();const copy={...JSON.parse(JSON.stringify(calendar)),id:uid(),name:calendar.name+' (copia)'};rCalendars.push(copy);rSelectedCalendar=copy.id;rSave();dialog.close();renderRedesMonth();refreshRedesButtons()};
+ const remove=el('button','redes-calendar-icon');remove.type='button';remove.title='Eliminar';remove.setAttribute('aria-label','Eliminar categoría');remove.append(lineIcon('<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/>'));remove.onclick=()=>{if(!confirm('¿Eliminar '+calendar.name+' y sus registros? Podés recuperarlos con Deshacer.'))return;rPush();rCalendars=rCalendars.filter(c=>c.id!==calendar.id);rSave();dialog.close();renderRedesMonth();refreshRedesButtons()};
  tools.append(duplicate,remove);form.append(label,tools,actions);form.onsubmit=event=>{event.preventDefault();const value=input.value.trim();if(!value){input.setCustomValidity('Escribí un nombre');input.reportValidity();return}rPush();calendar.name=value;rSave();dialog.close();renderRedesMonth();refreshRedesButtons()};input.oninput=()=>input.setCustomValidity('');
  dialog.append(heading,form);dialog.onclose=()=>dialog.remove();document.body.append(dialog);dialog.showModal();input.focus();input.select()
 }
