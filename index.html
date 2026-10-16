@@ -409,6 +409,9 @@ small,.muted,.count,.weekday,.calendar-hint,.field,.balance-native .cat-footer,.
 #board:not(.eisenhower-layout){grid-template-columns:repeat(4,minmax(261px,1fr))}
 #board:not(.eisenhower-layout) .card{width:225px;box-sizing:border-box}
 @media(max-width:760px){#board:not(.eisenhower-layout){grid-template-columns:repeat(4,280px)}}
+
+/* Vista rápida de tareas con dimensiones uniformes. */
+.popup.quick{width:310px;height:320px;max-width:calc(100vw - 24px);max-height:calc(100dvh - 24px);overflow-y:auto;overflow-x:hidden;box-sizing:border-box;overscroll-behavior:contain}
 </style></head><body>
 <section id="auth-gate" aria-label="Acceso a Kairos">
 <div class="auth-card"><img class="kairos-logo" src="assets/kairos-manrope.svg" alt="KAIROS" width="120" height="40">
@@ -467,7 +470,7 @@ function toast(text){document.querySelector('.toast')?.remove();const n=el('div'
 function stats(c){const a=c.checks.flatMap(g=>g.items);return [a.filter(i=>i.done).length,a.length]}
 function closePopup(){popup?.remove();popup=null}
 function showPopup(anchor,cls){closePopup();popup=el('div','popup '+cls);document.body.append(popup);const r=anchor.getBoundingClientRect();popup.style.left=Math.max(12,Math.min(r.left,innerWidth-322))+'px';popup.style.top=Math.min(r.bottom+6,innerHeight-200)+'px';return popup}
-function fitPopup(){if(!popup)return;const r=popup.getBoundingClientRect();if(r.bottom>innerHeight-12)popup.style.top=Math.max(12,innerHeight-r.height-12)+'px'}
+function fitPopup(){if(!popup)return;const r=popup.getBoundingClientRect();if(popup.classList.contains('quick')){popup.style.top=Math.max(12,Math.min(r.top,innerHeight-r.height-12))+'px';return}if(r.bottom>innerHeight-12)popup.style.top=Math.max(12,innerHeight-r.height-12)+'px'}
 function reorderEntry(list,from,to){if(!Number.isInteger(from)||from<0||from>=list.length||!Number.isInteger(to)||to<0||to>list.length)return false;if(from===to||from+1===to)return false;const moved=list.splice(from,1)[0];list.splice(to-(from<to?1:0),0,moved);return true}
 const EISENHOWER_TITLES=['HACER','PLANIFICAR','DELEGAR','ELIMINAR'];
 const IMPACT_TITLES=['OBSEQUIO','PROYECTO','RELLENO','INGRATO'];
