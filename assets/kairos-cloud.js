@@ -5,16 +5,37 @@
   const PUBLIC_KEY = 'sb_publishable_upAQWEUODK2TXIrERiGEWg_IXIgtJ9V';
   const OWNER = '58c60587-9559-4747-a7bc-a90d36147caa';
   const META = KEY + '-cloud-v1-' + OWNER;
+  const RECOVERY = KEY + '-cloud-conflict-backup';
   const gate = $('auth-gate'), app = $('kairos-app');
   let client, user = null, ready = false, loading = false, applying = false;
   let stamp = null, dirty = false, pending = null, saving = false, timer;
   let baseline = '', conflict = false, remoteConflict = null;
-  function signature(value) { return JSON.stringify({boards:value.boards,redes:value.redes}); }
+  function signature(value) {
+    // Object property order is not a workspace change.
+    const canonical=value=>Array.isArray(value)?value.map(canonical):value&&typeof value==='object'?Object.fromEntries(Object.keys(value).sort().map(key=>[key,canonical(value[key])])):value;
+    return JSON.stringify(canonical({boards:value.boards,redes:value.redes}));
+  }
+  const recovery=document.createElement('button');
+  recovery.id='cloud-recovery';recovery.className='cloud-status';recovery.textContent='Descargar copia local';
+  recovery.title='Descargar los cambios locales conservados antes de cargar la nube';recovery.hidden=true;
+  document.querySelector('.backup-tools').append(recovery);
+  try {recovery.hidden=!localStorage.getItem(RECOVERY);}catch{}
+  recovery.onclick=()=>{
+    try {const value=JSON.parse(localStorage.getItem(RECOVERY)||'null');if(value)download(value);}
+    catch {toast('No se pudo descargar la copia local.');}
+  };
+  function preserveLocal(snapshot) {
+    const value=JSON.stringify(snapshot);
+    // Keep earlier recoveries as well as an accessible copy of the latest one.
+    localStorage.setItem(RECOVERY+'-'+Date.now()+'-'+Math.random().toString(36).slice(2),value);
+    localStorage.setItem(RECOVERY,value);recovery.hidden=false;
+  }
   function status(text) { const node=$('cloud-status');node.textContent=text;node.hidden=text==='Guardado en Supabase';node.style.display=node.hidden?'none':''; }
   function message(text) { $('auth-message').textContent = text === 'Ingresá con tu cuenta de Kairos.' ? '' : text; }
   function lock(text) {
     ready = false; app.hidden = true; app.inert = true; gate.hidden = false;
     document.querySelectorAll('dialog[open]').forEach(d => d.close());
+    $('auth-form').hidden=false;$('auth-conflict').hidden=true;
     if(text) message(text);
   }
   function unlock() { ready = true; app.hidden = false; app.inert = false; gate.hidden = true; }
@@ -95,8 +116,14 @@
       const remote=await readRemote();
       if(meta?.dirty&&meta.snapshot) {
         pending=meta.snapshot;dirty=true;stamp=meta.stamp;
-        if(remote&&remote.updated_at!==stamp) {showConflict(remote);return;}
-        apply(pending);
+        if(remote&&(remote.updated_at!==stamp||signature(remote.data)===signature(pending))) {
+          // On entry the cloud is authoritative. Never drop an unsent local copy.
+          // If it is already on the server, a stale timestamp needs no recovery.
+          const differs=signature(remote.data)!==signature(pending);
+          if(differs) preserveLocal(pending);
+          apply(remote.data);stamp=remote.updated_at;dirty=false;pending=null;persist();
+          if(differs) toast('Se cargó la nube. Tus cambios locales quedaron en Descargar copia local.');
+        } else apply(pending);
       } else if(remote) {
         apply(remote.data);stamp=remote.updated_at;dirty=false;pending=null;persist();
       } else {
@@ -120,7 +147,7 @@
     try {
       const remote=await readRemote();
       if(!remote) throw Error('No existe versión remota');
-      localStorage.setItem(KEY+'-cloud-conflict-backup',JSON.stringify(pending||kairosBackup()));
+      preserveLocal(pending||kairosBackup());
       apply(remote.data);stamp=remote.updated_at;dirty=false;pending=null;conflict=false;remoteConflict=null;persist();
       $('auth-conflict').hidden=true;$('auth-form').hidden=false;unlock();status('Guardado en Supabase');
     } catch {message('No se pudo cargar la versión de la nube. Tu copia pendiente se conserva.');}
