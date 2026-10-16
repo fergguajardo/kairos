@@ -542,6 +542,41 @@ body{background:#090a09;padding-bottom:120px}
 @media(max-width:1100px){.performance-metric{gap:16px;padding:0 14px;grid-template-columns:minmax(140px,1fr) minmax(130px,1fr)}.performance-portrait{width:64px;height:64px}.performance-figure{gap:10px}.performance-mode strong{font-size:13px}.performance-mode span{font-size:12px}}
 @media(max-width:800px){.performance-panel{grid-template-columns:1fr;padding:18px 20px}.performance-metric{grid-template-columns:minmax(140px,1fr) minmax(150px,1fr);padding:0;gap:20px}.performance-metric+.performance-metric{border-left:0;border-top:1px solid #9c783b66;padding-top:18px;margin-top:18px}.performance-portrait{width:72px;height:72px}#page:has(>.performance-panel){margin-left:22px;margin-right:22px}}
 @media(max-width:420px){.performance-panel{padding:17px 14px}.performance-metric{grid-template-columns:minmax(115px,1fr) minmax(110px,1fr);gap:12px}.performance-heading{gap:8px}.performance-heading svg{width:24px;height:24px}.performance-value,.performance-track,.performance-formula{margin-left:32px}.performance-portrait{width:50px;height:50px}.performance-figure{gap:8px}.performance-mode strong{font-size:12px}.performance-mode span{font-size:11px}}
+
+/* Performance reference beside the two indicators. */
+.performance-panel{grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(320px,1.25fr);padding:20px 18px}
+.performance-metric{grid-template-columns:minmax(0,1fr);gap:12px;padding:0 20px}
+.performance-figure{padding-left:45px;gap:10px}
+.performance-portrait{width:52px;height:52px}
+.performance-mode strong{font-size:13px}
+.performance-mode span{font-size:11px}
+.performance-scale{min-width:0;border-left:1px solid #9c783b88;padding:0 18px;text-align:center}
+.performance-scale h3{margin:0;color:#f4efde;font-size:16px;font-weight:500}
+.performance-scale-context{margin:5px 0 14px;color:#9f9783;font-size:11px;line-height:1.4}
+.performance-scale-levels{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.performance-scale-level{display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0}
+.performance-scale-portrait{display:block;width:56px;height:56px;border:1px solid #e5b95c;border-radius:50%;object-fit:cover;background:#090b09}
+.performance-scale-level strong{font-size:12px;font-weight:500;line-height:1.3}
+.performance-scale-count{font-size:17px;line-height:1.2;color:#fff2c4}
+.performance-scale-level small{font-size:10px;color:#c9bfa6;white-space:nowrap}
+@media(max-width:1000px){
+ .performance-panel{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .performance-scale{grid-column:1/-1;border-left:0;border-top:1px solid #9c783b66;margin-top:18px;padding:18px 0 0}
+ .performance-scale-levels{max-width:480px;margin:auto}
+}
+@media(max-width:800px){
+ .performance-panel{grid-template-columns:minmax(0,1fr)}
+ .performance-metric{grid-template-columns:minmax(140px,1fr) minmax(150px,1fr);padding:0;gap:20px}
+ .performance-figure{padding-left:0}
+ .performance-scale{grid-column:auto}
+}
+@media(max-width:420px){
+ .performance-metric{grid-template-columns:minmax(115px,1fr) minmax(110px,1fr);gap:12px}
+ .performance-scale-levels{gap:6px}
+ .performance-scale-level strong{font-size:11px}
+ .performance-scale-portrait{width:50px;height:50px}
+}
+
 </style></head><body>
 <section id="auth-gate" aria-label="Acceso a Kairos">
 
@@ -718,6 +753,14 @@ function renderIntegratedMetrics(page){
   }
   const formula=el('small','performance-formula',metric.formula);summary.append(formula);card.append(summary,figure);panel.append(card);
  });
+ const scale=el('aside','performance-scale');scale.setAttribute('aria-label','Escala de desempeño de Alcance sobre seis tarjetas');
+ const scaleHeading=el('h3','','Escala de desempeño');scale.append(scaleHeading,el('p','performance-scale-context','Alcance · referencia sobre 6 tarjetas'));
+ const levels=el('div','performance-scale-levels');
+ [{name:'Atila',image:portraits.atila,count:'0–2',range:'0–33,3%'},{name:'Marco Aurelio',image:portraits.marco,count:'3–4',range:'50–66,7%'},{name:'Buda',image:portraits.buda,count:'5–6',range:'83,3–100%'}].forEach(level=>{
+  const item=el('div','performance-scale-level'),portrait=el('img','performance-scale-portrait');portrait.src=level.image;portrait.alt='';portrait.width=56;portrait.height=56;
+  item.append(portrait,el('strong','',level.name),el('span','performance-scale-count',level.count),el('small','',level.range));levels.append(item);
+ });
+ scale.append(levels);panel.append(scale);
  page.append(panel);
 }
 
