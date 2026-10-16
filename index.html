@@ -480,13 +480,15 @@ small,.muted,.count,.weekday,.calendar-hint,.field,.balance-native .cat-footer,.
 #auth-gate #auth-message{font-size:12px;min-height:32px}
 @media(max-width:540px){#auth-gate{padding:24px 18px}#auth-gate .auth-card{padding:38px 25px 26px;border-radius:20px}#auth-gate .auth-brand{margin-bottom:36px;gap:14px}#auth-gate .auth-brand>svg{width:76px;height:76px}#auth-gate .auth-brand>span{font-size:36px}}
 @media(max-height:700px) and (min-width:541px){#auth-gate{padding:20px}#auth-gate .auth-card{padding-top:30px;padding-bottom:24px}#auth-gate .auth-brand{margin-bottom:30px}#auth-gate .auth-brand>svg{width:70px;height:70px}#auth-gate .auth-brand>span{font-size:36px}}
+
+#auth-gate .auth-status:has(#auth-message:empty){display:none}
 </style></head><body>
 <section id="auth-gate" aria-label="Acceso a Kairos">
 
 <div class="auth-card">
 <div class="auth-brand"><svg viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="auth-sun" x2="0" y2="1"><stop stop-color="#fff2b4"/><stop offset="1" stop-color="#e8a33d"/></linearGradient><filter id="auth-halo"><feGaussianBlur stdDeviation="3"/></filter></defs><rect x="1" y="1" width="62" height="62" rx="14" fill="#0a0a09" stroke="#e0b257" stroke-width=".8"/><circle cx="32" cy="32" r="12" fill="#e5a242" opacity=".3" filter="url(#auth-halo)"/><path d="M32 9v47" stroke="#f1cc77" stroke-width="1"/><path d="M19 40a13 13 0 0 1 26 0Z" fill="url(#auth-sun)"/><path d="M2 49Q32 29 62 49" fill="none" stroke="#e8b55a" stroke-width="1"/></svg><span>KAIROS</span></div><form id="auth-form">
 <div class="auth-field"><label class="auth-accessible-label" for="auth-email">Correo electrónico</label><div class="auth-input-wrap"><span class="auth-input-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 6 9 7 9-7"/></svg></span><input id="auth-email" type="email" autocomplete="username" placeholder="Correo electrónico" required></div></div>
-<div class="auth-field"><label class="auth-accessible-label" for="auth-password">Contraseña</label><div class="auth-password-wrap auth-input-wrap"><span class="auth-input-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="10" width="12" height="11" rx="2"/><path d="M9 10V6a3 3 0 0 1 6 0v4"/><path d="M12 14v3"/></svg></span><input id="auth-password" type="password" autocomplete="current-password" placeholder="Tu contraseña" required><button id="auth-password-toggle" type="button" aria-label="Mostrar contraseña" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
+<div class="auth-field"><label class="auth-accessible-label" for="auth-password">Contraseña</label><div class="auth-password-wrap auth-input-wrap"><span class="auth-input-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="10" width="12" height="11" rx="2"/><path d="M9 10V6a3 3 0 0 1 6 0v4"/><path d="M12 14v3"/></svg></span><input id="auth-password" type="password" autocomplete="current-password" placeholder="Contraseña" required><button id="auth-password-toggle" type="button" aria-label="Mostrar contraseña" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
 <button id="auth-submit" type="submit">Ingresar</button></form>
 <div class="auth-status"><div class="auth-status-divider" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="10" width="12" height="11" rx="2"/><path d="M9 10V6a3 3 0 0 1 6 0v4"/><path d="M12 14v3"/></svg></div><p id="auth-message" role="status">Comprobando el acceso…</p></div>
 <div id="auth-conflict" hidden><button id="auth-conflict-download">Descargar mis cambios pendientes</button><button id="auth-conflict-load" disabled>Cargar versión de la nube</button></div>
@@ -897,6 +899,6 @@ function restoreKairosBackup(next,silent=false){const previous=kairosBackup(),va
 updateHistoryButtons();render();
 </script><script>
 document.getElementById('auth-password-toggle').addEventListener('click',function(){const input=document.getElementById('auth-password'),visible=input.type==='password';input.type=visible?'text':'password';this.setAttribute('aria-pressed',String(visible));this.setAttribute('aria-label',visible?'Ocultar contraseña':'Mostrar contraseña')});
-</script><script src="assets/kairos-cloud.js?v=2"></script></body></html>
+</script><script src="assets/kairos-cloud.js?v=3"></script></body></html>
 
 
