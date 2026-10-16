@@ -404,6 +404,9 @@ small,.muted,.count,.weekday,.calendar-hint,.field,.balance-native .cat-footer,.
 .nav svg,.nav button[aria-selected=true] svg{width:26px;height:26px;flex-shrink:0;fill:none;color:#E5B95C;stroke:#E5B95C;stroke-width:1.25;stroke-linecap:round;stroke-linejoin:round}
 @media(max-width:600px){.nav{bottom:max(10px,env(safe-area-inset-bottom));width:max-content;max-width:calc(100vw - 16px);height:56px;padding:7px 5px;gap:4px}.nav button{height:40px;gap:5px;padding:5px 6px;font-size:15px;border-radius:11px}.nav svg,.nav button[aria-selected=true] svg{width:26px;height:26px}.nav button+button::before{left:-3px;top:9px;bottom:9px}}
 @media(prefers-reduced-motion:reduce){.nav button{transition:none}}
+
+/* Ancho de las tarjetas de control del Kanban. */
+#board:not(.eisenhower-layout) .card{width:225px;max-width:100%;box-sizing:border-box}
 </style></head><body>
 <section id="auth-gate" aria-label="Acceso a Kairos">
 <div class="auth-card"><img class="kairos-logo" src="assets/kairos-manrope.svg" alt="KAIROS" width="120" height="40">
