@@ -1134,7 +1134,7 @@ function renderRedesMonth(){
  const host=document.querySelector('.redes-month');if(!host)return;host.replaceChildren();
  const layout=el('div','redes-workspace'),sidebar=el('aside','redes-sidebar'),sidehead=el('div','redes-sidehead'),manage=el('button','redes-manage');
  manage.setAttribute('aria-label','Añadir categoría');manage.title='Añadir categoría';manage.append(lineIcon('<path d="M4 6h16M4 12h16M4 18h16M8 3v6M16 9v6M10 15v6"/>'));manage.onclick=addRedesCategory;
- sidehead.append(el('h2','','Categorías'),manage);sidebar.append(sidehead);
+ sidehead.append(el('h2','','✦ Categorías'),manage);sidebar.append(sidehead);
  const list=el('div','redes-category-list');list.setAttribute('aria-label','Categorías');
  if(!rCalendars.some(c=>c.id===rSelectedCalendar))rSelectedCalendar=rCalendars[0]?.id;
  rCalendars.forEach(calendar=>{
