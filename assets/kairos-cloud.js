@@ -11,7 +11,7 @@
   let baseline = '', conflict = false, remoteConflict = null;
   function signature(value) { return JSON.stringify({boards:value.boards,redes:value.redes}); }
   function status(text) { const node=$('cloud-status');node.textContent=text;node.hidden=text==='Guardado en Supabase';node.style.display=node.hidden?'none':''; }
-  function message(text) { $('auth-message').textContent = text; }
+  function message(text) { $('auth-message').textContent = text === 'Ingresá con tu cuenta de Kairos.' ? '' : text; }
   function lock(text) {
     ready = false; app.hidden = true; app.inert = true; gate.hidden = false;
     document.querySelectorAll('dialog[open]').forEach(d => d.close());
