@@ -1149,7 +1149,7 @@ function renderRedesMonth(){
  if(!rCalendars.some(c=>c.id===rSelectedCalendar))rSelectedCalendar=rCalendars[0]?.id;
  rCalendars.forEach(calendar=>{
  const row=el('div','redes-category'+(calendar.id===rSelectedCalendar?' selected':'')),select=el('button','redes-category-select'),words=el('span','redes-category-copy');
- select.type='button';select.setAttribute('aria-pressed',String(calendar.id===rSelectedCalendar));words.append(el('strong','',bullet(calendar.name)),el('span','',redesDays(redesStats(calendar).current)));select.append(words);select.onclick=()=>{rSelectedCalendar=calendar.id;renderRedesMonth()};
+ select.type='button';select.setAttribute('aria-pressed',String(calendar.id===rSelectedCalendar));words.append(el('strong','',bullet(calendar.name)));select.append(words);select.onclick=()=>{rSelectedCalendar=calendar.id;renderRedesMonth()};
 
  row.append(select);attachRedesCalendarDrag(row,select,calendar.id);list.append(row)
  });
