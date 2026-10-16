@@ -658,6 +658,12 @@ body{background:#090a09;padding-bottom:120px}
 #kairos-app #task-sections .agenda-section-button:is([aria-pressed=true],:hover,:active,:focus-visible){border-color:transparent;background:transparent;box-shadow:none}
 
 .redes-edit-tools .redes-calendar-icon{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;padding:9px;color:var(--ink)}
+
+.redes-native .redes-category{padding:8px 10px;gap:4px}
+.redes-native .redes-category-select{display:flex;flex:1;min-width:0;align-self:stretch;align-items:center;text-align:left;padding:5px 6px;background:transparent;border:0;box-shadow:none}
+.redes-native .redes-category-delete{display:inline-flex;align-items:center;justify-content:center;flex:0 0 34px;width:34px;height:36px;padding:8px;background:transparent;border:1px solid transparent;border-radius:7px;color:var(--muted)}
+.redes-native .redes-category-delete:hover{color:var(--gold-light);border-color:var(--line)}
+
 </style></head><body>
 <section id="auth-gate" aria-label="Acceso a Kairos" hidden>
 
@@ -1106,6 +1112,7 @@ document.addEventListener('keydown',event=>{
 });
 function redesDays(count){return count+' '+(count===1?'día':'días')}
 function addRedesCategory(){rPush();const category={id:uid(),name:'Nueva categoría',meses:{}};rCalendars.push(category);rSelectedCalendar=category.id;rSave();renderRedesMonth();refreshRedesButtons();editRedesCategory(category)}
+function deleteRedesCategory(calendar){rPush();rCalendars=rCalendars.filter(c=>c.id!==calendar.id);rSave();renderRedesMonth();refreshRedesButtons()}
 function editRedesCategory(calendar){
  const dialog=el('dialog','redes-editor'),heading=el('h2','','Editar categoría'),form=el('form'),label=el('label','field','Nombre'),input=el('input'),actions=el('div','actions');
  input.value=calendar.name;input.required=true;input.maxLength=100;label.append(input);
@@ -1113,7 +1120,7 @@ function editRedesCategory(calendar){
  const save=el('button','','Guardar');save.type='submit';actions.append(close,save);
  const tools=el('div','redes-edit-tools');
  const duplicate=el('button','redes-calendar-icon');duplicate.type='button';duplicate.title='Duplicar';duplicate.setAttribute('aria-label','Duplicar categoría');duplicate.append(lineIcon('<rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 3H5a2 2 0 0 0-2 2v11"/>'));duplicate.onclick=()=>{rPush();const copy={...JSON.parse(JSON.stringify(calendar)),id:uid(),name:calendar.name+' (copia)'};rCalendars.push(copy);rSelectedCalendar=copy.id;rSave();dialog.close();renderRedesMonth();refreshRedesButtons()};
- const remove=el('button','redes-calendar-icon');remove.type='button';remove.title='Eliminar';remove.setAttribute('aria-label','Eliminar categoría');remove.append(lineIcon('<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/>'));remove.onclick=()=>{if(!confirm('¿Eliminar '+calendar.name+' y sus registros? Podés recuperarlos con Deshacer.'))return;rPush();rCalendars=rCalendars.filter(c=>c.id!==calendar.id);rSave();dialog.close();renderRedesMonth();refreshRedesButtons()};
+ const remove=el('button','redes-calendar-icon');remove.type='button';remove.title='Eliminar';remove.setAttribute('aria-label','Eliminar categoría');remove.append(lineIcon('<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/>'));remove.onclick=()=>{dialog.close();deleteRedesCategory(calendar)};
  tools.append(duplicate,remove);form.append(label,tools,actions);form.onsubmit=event=>{event.preventDefault();const value=input.value.trim();if(!value){input.setCustomValidity('Escribí un nombre');input.reportValidity();return}rPush();calendar.name=value;rSave();dialog.close();renderRedesMonth();refreshRedesButtons()};input.oninput=()=>input.setCustomValidity('');
  dialog.append(heading,form);dialog.onclose=()=>dialog.remove();document.body.append(dialog);dialog.showModal();input.focus();input.select()
 }
@@ -1125,9 +1132,10 @@ function renderRedesMonth(){
  const list=el('div','redes-category-list');list.setAttribute('aria-label','Categorías');
  if(!rCalendars.some(c=>c.id===rSelectedCalendar))rSelectedCalendar=rCalendars[0]?.id;
  rCalendars.forEach(calendar=>{
- const row=el('button','redes-category'+(calendar.id===rSelectedCalendar?' selected':'')),words=el('span','redes-category-copy');
- row.setAttribute('aria-pressed',String(calendar.id===rSelectedCalendar));words.append(el('strong','',calendar.name),el('span','',redesDays(redesStats(calendar).current)));row.append(words,el('span','redes-chevron','›'));row.onclick=()=>{rSelectedCalendar=calendar.id;renderRedesMonth()};
- attachRedesCalendarDrag(row,row,calendar.id);list.append(row)
+ const row=el('div','redes-category'+(calendar.id===rSelectedCalendar?' selected':'')),select=el('button','redes-category-select'),words=el('span','redes-category-copy');
+ select.type='button';select.setAttribute('aria-pressed',String(calendar.id===rSelectedCalendar));words.append(el('strong','',bullet(calendar.name)),el('span','',redesDays(redesStats(calendar).current)));select.append(words);select.onclick=()=>{rSelectedCalendar=calendar.id;renderRedesMonth()};
+ const remove=el('button','redes-category-delete redes-calendar-icon');remove.type='button';remove.title='Eliminar categoría';remove.setAttribute('aria-label','Eliminar categoría '+calendar.name);remove.append(lineIcon('<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/>'));remove.onclick=()=>deleteRedesCategory(calendar);
+ row.append(select,remove);attachRedesCalendarDrag(row,select,calendar.id);list.append(row)
  });
  sidebar.append(list);layout.append(sidebar);
  const calendar=rCalendars.find(c=>c.id===rSelectedCalendar),detail=el('section','redes-detail');
