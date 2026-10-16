@@ -460,15 +460,33 @@ small,.muted,.count,.weekday,.calendar-hint,.field,.balance-native .cat-footer,.
 @media(max-height:720px) and (min-width:541px){#auth-gate{padding-top:20px;padding-bottom:20px}#auth-gate .auth-card{padding-top:26px;padding-bottom:22px}.auth-brand{margin-bottom:22px}#auth-gate .auth-intro{margin-bottom:23px}.auth-status{margin-top:23px}}
 
 #auth-gate .auth-card h2{font-size:30px!important;font-weight:500!important}@media(max-width:540px){#auth-gate .auth-card h2{font-size:27px!important}}
+
+/* Acceso minimalista: marca centrada y controles esenciales. */
+#auth-gate{background:radial-gradient(ellipse at 50% 45%,#17130c55,transparent 65%),#090909;padding:36px 20px}
+#auth-gate .auth-card{max-width:480px;padding:48px 42px 32px;border-color:#b48337;border-radius:22px;background:linear-gradient(135deg,#0d0e0eef,#090a0a 70%);box-shadow:0 12px 60px #0005;backdrop-filter:none}
+#auth-gate .auth-brand{flex-direction:column;gap:16px;margin:0 0 46px}
+#auth-gate .auth-brand>svg{width:86px;height:86px;filter:none}
+#auth-gate .auth-brand>span{font:400 42px/1.15 Outfit,sans-serif;letter-spacing:.14em;padding-left:.14em;color:#f5f0df}
+#auth-gate .auth-field .auth-accessible-label{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.auth-input-wrap{position:relative}
+#auth-gate .auth-input-icon{position:absolute;left:18px;top:0;height:54px;display:flex;align-items:center;pointer-events:none;color:#e8ba62}
+#auth-gate .auth-input-icon svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+#auth-gate .auth-field input{padding-left:57px;border-color:#786037;background:#080909;border-radius:11px}
+#auth-gate #auth-password{padding-left:57px}
+#auth-gate #auth-form{gap:20px}
+#auth-gate #auth-submit{height:60px;margin-top:6px}
+#auth-gate .auth-status{margin-top:30px}
+#auth-gate .auth-status-divider{margin-left:30px;margin-right:30px;margin-bottom:20px}
+#auth-gate #auth-message{font-size:12px;min-height:32px}
+@media(max-width:540px){#auth-gate{padding:24px 18px}#auth-gate .auth-card{padding:38px 25px 26px;border-radius:20px}#auth-gate .auth-brand{margin-bottom:36px;gap:14px}#auth-gate .auth-brand>svg{width:76px;height:76px}#auth-gate .auth-brand>span{font-size:36px}}
+@media(max-height:700px) and (min-width:541px){#auth-gate{padding:20px}#auth-gate .auth-card{padding-top:30px;padding-bottom:24px}#auth-gate .auth-brand{margin-bottom:30px}#auth-gate .auth-brand>svg{width:70px;height:70px}#auth-gate .auth-brand>span{font-size:36px}}
 </style></head><body>
 <section id="auth-gate" aria-label="Acceso a Kairos">
-<div class="auth-scenery" aria-hidden="true"><div class="auth-orbit"></div><div class="auth-terrain"></div></div>
+
 <div class="auth-card">
-<div class="auth-brand"><svg viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="auth-sun" x2="0" y2="1"><stop stop-color="#fff2b4"/><stop offset="1" stop-color="#d99232"/></linearGradient></defs><rect x="1" y="1" width="62" height="62" rx="14" fill="#0c0b09" stroke="#b08035"/><path d="M10 38a22 22 0 0 1 44 0M2 48Q32 28 62 48M32 3v58" fill="none" stroke="#d9a247" stroke-width=".7"/><path d="M19 39a13 13 0 0 1 26 0Z" fill="url(#auth-sun)"/><path d="M32 10v36M13 34h38" stroke="#ffe3a0" stroke-width=".6"/></svg><span>KAIROS</span></div>
-<h2>Ingresá a Kairos</h2><p class="auth-intro">Tu espacio para convertir ideas en acción.</p>
-<form id="auth-form">
-<div class="auth-field"><label for="auth-email"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 6 9 7 9-7"/></svg><span>Correo electrónico</span></label><input id="auth-email" type="email" autocomplete="username" placeholder="tu@correo.com" required></div>
-<div class="auth-field"><label for="auth-password"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="10" width="12" height="11" rx="2"/><path d="M9 10V6a3 3 0 0 1 6 0v4"/><path d="M12 14v3"/></svg><span>Contraseña</span></label><div class="auth-password-wrap"><input id="auth-password" type="password" autocomplete="current-password" placeholder="Tu contraseña" required><button id="auth-password-toggle" type="button" aria-label="Mostrar contraseña" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
+<div class="auth-brand"><svg viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="auth-sun" x2="0" y2="1"><stop stop-color="#fff2b4"/><stop offset="1" stop-color="#e8a33d"/></linearGradient><filter id="auth-halo"><feGaussianBlur stdDeviation="3"/></filter></defs><rect x="1" y="1" width="62" height="62" rx="14" fill="#0a0a09" stroke="#e0b257" stroke-width=".8"/><circle cx="32" cy="32" r="12" fill="#e5a242" opacity=".3" filter="url(#auth-halo)"/><path d="M32 9v47" stroke="#f1cc77" stroke-width="1"/><path d="M19 40a13 13 0 0 1 26 0Z" fill="url(#auth-sun)"/><path d="M2 49Q32 29 62 49" fill="none" stroke="#e8b55a" stroke-width="1"/></svg><span>KAIROS</span></div><form id="auth-form">
+<div class="auth-field"><label class="auth-accessible-label" for="auth-email">Correo electrónico</label><div class="auth-input-wrap"><span class="auth-input-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 6 9 7 9-7"/></svg></span><input id="auth-email" type="email" autocomplete="username" placeholder="Correo electrónico" required></div></div>
+<div class="auth-field"><label class="auth-accessible-label" for="auth-password">Contraseña</label><div class="auth-password-wrap auth-input-wrap"><span class="auth-input-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="10" width="12" height="11" rx="2"/><path d="M9 10V6a3 3 0 0 1 6 0v4"/><path d="M12 14v3"/></svg></span><input id="auth-password" type="password" autocomplete="current-password" placeholder="Tu contraseña" required><button id="auth-password-toggle" type="button" aria-label="Mostrar contraseña" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
 <button id="auth-submit" type="submit">Ingresar</button></form>
 <div class="auth-status"><div class="auth-status-divider" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="10" width="12" height="11" rx="2"/><path d="M9 10V6a3 3 0 0 1 6 0v4"/><path d="M12 14v3"/></svg></div><p id="auth-message" role="status">Comprobando el acceso…</p></div>
 <div id="auth-conflict" hidden><button id="auth-conflict-download">Descargar mis cambios pendientes</button><button id="auth-conflict-load" disabled>Cargar versión de la nube</button></div>
