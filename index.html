@@ -580,6 +580,20 @@ body{background:#090a09;padding-bottom:120px}
 
 /* Atila includes its own circular frame in the supplied artwork. */
 .performance-portrait[src^="assets/atila-portrait.svg"],.performance-scale-portrait[src^="assets/atila-portrait.svg"]{border:0;border-radius:0;background:transparent;object-fit:contain}
+
+/* Keep the reference between Alcance and Gestión. */
+.performance-panel{grid-template-columns:minmax(0,1fr) minmax(320px,1.25fr) minmax(0,1fr);align-items:center}
+.performance-scale+.performance-metric{border-left:1px solid #9c783b88}
+@media(max-width:1000px){
+ .performance-panel{grid-template-columns:minmax(0,1fr)}
+ .performance-metric{grid-template-columns:minmax(140px,1fr) minmax(150px,1fr);padding:0;gap:20px}
+ .performance-figure{padding-left:0}
+ .performance-scale{grid-column:auto}
+ .performance-scale+.performance-metric{border-left:0;border-top:1px solid #9c783b66;margin-top:18px;padding-top:18px}
+}
+@media(max-width:420px){
+ .performance-metric{grid-template-columns:minmax(115px,1fr) minmax(110px,1fr);gap:12px}
+}
 </style></head><body>
 <section id="auth-gate" aria-label="Acceso a Kairos">
 
@@ -757,13 +771,12 @@ function renderIntegratedMetrics(page){
   const formula=el('small','performance-formula',metric.formula);summary.append(formula);card.append(summary,figure);panel.append(card);
  });
  const scale=el('aside','performance-scale');scale.setAttribute('aria-label','Escala de desempeño de Alcance sobre seis tarjetas');
- const scaleHeading=el('h3','','Escala de desempeño');scale.append(scaleHeading,el('p','performance-scale-context','Alcance · referencia sobre 6 tarjetas'));
  const levels=el('div','performance-scale-levels');
  [{name:'Atila',image:portraits.atila,count:'0–2',range:'0–33,3%'},{name:'Marco Aurelio',image:portraits.marco,count:'3–4',range:'50–66,7%'},{name:'Buda',image:portraits.buda,count:'5–6',range:'83,3–100%'}].forEach(level=>{
   const item=el('div','performance-scale-level'),portrait=el('img','performance-scale-portrait');portrait.src=level.image;portrait.alt='';portrait.width=56;portrait.height=56;
   item.append(portrait,el('strong','',level.name),el('span','performance-scale-count',level.count),el('small','',level.range));levels.append(item);
  });
- scale.append(levels);panel.append(scale);
+ scale.append(levels);panel.insertBefore(scale,panel.children[1]);
  page.append(panel);
 }
 
