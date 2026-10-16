@@ -623,6 +623,9 @@ body{background:#090a09;padding-bottom:120px}
 .balance-native .balance-investments{max-width:300px;color:var(--text-dim);font-size:12px}
 .balance-investments summary{cursor:pointer;padding:8px 0}
 @media(max-width:640px){.balance-section-title{margin-left:12px}}
+
+.redes-date.is-today{position:relative}
+.redes-date.is-today::after{content:"";position:absolute;left:32%;right:32%;bottom:6px;height:1px;background:var(--gold);border-radius:1px;pointer-events:none}
 </style></head><body>
 <section id="auth-gate" aria-label="Acceso a Kairos">
 
@@ -1056,6 +1059,7 @@ function attachRedesCalendarDrag(card,bar,id){
 }
 
 function renderRedesMonth(){
+ const today=new Date();
  const host=document.querySelector('.redes-month');if(!host)return;host.replaceChildren();
  const cards=el('div','redes-calendars');
  rCalendars.forEach(calendar=>{
@@ -1083,12 +1087,12 @@ function renderRedesMonth(){
  ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'].forEach(name=>grid.append(el('span','redes-weekday',name)));
  for(let blank=0;blank<(new Date(year,month,1).getDay()+6)%7;blank++)grid.append(el('span',''));
  for(let day=1;day<=days;day++){
- const marked=selected.includes(day),button=el('button','redes-date'+(marked?' crossed':''),String(day));
+ const marked=selected.includes(day),isToday=year===today.getFullYear()&&month===today.getMonth()&&day===today.getDate(),button=el('button','redes-date'+(marked?' crossed':'')+(isToday?' is-today':''),String(day));if(isToday)button.setAttribute('aria-current','date');
  button.setAttribute('aria-label',day+' de '+date.toLocaleDateString('es-AR',{month:'long',year:'numeric'})+' - '+calendar.name);button.setAttribute('aria-pressed',String(marked));
  button.onclick=()=>{rPush();calendar.meses[key]=marked?selected.filter(value=>value!==day):[...selected,day].sort((a,b)=>a-b);rSave();renderRedesMonth();refreshRedesButtons()};grid.append(button)
  }
  const totalDays=redesCalendarTotal(calendar);
- card.append(grid,el('p','redes-month-count','Conteo: '+totalDays+' '+(totalDays===1?'día':'días')));cards.append(card)
+ card.append(grid,el('p','redes-month-count','Conteo: '+totalDays+' '+(totalDays===1?'día':'días')+'.'));cards.append(card)
  });
  const add=el('button','redes-calendar-add','+ Añadir calendario');
  add.onclick=()=>{rPush();rCalendars.push({id:uid(),name:'Nueva categoría',meses:{}});rSave();renderRedesMonth();refreshRedesButtons()};
