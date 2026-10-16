@@ -670,6 +670,7 @@ body{background:#090a09;padding-bottom:120px}
 #page.redes-native :is(h2,h3,p,button,strong,dt,dd,.redes-category-copy>span,.redes-weekday,.redes-date),
 dialog.redes-editor :is(h2,label,input,button){font-family:'Outfit',sans-serif!important;font-size:16px!important;font-weight:500!important;line-height:24px!important}
 
+.redes-detail-heading{justify-content:flex-end;padding:14px 28px}
 </style></head><body>
 <section id="auth-gate" aria-label="Acceso a Kairos" hidden>
 
@@ -1146,11 +1147,11 @@ function renderRedesMonth(){
  sidebar.append(list);layout.append(sidebar);
  const calendar=rCalendars.find(c=>c.id===rSelectedCalendar),detail=el('section','redes-detail');
  if(!calendar){const add=el('button','','Añadir categoría');add.onclick=addRedesCategory;detail.append(el('h2','','Tu próximo hábito empieza acá'),el('p','muted','Creá una categoría para comenzar a registrar tus días.'),add);layout.append(detail);host.append(layout);return}
- const stats=redesStats(calendar),heading=el('div','redes-detail-heading'),copy=el('div'),edit=el('button','redes-edit');
- copy.append(el('h2','',calendar.name),el('p','',redesDays(stats.current)+' de abstinencia.'));
+ const stats=redesStats(calendar),heading=el('div','redes-detail-heading'),edit=el('button','redes-edit');
+ detail.setAttribute('aria-label','Calendario de '+calendar.name);
  edit.setAttribute('aria-label','Editar categoría');edit.title='Editar categoría';edit.append(lineIcon('<path d="m16 3 5 5-12 12-6 1 1-6Z M14 5l5 5"/>'));edit.onclick=()=>editRedesCategory(calendar);const actions=el('div','redes-detail-actions');
  const remove=el('button','redes-category-delete redes-calendar-icon');remove.type='button';remove.title='Eliminar categoría';remove.setAttribute('aria-label','Eliminar categoría '+calendar.name);remove.append(lineIcon('<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/>'));remove.onclick=()=>deleteRedesCategory(calendar);
- actions.append(edit,remove);heading.append(copy,actions);detail.append(heading);
+ actions.append(edit,remove);heading.append(actions);detail.append(heading);
  const body=el('div','redes-detail-body'),card=el('section','redes-calendar-card'),date=rCalendarDates[calendar.id]||rMonthDate;
  const year=date.getFullYear(),month=date.getMonth(),key=year+'-'+String(month+1).padStart(2,'0'),days=new Date(year,month+1,0).getDate(),selected=calendar.meses?.[key]||[],bar=el('div','redes-month-bar'),prev=el('button','','‹'),next=el('button','','›');
  prev.setAttribute('aria-label','Mes anterior');next.setAttribute('aria-label','Mes siguiente');prev.onclick=()=>{rCalendarDates[calendar.id]=new Date(year,month-1,1);renderRedesMonth()};next.onclick=()=>{rCalendarDates[calendar.id]=new Date(year,month+1,1);renderRedesMonth()};
