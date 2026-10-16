@@ -650,6 +650,13 @@ body{background:#090a09;padding-bottom:120px}
 @media(max-width:1100px){.redes-workspace{gap:18px;grid-template-columns:250px minmax(0,1fr)}.redes-detail-body{grid-template-columns:minmax(0,1fr);gap:12px;padding:20px}.redes-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px;border-left:0;border-top:1px solid var(--line);padding:12px 0 0;margin:0}.redes-stats>div{padding:10px 0}.redes-detail-heading{padding:20px}.redes-edit{font-size:13px!important;padding:9px}.redes-detail-heading h2{font-size:25px!important}}
 @media(max-width:700px){.redes-workspace{grid-template-columns:minmax(0,1fr)}.redes-sidebar{padding:16px}.redes-category-list{max-height:250px}.redes-category{min-height:66px}.redes-detail-heading{flex-wrap:wrap}.redes-detail-heading p{font-size:17px}.redes-detail-body{padding:16px;gap:20px}.redes-detail .redes-date{height:52px;font-size:17px!important}.redes-month-grid{gap:4px}.redes-weekday{font-size:13px!important}.redes-month-bar h3{font-size:18px!important}.redes-stats dd{font-size:19px}.redes-stats>div:first-child dd{font-size:27px}}
 
+
+/* Keep navigation tabs unboxed in both workspace panels. */
+#kairos-app .nav button,
+#kairos-app .nav button:is([aria-selected=true],:hover,:active,:focus-visible),
+#kairos-app #task-sections .agenda-section-button,
+#kairos-app #task-sections .agenda-section-button:is([aria-pressed=true],:hover,:active,:focus-visible){border-color:transparent;background:transparent;box-shadow:none}
+
 </style></head><body>
 <section id="auth-gate" aria-label="Acceso a Kairos">
 
