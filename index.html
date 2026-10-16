@@ -671,6 +671,14 @@ body{background:#090a09;padding-bottom:120px}
 dialog.redes-editor :is(h2,label,input,button){font-family:'Outfit',sans-serif!important;font-size:16px!important;font-weight:500!important;line-height:24px!important}
 
 .redes-detail-heading{justify-content:flex-end;padding:14px 28px}
+
+/* Keep a dedicated vertical scrollbar in the category navigator. */
+.redes-category-list{overflow-y:scroll;scrollbar-gutter:stable;overscroll-behavior-y:contain}
+.redes-category-list>.redes-category{flex-shrink:0}
+.redes-category-list::-webkit-scrollbar{width:8px}
+.redes-category-list::-webkit-scrollbar-track{background:#ffffff0b;border-radius:8px}
+.redes-category-list::-webkit-scrollbar-thumb{background:var(--gold);border:2px solid var(--bg);border-radius:8px}
+
 </style></head><body>
 <section id="auth-gate" aria-label="Acceso a Kairos" hidden>
 
@@ -1132,11 +1140,11 @@ function editRedesCategory(calendar){
  dialog.append(heading,form);dialog.onclose=()=>dialog.remove();document.body.append(dialog);dialog.showModal();input.focus();input.select()
 }
 function renderRedesMonth(){
- const host=document.querySelector('.redes-month');if(!host)return;host.replaceChildren();
+ const host=document.querySelector('.redes-month');if(!host)return;const scrollTop=host.querySelector('.redes-category-list')?.scrollTop||0;host.replaceChildren();
  const layout=el('div','redes-workspace'),sidebar=el('aside','redes-sidebar'),sidehead=el('div','redes-sidehead'),manage=el('button','redes-manage');
  manage.setAttribute('aria-label','Añadir categoría');manage.title='Añadir categoría';manage.append(lineIcon('<path d="M4 6h16M4 12h16M4 18h16M8 3v6M16 9v6M10 15v6"/>'));manage.onclick=addRedesCategory;
  sidehead.append(el('h2','','✦ Categorías'),manage);sidebar.append(sidehead);
- const list=el('div','redes-category-list');list.setAttribute('aria-label','Categorías');
+ const list=el('div','redes-category-list');list.setAttribute('aria-label','Categorías');list.setAttribute('role','region');list.tabIndex=0;
  if(!rCalendars.some(c=>c.id===rSelectedCalendar))rSelectedCalendar=rCalendars[0]?.id;
  rCalendars.forEach(calendar=>{
  const row=el('div','redes-category'+(calendar.id===rSelectedCalendar?' selected':'')),select=el('button','redes-category-select'),words=el('span','redes-category-copy');
@@ -1146,7 +1154,7 @@ function renderRedesMonth(){
  });
  sidebar.append(list);layout.append(sidebar);
  const calendar=rCalendars.find(c=>c.id===rSelectedCalendar),detail=el('section','redes-detail');
- if(!calendar){const add=el('button','','Añadir categoría');add.onclick=addRedesCategory;detail.append(el('h2','','Tu próximo hábito empieza acá'),el('p','muted','Creá una categoría para comenzar a registrar tus días.'),add);layout.append(detail);host.append(layout);return}
+ if(!calendar){const add=el('button','','Añadir categoría');add.onclick=addRedesCategory;detail.append(el('h2','','Tu próximo hábito empieza acá'),el('p','muted','Creá una categoría para comenzar a registrar tus días.'),add);layout.append(detail);host.append(layout);list.scrollTop=scrollTop;return}
  const stats=redesStats(calendar),heading=el('div','redes-detail-heading'),edit=el('button','redes-edit');
  detail.setAttribute('aria-label','Calendario de '+calendar.name);
  edit.setAttribute('aria-label','Editar categoría');edit.title='Editar categoría';edit.append(lineIcon('<path d="m16 3 5 5-12 12-6 1 1-6Z M14 5l5 5"/>'));edit.onclick=()=>editRedesCategory(calendar);const actions=el('div','redes-detail-actions');
@@ -1167,7 +1175,7 @@ function renderRedesMonth(){
  button.onclick=()=>{rPush();calendar.meses=calendar.meses||{};calendar.meses[key]=marked?selected.filter(value=>value!==day):[...selected,day].sort((a,b)=>a-b);rSave();renderRedesMonth();refreshRedesButtons()};grid.append(button)
  }
  card.append(grid);const summary=el('dl','redes-stats');[['Conteo actual',redesDays(stats.current)],['Racha más larga',redesDays(stats.longest)],['Inicio',stats.start],['Último registro',stats.last]].forEach(([label,value])=>{const item=el('div');item.append(el('dt','',label),el('dd','',value));summary.append(item)});
- body.append(card,summary);detail.append(body);layout.append(detail);host.append(layout)
+ body.append(card,summary);detail.append(body);layout.append(detail);host.append(layout);list.scrollTop=scrollTop
 }
 
 function renderRedesPage(page){page.classList.add('balance-native','redes-native');page.append(el('section','redes-month'));rboard=el('div','budget-board');rboard.id='rboard';rboard.hidden=true;page.append(rboard);const footer=el('footer','total'),total=el('b');total.id='r-total';footer.hidden=true;footer.append(document.createTextNode('Total del mes: '),total,document.createTextNode(' días sin uso'));page.append(footer);renderRedes(redesData);refreshRedesButtons();}
