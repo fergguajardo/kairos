@@ -406,7 +406,9 @@ small,.muted,.count,.weekday,.calendar-hint,.field,.balance-native .cat-footer,.
 @media(prefers-reduced-motion:reduce){.nav button{transition:none}}
 
 /* Ancho de las tarjetas de control del Kanban. */
-#board:not(.eisenhower-layout) .card{width:225px;max-width:100%;box-sizing:border-box}
+#board:not(.eisenhower-layout){grid-template-columns:repeat(4,minmax(261px,1fr))}
+#board:not(.eisenhower-layout) .card{width:225px;box-sizing:border-box}
+@media(max-width:760px){#board:not(.eisenhower-layout){grid-template-columns:repeat(4,280px)}}
 </style></head><body>
 <section id="auth-gate" aria-label="Acceso a Kairos">
 <div class="auth-card"><img class="kairos-logo" src="assets/kairos-manrope.svg" alt="KAIROS" width="120" height="40">
