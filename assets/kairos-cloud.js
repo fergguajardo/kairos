@@ -33,12 +33,13 @@
   function status(text) { const node=$('cloud-status');node.textContent=text;node.hidden=text==='Guardado en Supabase';node.style.display=node.hidden?'none':''; }
   function message(text) { $('auth-message').textContent = text === 'Ingresá con tu cuenta de Kairos.' ? '' : text; }
   function lock(text) {
+    try{sessionStorage.removeItem(KEY+'-resume-ui');}catch{}
     ready = false; app.hidden = true; app.inert = true; gate.hidden = false;
     document.querySelectorAll('dialog[open]').forEach(d => d.close());
     $('auth-form').hidden=false;$('auth-conflict').hidden=true;
     if(text) message(text);
   }
-  function unlock() { ready = true; app.hidden = false; app.inert = false; gate.hidden = true; }
+  function unlock() { try{sessionStorage.setItem(KEY+'-resume-ui','1');}catch{} ready = true; app.hidden = false; app.inert = false; gate.hidden = true; }
   function persist() {
     localStorage.setItem(META,JSON.stringify({stamp,dirty,snapshot:dirty?pending:null}));
   }
