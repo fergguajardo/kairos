@@ -673,7 +673,8 @@ dialog.redes-editor :is(h2,label,input,button){font-family:'Outfit',sans-serif!i
 .redes-detail-heading{justify-content:flex-end;padding:14px 28px}
 
 /* Keep a dedicated vertical scrollbar in the category navigator. */
-.redes-category-list{overflow-y:scroll;scrollbar-gutter:stable;overscroll-behavior-y:contain}
+.redes-category-list{height: min(420px,55vh);max-height:min(420px,55vh);overflow-y:scroll;scrollbar-gutter:stable;overscroll-behavior-y:contain}
+@media(max-width:700px){.redes-category-list{height:min(250px,40vh);max-height:min(250px,40vh)}}
 .redes-category-list>.redes-category{flex-shrink:0}
 .redes-category-list::-webkit-scrollbar{width:8px}
 .redes-category-list::-webkit-scrollbar-track{background:#ffffff0b;border-radius:8px}
