@@ -1292,7 +1292,7 @@ function renderRedesMonth(){
  const body=el('div','redes-detail-body'),card=el('section','redes-calendar-card'),date=rCalendarDates[calendar.id]||rMonthDate;
  const year=date.getFullYear(),month=date.getMonth(),key=year+'-'+String(month+1).padStart(2,'0'),days=new Date(year,month+1,0).getDate(),selected=calendar.meses?.[key]||[],bar=el('div','redes-month-bar'),prev=el('button','','‹'),next=el('button','','›');
  prev.setAttribute('aria-label','Mes anterior');next.setAttribute('aria-label','Mes siguiente');prev.onclick=()=>{rCalendarDates[calendar.id]=new Date(year,month-1,1);renderRedesMonth()};next.onclick=()=>{rCalendarDates[calendar.id]=new Date(year,month+1,1);renderRedesMonth()};
- const monthName=date.toLocaleDateString('es-AR',{month:'long',year:'numeric'});const monthLabel=el('h3','',['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][month]);monthLabel.setAttribute('aria-label',monthName);monthLabel.title=monthName;bar.append(prev,monthLabel,next);card.append(bar);
+ const monthName=date.toLocaleDateString('es-AR',{month:'long',year:'numeric'});const monthLabel=el('h3','',['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][month]+' '+year);monthLabel.setAttribute('aria-label',monthName);monthLabel.title=monthName;bar.append(prev,monthLabel,next);card.append(bar);
  const grid=el('div','redes-month-grid');grid.setAttribute('role','group');grid.setAttribute('aria-label','Días de '+calendar.name);
  ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'].forEach(name=>grid.append(el('span','redes-weekday',name)));
  const offset=(new Date(year,month,1).getDay()+6)%7,total=Math.ceil((offset+days)/7)*7,today=new Date();today.setHours(0,0,0,0);
