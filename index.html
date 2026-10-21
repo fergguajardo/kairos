@@ -758,20 +758,22 @@ dialog.redes-editor :is(h2,label,input,button){font-family:'Outfit',sans-serif!i
 @media(max-width:1100px){#page.balance-native .balance-focus-center .item{gap:5px}#page.balance-native .balance-focus-center .item-row{gap:3px}#page.balance-native .balance-focus-center .item-row input.price{width:62px}#page.balance-native .balance-focus-center .item-row .gasto{min-width:54px;font-size:12px!important}#page.balance-native .balance-focus-center .item-row input.qty{width:32px}#page.balance-native .balance-focus-center .balance-product-number{min-width:18px;margin-right:0}}
 @media(min-width:501px) and (max-width:800px){.balance-focus-workspace{grid-template-columns:1fr}.balance-focus-nav{max-height:180px}}
 </style><style id="balance-centered-values">#page.balance-native .balance-focus-center .item-row input.qty,#page.balance-native .balance-focus-center .item-row input.price,#page.balance-native .balance-focus-center .item-row .gasto{text-align:center}</style>
-<style id="apps-vertical-navigation">
+<style id="apps-horizontal-navigation">
 #page:has(>.apps-workspace){padding:0;background:transparent;border:0;border-radius:0}
-.apps-workspace{display:grid;grid-template-columns:96px minmax(0,1fr);gap:24px;align-items:start}
-.apps-sidebar{padding:16px;border:1px solid var(--line);border-radius:12px;background:#0002;min-width:0}
-.apps-category-rail{display:flex;flex-direction:column;gap:10px;height:min(300px,45vh);overflow-y:scroll;overflow-x:hidden;scrollbar-gutter:stable;overscroll-behavior-y:contain;padding-right:8px;scrollbar-width:thin;scrollbar-color:var(--gold) #ffffff0b}
-.apps-category-button{display:flex;align-items:center;justify-content:center;gap:14px;flex:0 0 auto;min-height:76px;width:100%;padding:16px 12px;border:1px solid transparent;border-radius:9px;background:transparent;color:var(--muted);font:400 16px Outfit,sans-serif;text-align:left}
+.apps-workspace{display:grid;grid-template-columns:minmax(0,1fr);gap:24px;align-items:start}
+.apps-sidebar{padding:12px;border:1px solid var(--line);border-radius:12px;background:#0002;min-width:0}
+.apps-category-rail{display:flex;flex-direction:row;gap:10px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:thin;scrollbar-color:var(--gold) #ffffff0b}
+.apps-category-button{display:flex;align-items:center;justify-content:center;gap:14px;flex:1 0 auto;min-height:64px;padding:16px 20px;border:1px solid transparent;border-radius:9px;background:transparent;color:var(--muted);font:400 16px Outfit,sans-serif;white-space:nowrap}
 .apps-category-button[aria-pressed=true]{background:#E5B95C0d;border-color:var(--line);color:var(--ink)}
 .apps-category-button:hover{color:var(--gold);border-color:var(--line)}
 .apps-category-button .browser-icon{color:var(--gold);flex-shrink:0}
 .apps-category-button svg{width:26px;height:26px}
-.apps-category-rail::-webkit-scrollbar{width:8px}.apps-category-rail::-webkit-scrollbar-track{background:#ffffff0b;border-radius:8px}.apps-category-rail::-webkit-scrollbar-thumb{background:var(--gold);border:2px solid var(--bg);border-radius:8px}
 .apps-category-rail:focus-visible,.apps-category-button:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
 .apps-detail{min-width:0}.apps-detail .apps-category{margin-top:0}
-@media(max-width:700px){.apps-workspace{grid-template-columns:76px minmax(0,1fr);gap:12px}.apps-sidebar{padding:8px}.apps-category-button{padding:12px 6px;gap:8px;font-size:13px;min-height:68px}.apps-category-button svg{width:20px;height:20px}.apps-category-rail{height:220px;padding-right:4px}.apps-detail .calendar-tools{display:flex;flex-direction:column;align-items:stretch}.apps-detail .app-link{min-width:0;overflow-wrap:anywhere}.apps-detail h2{font-size:17px!important}}
+.apps-detail .calendar-tools{display:flex;flex-direction:row;flex-wrap:wrap;gap:12px}
+.apps-detail .app-link{display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;min-width:0;padding:16px}
+.apps-detail .app-logo{width:28px;height:28px}.apps-detail .app-logo svg{width:28px;height:28px}
+@media(max-width:700px){.apps-workspace{gap:16px}.apps-sidebar{padding:8px}.apps-category-rail{gap:4px}.apps-category-button{padding:12px 10px;gap:8px;font-size:13px;min-height:56px}.apps-category-button svg{width:20px;height:20px}}
 </style></head><body>
 <section id="auth-gate" aria-label="Acceso a Kairos" hidden>
 
@@ -1045,21 +1047,21 @@ function normalizeEisenhower(value){
   return {id,title:task.title,description:String(task.description||''),due:/^\d{4}-\d{2}-\d{2}$/.test(task.due||'')?task.due:'',quadrant:task.quadrant,subtasks:(task.subtasks||[]).map(sub=>{if(!sub||typeof sub.title!=='string')throw Error('Subtarea inválida');return {title:sub.title,done:!!sub.done}})};
  });
 }
-let appsSelectedCategory='Asistencia';
+let appsSelectedCategory='Innovación';
 function renderPage(){const page=$('page');page.replaceChildren();if(['eisenhower','impact','books'].includes(currentPage))return;page.classList.toggle('board-browser',currentPage==='view');if(currentPage==='mail'){
  const layout=el('div','apps-workspace'),sidebar=el('nav','apps-sidebar'),rail=el('div','apps-category-rail'),detail=el('div','apps-detail');
- sidebar.setAttribute('aria-label','Categorías de Apps');rail.setAttribute('role','region');rail.setAttribute('aria-label','Navegación vertical de categorías');rail.tabIndex=0;
+ sidebar.setAttribute('aria-label','Categorías de Apps');rail.setAttribute('role','region');rail.setAttribute('aria-label','Navegación horizontal de categorías');rail.tabIndex=0;
  sidebar.append(rail);layout.append(sidebar,detail);page.append(layout);
  const entries=[];
- [['Asistencia',[['ChatGPT','https://chatgpt.com/']]],['Seguridad',[['GitHub','https://github.com/'],['Supabase','https://supabase.com/dashboard']]],['Servicios',[['Galicia','https://www.galicia.ar/'],['Mercado Libre','https://www.mercadolibre.com.ar/']]],['Cinemática',[['Flow','https://labs.google/fx/tools/flow']]]].forEach(([category,apps])=>{const section=el('section','app-category apps-category');section.setAttribute('aria-label',category);const links=el('div','calendar-tools');apps.forEach(([name,url])=>{const a=el('a','mail-link app-link',name),direct=['ChatGPT','Claude','Pixabay','Gemini','Flow'].includes(name),logo=el(direct?'span':'img','app-logo'+(direct?' app-logo-flat':''));if(direct){logo.setAttribute('aria-hidden','true');logo.innerHTML=APP_ISOTYPES[name].replace(/fill="#F4EFE6"/g,'fill="currentColor"');logo.querySelector('title')?.remove();if(name==='Claude')logo.style.color='#D97757'}else{logo.src=APP_ISOTYPES[name]?'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(APP_ISOTYPES[name]):'https://www.google.com/s2/favicons?sz=64&domain_url='+encodeURIComponent(url);logo.alt='';logo.width=24;logo.height=24;logo.loading='lazy';logo.referrerPolicy='no-referrer';logo.onerror=()=>{logo.hidden=true}};a.prepend(logo);a.href=url;a.target='_blank';a.rel='noopener noreferrer';links.append(a)});section.append(links);
+ [['Innovación',[['ChatGPT','https://chatgpt.com/'],['Flow','https://labs.google/fx/tools/flow']]],['Finanzas',[['Banco Galicia','https://www.galicia.ar/'],['Mercado Libre','https://www.mercadolibre.com.ar/']]],['Seguridad',[['GitHub','https://github.com/'],['Supabase','https://supabase.com/dashboard']]]].forEach(([category,apps])=>{const section=el('section','app-category apps-category');section.setAttribute('aria-label',category);const links=el('div','calendar-tools');apps.forEach(([name,url])=>{const a=el('a','mail-link app-link'),direct=['ChatGPT','Claude','Pixabay','Gemini','Flow'].includes(name),logo=el(direct?'span':'img','app-logo'+(direct?' app-logo-flat':''));if(direct){logo.setAttribute('aria-hidden','true');logo.innerHTML=APP_ISOTYPES[name].replace(/fill="#F4EFE6"/g,'fill="currentColor"');logo.querySelector('title')?.remove();if(name==='Claude')logo.style.color='#D97757'}else{logo.src=APP_ISOTYPES[name==='Banco Galicia'?'Galicia':name]?'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(APP_ISOTYPES[name==='Banco Galicia'?'Galicia':name]):'https://www.google.com/s2/favicons?sz=64&domain_url='+encodeURIComponent(url);logo.alt='';logo.width=24;logo.height=24;logo.loading='lazy';logo.referrerPolicy='no-referrer';logo.onerror=()=>{logo.hidden=true}};a.setAttribute('aria-label',name);a.title=name;a.prepend(logo);a.href=url;a.target='_blank';a.rel='noopener noreferrer';links.append(a)});section.append(links);
  const button=el('button','apps-category-button');button.type='button';button.title=category;button.setAttribute('aria-label',category);button.setAttribute('aria-pressed','false');
- const icons={'Asistencia':'<path d="M12 3v18M3 12h18M5 5l14 14M5 19 19 5"/>','Seguridad':'<path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6Z"/><path d="m8 12 3 3 5-6"/>','Servicios':'<path d="M4 8h16M6 8v12M12 8v12M18 8v12M3 21h18M3 6l9-4 9 4Z"/>','Cinemática':'<rect x="3" y="5" width="18" height="15" rx="2"/><path d="m10 10 5 3-5 3ZM3 9h18M7 5v4M12 5v4M17 5v4"/>'};
- const icon=lineIcon(icons[category]);icon.setAttribute('aria-hidden','true');button.prepend(icon);
+ const icons={'Innovación':'<path d="M12 3v18M3 12h18M5 5l14 14M5 19 19 5"/>','Seguridad':'<path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6Z"/><path d="m8 12 3 3 5-6"/>','Finanzas':'<path d="M4 8h16M6 8v12M12 8v12M18 8v12M3 21h18M3 6l9-4 9 4Z"/>','Cinemática':'<rect x="3" y="5" width="18" height="15" rx="2"/><path d="m10 10 5 3-5 3ZM3 9h18M7 5v4M12 5v4M17 5v4"/>'};
+ const icon=lineIcon(icons[category]);icon.setAttribute('aria-hidden','true');button.append(icon,el('span','',category));
  const show=()=>{appsSelectedCategory=category;entries.forEach(entry=>entry.button.setAttribute('aria-pressed',String(entry.category===category)));detail.replaceChildren(section)};
  button.onclick=show;rail.append(button);entries.push({category,button,show});
  });
  (entries.find(entry=>entry.category===appsSelectedCategory)||entries[0]).show();
- enableCategoryKeyboard(rail,'.apps-category-button',()=>document.querySelector('.apps-category-rail'));
+ enableCategoryKeyboard(rail,'.apps-category-button',()=>document.querySelector('.apps-category-rail'),true);
  return}if(currentPage==='metrics'){renderIntegratedMetrics(page);return}
 if(currentPage==='view'){renderBoardBrowser(page);return}
 
@@ -1124,15 +1126,16 @@ function ensureBalanceSections(b){
  b.categorias.forEach(category=>{category.balanceSection=balanceCategorySection(category)});b.ingresosComplemento??=[];b.inversionComplemento??=[];b.sectionsVersion=1;
  }
 }
-function enableCategoryKeyboard(container,selector,resolve){
+function enableCategoryKeyboard(container,selector,resolve,horizontal=false){
  container.tabIndex=0;
  container.onpointerdown=event=>{if(!event.target.closest('button,input,textarea,select,[contenteditable="true"]'))container.focus({preventScroll:true})};
  container.onkeydown=event=>{
   if(event.altKey||event.ctrlKey||event.metaKey||event.shiftKey||event.target.closest('input,textarea,select,[contenteditable="true"]'))return;
-  const keys=['ArrowDown','ArrowUp','Home','End'];if(!keys.includes(event.key))return;
+  const forward=horizontal?'ArrowRight':'ArrowDown',backward=horizontal?'ArrowLeft':'ArrowUp';
+  const keys=[forward,backward,'Home','End'];if(!keys.includes(event.key))return;
   const buttons=Array.from(container.querySelectorAll(selector));if(!buttons.length)return;
   const focused=buttons.indexOf(event.target.closest('button')),active=focused>=0?focused:Math.max(0,buttons.findIndex(button=>button.getAttribute('aria-pressed')==='true'));
-  const next=event.key==='Home'?0:event.key==='End'?buttons.length-1:Math.max(0,Math.min(buttons.length-1,active+(event.key==='ArrowDown'?1:-1)));
+  const next=event.key==='Home'?0:event.key==='End'?buttons.length-1:Math.max(0,Math.min(buttons.length-1,active+(event.key===forward?1:-1)));
   event.preventDefault();buttons[next].click();const current=(resolve()||container).querySelectorAll(selector)[next];if(current){current.focus({preventScroll:true});current.scrollIntoView({block:'nearest',inline:'nearest'})}
  };
 }
