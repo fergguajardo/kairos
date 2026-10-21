@@ -411,16 +411,16 @@ small,.muted,.count,.weekday,.calendar-hint,.field,.balance-native .cat-footer,.
 @media(max-width:760px){#board:not(.eisenhower-layout){grid-template-columns:repeat(4,280px)}}
 
 /* Navegación de las cuatro secciones de Tablero. */
-:is(#task-sections,#project-sections){max-width:100%;min-width:0;gap:12px}
-:is(#task-sections,#project-sections) .tablero-panel{display:flex;align-items:center;flex-wrap:nowrap;gap:4px;width:max-content;max-width:100%;height:60px;padding:7px 8px;border:1px solid #B98A35;border-radius:999px;background:linear-gradient(180deg,#080808,#0B0A08);box-shadow:0 6px 22px #0005;overflow-x:auto;box-sizing:border-box}
-:is(#task-sections,#project-sections) .agenda-section-button{position:relative;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;height:44px;gap:10px;padding:5px 13px;border:1px solid transparent;border-radius:12px;background:transparent;color:#F3E9CC;font-size:15px!important;font-weight:500!important;white-space:nowrap;box-sizing:border-box}
-:is(#task-sections,#project-sections) .agenda-section-button+.agenda-section-button::before{content:"";position:absolute;left:-3px;top:10px;bottom:10px;width:1px;background:#D2B57826;pointer-events:none}
-:is(#task-sections,#project-sections) .agenda-section-button[aria-pressed=true]{border-color:#E5B95C;background:radial-gradient(ellipse at center,#38280D38,transparent 85%);color:#F0C76B;box-shadow:inset 0 0 0 1px #E5B95C24}
-:is(#task-sections,#project-sections) .agenda-section-button:hover{background-color:#E5B95C08;color:#F0C76B}
-:is(#task-sections,#project-sections) .agenda-section-button:focus-visible{outline:2px solid #F0C76B;outline-offset:-3px}
-:is(#task-sections,#project-sections) .agenda-section-icon{width:28px;height:28px;flex-shrink:0;fill:none;stroke:#E5B95C;color:#E5B95C;stroke-width:1.2;stroke-linecap:round;stroke-linejoin:round}
-:is(#task-sections,#project-sections)>select{width:auto;max-width:220px;margin:0}
-@media(max-width:600px){:is(#task-sections,#project-sections){width:100%}:is(#task-sections,#project-sections) .tablero-panel{padding-left:5px;padding-right:5px}:is(#task-sections,#project-sections) .agenda-section-button{gap:8px;padding-left:10px;padding-right:10px}}
+:is(#task-sections,#project-sections,#apps-sections){max-width:100%;min-width:0;gap:12px}
+:is(#task-sections,#project-sections,#apps-sections) .tablero-panel{display:flex;align-items:center;flex-wrap:nowrap;gap:4px;width:max-content;max-width:100%;height:60px;padding:7px 8px;border:1px solid #B98A35;border-radius:999px;background:linear-gradient(180deg,#080808,#0B0A08);box-shadow:0 6px 22px #0005;overflow-x:auto;box-sizing:border-box}
+:is(#task-sections,#project-sections,#apps-sections) .agenda-section-button{position:relative;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;height:44px;gap:10px;padding:5px 13px;border:1px solid transparent;border-radius:12px;background:transparent;color:#F3E9CC;font-size:15px!important;font-weight:500!important;white-space:nowrap;box-sizing:border-box}
+:is(#task-sections,#project-sections,#apps-sections) .agenda-section-button+.agenda-section-button::before{content:"";position:absolute;left:-3px;top:10px;bottom:10px;width:1px;background:#D2B57826;pointer-events:none}
+:is(#task-sections,#project-sections,#apps-sections) .agenda-section-button[aria-pressed=true]{border-color:#E5B95C;background:radial-gradient(ellipse at center,#38280D38,transparent 85%);color:#F0C76B;box-shadow:inset 0 0 0 1px #E5B95C24}
+:is(#task-sections,#project-sections,#apps-sections) .agenda-section-button:hover{background-color:#E5B95C08;color:#F0C76B}
+:is(#task-sections,#project-sections,#apps-sections) .agenda-section-button:focus-visible{outline:2px solid #F0C76B;outline-offset:-3px}
+:is(#task-sections,#project-sections,#apps-sections) .agenda-section-icon{width:28px;height:28px;flex-shrink:0;fill:none;stroke:#E5B95C;color:#E5B95C;stroke-width:1.2;stroke-linecap:round;stroke-linejoin:round}
+:is(#task-sections,#project-sections,#apps-sections)>select{width:auto;max-width:220px;margin:0}
+@media(max-width:600px){:is(#task-sections,#project-sections,#apps-sections){width:100%}:is(#task-sections,#project-sections,#apps-sections) .tablero-panel{padding-left:5px;padding-right:5px}:is(#task-sections,#project-sections,#apps-sections) .agenda-section-button{gap:8px;padding-left:10px;padding-right:10px}}
 
 /* Acceso: horizonte dorado y tarjeta de cristal oscuro. */
 #auth-gate{isolation:isolate;position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:40px 24px;overflow:auto;background:#090909;color:#f3eee1}
@@ -492,10 +492,10 @@ body{background:#090a09;padding-bottom:120px}
 #kairos-app>.backup-tools{position:absolute;top:36px;right:3vw;margin:0}
 #kairos-app>.backup-tools #cloud-status{font-size:11px!important;opacity:.65;border-color:transparent;background:transparent}
 #kairos-app .agenda-bar{margin:0 3vw 22px;align-items:center;gap:18px;flex-wrap:wrap}
-:is(#task-sections,#project-sections){flex:0 1 auto}
-:is(#task-sections,#project-sections) .tablero-panel{height:54px;padding:5px 7px}
-:is(#task-sections,#project-sections) .agenda-section-button{height:42px;padding:5px 12px;gap:9px}
-:is(#task-sections,#project-sections) .agenda-section-icon{width:27px;height:27px}
+:is(#task-sections,#project-sections,#apps-sections){flex:0 1 auto}
+:is(#task-sections,#project-sections,#apps-sections) .tablero-panel{height:54px;padding:5px 7px}
+:is(#task-sections,#project-sections,#apps-sections) .agenda-section-button{height:42px;padding:5px 12px;gap:9px}
+:is(#task-sections,#project-sections,#apps-sections) .agenda-section-icon{width:27px;height:27px}
 #kairos-app #auth-logout{width:54px;height:54px;padding:15px;border-radius:12px;border-color:#94702f66;background:#090b09}
 #kairos-app #auth-logout svg{width:22px;height:22px;color:#f1eddf}
 #board:not(.eisenhower-layout){grid-template-columns:repeat(4,minmax(250px,1fr));gap:22px;padding:0 3vw 28px;align-items:stretch;min-height:0}
@@ -513,7 +513,7 @@ body{background:#090a09;padding-bottom:120px}
 #kairos-app .nav svg,#kairos-app .nav button[aria-selected=true] svg{width:34px;height:34px}
 #kairos-app .nav button+button::before{left:-4px;top:14px;bottom:14px}
 @media(max-width:760px){#kairos-app>header{padding:22px 22px 24px;min-height:104px}.app-brand>svg{width:50px;height:50px}.app-brand>span{font-size:26px}#kairos-app>.backup-tools{top:28px;right:22px}#kairos-app .agenda-bar{margin-left:22px;margin-right:22px}#board:not(.eisenhower-layout){grid-template-columns:repeat(4,280px);padding-left:22px;padding-right:22px;gap:18px}#board:not(.eisenhower-layout) .column{padding:17px;min-height:420px}#board:not(.eisenhower-layout) .card{width:calc(100% - 10px)}}
-@media(max-width:600px){:is(#task-sections,#project-sections){width:100%}#kairos-app .agenda-bar>.tools{width:100%;justify-content:flex-end}#kairos-app #auth-logout{width:42px;height:42px;padding:10px}#kairos-app .nav{height:68px;padding:6px 5px;gap:4px;bottom:max(10px,env(safe-area-inset-bottom))}#kairos-app .nav button{height:54px;padding:6px 9px;gap:7px;font-size:15px!important}#kairos-app .nav svg,#kairos-app .nav button[aria-selected=true] svg{width:30px;height:30px}#kairos-app>.backup-tools{max-width:35vw}#kairos-app>.backup-tools #cloud-status{font-size:10px!important}}
+@media(max-width:600px){:is(#task-sections,#project-sections,#apps-sections){width:100%}#kairos-app .agenda-bar>.tools{width:100%;justify-content:flex-end}#kairos-app #auth-logout{width:42px;height:42px;padding:10px}#kairos-app .nav{height:68px;padding:6px 5px;gap:4px;bottom:max(10px,env(safe-area-inset-bottom))}#kairos-app .nav button{height:54px;padding:6px 9px;gap:7px;font-size:15px!important}#kairos-app .nav svg,#kairos-app .nav button[aria-selected=true] svg{width:30px;height:30px}#kairos-app>.backup-tools{max-width:35vw}#kairos-app>.backup-tools #cloud-status{font-size:10px!important}}
 
 /* Marca original del PNG, aislada de filtros y cambios de paleta. */
 #kairos-app .app-brand>.original-brand{display:block;width:216px;height:66px;max-width:100%;object-fit:contain;filter:none!important;mix-blend-mode:normal!important;opacity:1!important;background:transparent!important}
@@ -654,8 +654,8 @@ body{background:#090a09;padding-bottom:120px}
 /* Keep navigation tabs unboxed in both workspace panels. */
 #kairos-app .nav button,
 #kairos-app .nav button:is([aria-selected=true],:hover,:active,:focus-visible),
-#kairos-app :is(#task-sections,#project-sections) .agenda-section-button,
-#kairos-app :is(#task-sections,#project-sections) .agenda-section-button:is([aria-pressed=true],:hover,:active,:focus-visible){border-color:transparent;background:transparent;box-shadow:none}
+#kairos-app :is(#task-sections,#project-sections,#apps-sections) .agenda-section-button,
+#kairos-app :is(#task-sections,#project-sections,#apps-sections) .agenda-section-button:is([aria-pressed=true],:hover,:active,:focus-visible){border-color:transparent;background:transparent;box-shadow:none}
 
 .redes-edit-tools .redes-calendar-icon{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;padding:9px;color:var(--ink)}
 
@@ -761,19 +761,14 @@ dialog.redes-editor :is(h2,label,input,button){font-family:'Outfit',sans-serif!i
 <style id="apps-horizontal-navigation">
 #page:has(>.apps-workspace){padding:0;background:transparent;border:0;border-radius:0}
 .apps-workspace{display:grid;grid-template-columns:minmax(0,1fr);gap:24px;align-items:start}
-.apps-sidebar{padding:12px;border:1px solid var(--line);border-radius:12px;background:#0002;min-width:0}
-.apps-category-rail{display:flex;flex-direction:row;gap:10px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:thin;scrollbar-color:var(--gold) #ffffff0b}
-.apps-category-button{display:flex;align-items:center;justify-content:center;gap:14px;flex:1 0 auto;min-height:64px;padding:16px 20px;border:1px solid transparent;border-radius:9px;background:transparent;color:var(--muted);font:400 16px Outfit,sans-serif;white-space:nowrap}
-.apps-category-button[aria-pressed=true]{background:#E5B95C0d;border-color:var(--line);color:var(--ink)}
-.apps-category-button:hover{color:var(--gold);border-color:var(--line)}
-.apps-category-button .browser-icon{color:var(--gold);flex-shrink:0}
-.apps-category-button svg{width:26px;height:26px}
-.apps-category-rail:focus-visible,.apps-category-button:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
+#apps-sections{margin:0;min-width:0;max-width:100%}
+.apps-category-rail{overscroll-behavior-x:contain;scrollbar-width:thin;scrollbar-color:var(--gold) #ffffff0b}
+.apps-category-rail:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
 .apps-detail{min-width:0}.apps-detail .apps-category{margin-top:0}
 .apps-detail .calendar-tools{display:flex;flex-direction:row;flex-wrap:wrap;gap:12px}
 .apps-detail .app-link{display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;min-width:0;padding:16px}
 .apps-detail .app-logo{width:28px;height:28px}.apps-detail .app-logo svg{width:28px;height:28px}
-@media(max-width:700px){.apps-workspace{gap:16px}.apps-sidebar{padding:8px}.apps-category-rail{gap:4px}.apps-category-button{padding:12px 10px;gap:8px;font-size:13px;min-height:56px}.apps-category-button svg{width:20px;height:20px}}
+@media(max-width:700px){.apps-workspace{gap:16px}}
 </style></head><body>
 <section id="auth-gate" aria-label="Acceso a Kairos" hidden>
 
@@ -1049,14 +1044,14 @@ function normalizeEisenhower(value){
 }
 let appsSelectedCategory='Innovación';
 function renderPage(){const page=$('page');page.replaceChildren();if(['eisenhower','impact','books'].includes(currentPage))return;page.classList.toggle('board-browser',currentPage==='view');if(currentPage==='mail'){
- const layout=el('div','apps-workspace'),sidebar=el('nav','apps-sidebar'),rail=el('div','apps-category-rail'),detail=el('div','apps-detail');
- sidebar.setAttribute('aria-label','Categorías de Apps');rail.setAttribute('role','region');rail.setAttribute('aria-label','Navegación horizontal de categorías');rail.tabIndex=0;
+ const layout=el('div','apps-workspace'),sidebar=el('nav','task-sections apps-sidebar'),rail=el('div','tablero-panel apps-category-rail'),detail=el('div','apps-detail');
+ sidebar.id='apps-sections';sidebar.setAttribute('aria-label','Categorías de Apps');rail.setAttribute('role','region');rail.setAttribute('aria-label','Navegación horizontal de categorías');rail.tabIndex=0;
  sidebar.append(rail);layout.append(sidebar,detail);page.append(layout);
  const entries=[];
  [['Innovación',[['ChatGPT','https://chatgpt.com/'],['Flow','https://labs.google/fx/tools/flow']]],['Finanzas',[['Banco Galicia','https://www.galicia.ar/'],['Mercado Libre','https://www.mercadolibre.com.ar/']]],['Seguridad',[['GitHub','https://github.com/'],['Supabase','https://supabase.com/dashboard']]]].forEach(([category,apps])=>{const section=el('section','app-category apps-category');section.setAttribute('aria-label',category);const links=el('div','calendar-tools');apps.forEach(([name,url])=>{const a=el('a','mail-link app-link'),direct=['ChatGPT','Claude','Pixabay','Gemini','Flow'].includes(name),logo=el(direct?'span':'img','app-logo'+(direct?' app-logo-flat':''));if(direct){logo.setAttribute('aria-hidden','true');logo.innerHTML=APP_ISOTYPES[name].replace(/fill="#F4EFE6"/g,'fill="currentColor"');logo.querySelector('title')?.remove();if(name==='Claude')logo.style.color='#D97757'}else{logo.src=APP_ISOTYPES[name==='Banco Galicia'?'Galicia':name]?'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(APP_ISOTYPES[name==='Banco Galicia'?'Galicia':name]):'https://www.google.com/s2/favicons?sz=64&domain_url='+encodeURIComponent(url);logo.alt='';logo.width=24;logo.height=24;logo.loading='lazy';logo.referrerPolicy='no-referrer';logo.onerror=()=>{logo.hidden=true}};a.setAttribute('aria-label',name);a.title=name;a.prepend(logo);a.href=url;a.target='_blank';a.rel='noopener noreferrer';links.append(a)});section.append(links);
- const button=el('button','apps-category-button');button.type='button';button.title=category;button.setAttribute('aria-label',category);button.setAttribute('aria-pressed','false');
+ const button=el('button','agenda-section-button apps-category-button');button.type='button';button.title=category;button.setAttribute('aria-label',category);button.setAttribute('aria-pressed','false');
  const icons={'Innovación':'<path d="M12 3v18M3 12h18M5 5l14 14M5 19 19 5"/>','Seguridad':'<path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6Z"/><path d="m8 12 3 3 5-6"/>','Finanzas':'<path d="M4 8h16M6 8v12M12 8v12M18 8v12M3 21h18M3 6l9-4 9 4Z"/>','Cinemática':'<rect x="3" y="5" width="18" height="15" rx="2"/><path d="m10 10 5 3-5 3ZM3 9h18M7 5v4M12 5v4M17 5v4"/>'};
- const icon=lineIcon(icons[category]);icon.setAttribute('aria-hidden','true');button.append(icon,el('span','',category));
+ const icon=lineIcon(icons[category]);icon.querySelector('svg')?.classList.add('agenda-section-icon');icon.setAttribute('aria-hidden','true');button.append(icon,el('span','',category));
  const show=()=>{appsSelectedCategory=category;entries.forEach(entry=>entry.button.setAttribute('aria-pressed',String(entry.category===category)));detail.replaceChildren(section)};
  button.onclick=show;rail.append(button);entries.push({category,button,show});
  });
