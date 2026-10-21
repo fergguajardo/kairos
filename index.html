@@ -814,6 +814,26 @@ dialog.redes-editor :is(h2,label,input,button){font-family:'Outfit',sans-serif!i
 #page.redes-native .redes-category-isotype{flex-shrink:0}
 #page.redes-native .redes-category-label{color:var(--ink);text-align:left;overflow-wrap:anywhere}
 @media(max-width:700px){#page.redes-native .redes-category{width:auto;min-width:150px;flex:0 0 auto}#page.redes-native .redes-category-label{white-space:nowrap}}
+</style><style id="redes-balance-category-model">
+@media(min-width:1101px){.redes-workspace{grid-template-columns:190px minmax(0,1000px)}.redes-sidebar{padding:16px}}
+@media(min-width:801px) and (max-width:1100px){.redes-workspace{grid-template-columns:155px minmax(0,1fr)}.redes-sidebar{padding:12px}}
+#page.redes-native .redes-category{padding:0;min-height:0;width:100%;border:0;background:transparent;box-shadow:none;flex:0 0 auto}
+#page.redes-native .redes-category-select{display:flex;align-items:center;justify-content:flex-start;gap:10px;width:100%;min-height:0;height:auto;padding:12px 10px;border:1px solid transparent;border-radius:10px;background:transparent;box-shadow:none;color:var(--ink);font:400 14px Outfit,sans-serif!important;text-align:left}
+#page.redes-native .redes-category-select[aria-pressed=true]{border-color:var(--gold);background:#E5B95C0C}
+#page.redes-native .redes-category-copy{display:flex;flex-direction:row;align-items:center;gap:10px;width:100%}
+#page.redes-native .redes-category-copy>span{font:400 14px Outfit,sans-serif!important;color:var(--ink)}
+#page.redes-native .redes-category-label{text-transform:uppercase;white-space:normal;overflow-wrap:anywhere}
+#page.redes-native .redes-category-isotype,#page.redes-native .redes-category-isotype svg{width:22px;height:22px;flex:0 0 22px;fill:none;stroke:var(--gold);stroke-width:1.4}
+#page.redes-native .redes-category-list{padding-right:0;gap:8px;max-height:65vh;height:auto;scrollbar-width:none}
+#page.redes-native .redes-category-list::-webkit-scrollbar{display:none}
+@media(max-width:800px){
+.redes-workspace{grid-template-columns:minmax(0,1fr)}
+.redes-sidebar{display:block;padding:12px}
+.redes-sidehead{margin-bottom:12px}
+#page.redes-native .redes-category-list{display:flex;flex-direction:column;max-height:180px;overflow-x:hidden;overflow-y:auto}
+#page.redes-native .redes-category{min-width:0}
+}
+@media(max-width:500px){.redes-sidebar{padding:10px}}
 </style></head><body>
 <section id="auth-gate" aria-label="Acceso a Kairos" hidden>
 
@@ -1489,7 +1509,7 @@ function renderRedesMonth(){
  const list=el('div','redes-category-list');list.setAttribute('aria-label','Categorías');list.setAttribute('role','region');list.tabIndex=0;
  if(!rCalendars.some(c=>c.id===rSelectedCalendar))rSelectedCalendar=rCalendars[0]?.id;
  rCalendars.forEach((calendar,index)=>{
- const row=el('div','redes-category'+(calendar.id===rSelectedCalendar?' selected':'')),select=el('button','redes-category-select'),words=el('span','redes-category-copy');
+ const row=el('div','redes-category'+(calendar.id===rSelectedCalendar?' selected':'')),select=el('button','balance-focus-category redes-category-select'),words=el('span','redes-category-copy');
  select.type='button';select.setAttribute('aria-pressed',String(calendar.id===rSelectedCalendar));select.setAttribute('aria-label',calendar.name);select.title=calendar.name;const categoryIcon=redesCategoryIsotype(calendar.name,index,rCalendars.length);words.append(categoryIcon,el('span','redes-category-label',calendar.name));select.append(words);select.onclick=()=>{rSelectedCalendar=calendar.id;renderRedesMonth()};
 
  row.append(select);attachRedesCalendarDrag(row,select,calendar.id);list.append(row)
