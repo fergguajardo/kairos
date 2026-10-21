@@ -795,6 +795,17 @@ dialog.redes-editor :is(h2,label,input,button){font-family:'Outfit',sans-serif!i
 .redes-calendar-card .crossed .redes-day-marker{width:25.5px;height:3.4px}
 @media(min-width:1500px){.redes-detail .redes-calendar-card .redes-date{height:59.5px}}
 @media(max-width:700px){.redes-detail .redes-calendar-card .redes-date{height:44.2px}.redes-calendar-card .redes-month-grid{gap:3.4px}}
+</style><style id="redes-integrated-stats">
+@media(min-width:1101px){
+.redes-detail-body{grid-template-columns:minmax(0,calc((100% - max(175px,25%) - 30px)*.85)) minmax(0,175px);column-gap:16px}
+.redes-detail .redes-calendar-card{width:100%;max-width:100%}
+.redes-detail-body .redes-stats{margin:0;padding:0 0 0 16px;align-self:stretch}
+.redes-detail-body .redes-stats>div{padding:10px 0}
+}
+@media(max-width:1100px){
+.redes-detail-body{row-gap:12px}
+.redes-detail-body .redes-stats{width:85%;max-width:85%;margin-top:0}
+}
 </style></head><body>
 <section id="auth-gate" aria-label="Acceso a Kairos" hidden>
 
@@ -1497,7 +1508,7 @@ function renderRedesMonth(){
  button.append(el('span','',String(day)),el('span','redes-day-marker'));button.setAttribute('aria-label',day+' de '+monthName+' — '+calendar.name);button.setAttribute('aria-pressed',String(marked));if(isToday)button.setAttribute('aria-current','date');
  button.onclick=()=>{rPush();calendar.meses=calendar.meses||{};calendar.meses[key]=marked?selected.filter(value=>value!==day):[...selected,day].sort((a,b)=>a-b);rSave();renderRedesMonth();refreshRedesButtons()};grid.append(button)
  }
- card.append(grid);const summary=el('dl','redes-stats');[['Conteo actual',redesDays(stats.current)],['Racha más larga',redesDays(stats.longest)],['Inicio',stats.start],['Último registro',stats.last]].forEach(([label,value])=>{const item=el('div'),term=el('dt',''),icon=lineIcon({'Conteo actual':'<path d="M5 18V9M10 18V6M15 18V3M3 21h18"/>','Racha más larga':'<path d="m3 17 5-6 4 3 8-10M14 4h6v6"/>','Inicio':'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 1v3M1 12h3"/>','Último registro':'<path d="M4 5h16v15H4zM8 2v6M16 2v6m-9 7 3 3 6-7"/>'}[label]);icon.classList.add('redes-stat-isotype');icon.setAttribute('aria-hidden','true');term.append(icon,el('span','',label));item.append(term,el('dd','',value));summary.append(item)});
+ card.append(grid);const summary=el('dl','redes-stats');[['Conteo actual',redesDays(stats.current)],['Racha más larga',redesDays(stats.longest)],['Inicio',stats.start],['Último registro',stats.last]].forEach(([label,value])=>{const item=el('div'),term=el('dt',''),icon=lineIcon({'Conteo actual':'<path d="M5 18V9M10 18V6M15 18V3M3 21h18"/>','Racha más larga':'<path d="m3 17 5-6 4 3 8-10M14 4h6v6"/>','Inicio':'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 1v3M1 12h3"/>','Último registro':'<path d="M4 5h16v15H4zM8 2v6M16 2v6m-9 7 3 3 6-7"/>'}[label]);icon.classList.add('redes-stat-isotype');icon.setAttribute('aria-hidden','true');term.title=label;term.append(icon,el('span','sr',label));item.append(term,el('dd','',value));summary.append(item)});
  body.append(card,summary);detail.append(body);layout.append(detail);host.append(layout);list.scrollTop=scrollTop
 }
 
