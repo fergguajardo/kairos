@@ -849,14 +849,14 @@ function impactComparisonResult(pair){
 }
 let matrixOpponentId=null;
 function renderImpactComparison(host,matrix,selected){
- const heading=el('h3','','Evaluación cualitativa ponderada'),intro=el('p','muted','Elegí la propuesta superior en cada variable o marcá un empate.');
- host.append(heading,intro);
+ const heading=el('h3','','— Evaluación cualitativa ponderada —');
+ host.append(heading);
  const opponents=matrix.rows.filter(row=>row.id!==selected.id);
  if(!opponents.length){host.append(el('p','muted','Añadí otra propuesta para comparar su impacto.'));return}
  if(!opponents.some(row=>row.id===matrixOpponentId))matrixOpponentId=opponents[0].id;
  const other=opponents.find(row=>row.id===matrixOpponentId);
  const title=row=>row.title||'Propuesta '+String(matrix.rows.indexOf(row)+1).padStart(2,'0');
- const controls=el('div','impact-pair-controls'),label=el('label','','Comparar '+title(selected)+' con'),select=el('select','matrix-field-input');
+ const controls=el('div','impact-pair-controls'),label=el('label'),select=el('select','matrix-field-input');
  select.setAttribute('aria-label','Propuesta con la que comparar el impacto');
  opponents.forEach(row=>{const option=el('option','',title(row));option.value=row.id;select.append(option)});select.value=other.id;
  select.onchange=()=>{matrixOpponentId=select.value;host.replaceChildren();renderImpactComparison(host,matrix,selected)};
@@ -869,7 +869,7 @@ function renderImpactComparison(host,matrix,selected){
  thead.append(header);const tbody=el('tbody');
  result.rows.forEach(row=>{
   const tr=el('tr'),term=el('th'),choices=el('td'),group=el('div','impact-winner-choices');
-  term.scope='row';term.append(el('span','',row.name+' · '+row.weight+'%'),el('small','',row.description));
+  term.scope='row';term.append(el('span','',row.name+' · '+row.weight+'%'));
   group.setAttribute('role','group');group.setAttribute('aria-label','Evaluación de '+row.name);
   [[selected.id,title(selected)],['tie','Empate'],[other.id,title(other)]].forEach(([value,name])=>{
    const button=el('button','impact-winner',name);button.type='button';button.setAttribute('aria-pressed',String(row.winner===value));
@@ -885,7 +885,7 @@ function renderImpactComparison(host,matrix,selected){
  sides.forEach(side=>total.append(el('td','impact-points',String(result.points[side.id]).replace('.',','))));tfoot.append(total);table.append(caption,thead,tbody,tfoot);
  const scroll=el('div','impact-table-scroll');scroll.append(table);host.append(scroll);
  const status=el('p','impact-result');status.setAttribute('role','status');status.setAttribute('aria-live','polite');
- if(!result.complete)status.textContent='Completá las cuatro variables para determinar la prioridad.';
+ if(!result.complete)status.textContent='Pendiente · '+result.evaluated+'/4';
  else if(result.points[selected.id]===result.points[other.id])status.textContent='Empate ponderado · 50 a 50 puntos.';
  else{const winner=result.points[selected.id]>result.points[other.id]?selected:other;status.textContent='Prioridad: '+title(winner)+' · '+String(result.points[winner.id]).replace('.',',')+' de 100 puntos.'}
  host.append(status);
@@ -908,30 +908,25 @@ function renderProposalMatrix(page){
  if(!matrix.presentationVersion){if(!matrix.rows.length)matrix.rows=Array.from({length:5},()=>({id:uid(),title:'',scores:{}}));matrix.presentationVersion=1;save()}
  if(!matrix.rows.length){const empty=el('section','matrix-detail'),add=el('button','','＋ Añadir propuesta');add.onclick=()=>{const row={id:uid(),title:'',scores:{}};matrix.rows.push(row);matrixSelectedId=row.id;save();renderProposalMatrix(page)};empty.append(add);page.append(empty);return}
  if(!matrix.rows.some(row=>row.id===matrixSelectedId))matrixSelectedId=matrix.rows[0].id;
- const selectedIndex=matrix.rows.findIndex(row=>row.id===matrixSelectedId),selected=matrix.rows[selectedIndex],start=Math.floor(selectedIndex/5)*5;
- const navigator=el('section','matrix-navigator'),previous=el('button','matrix-arrow','‹'),next=el('button','matrix-arrow','›'),cards=el('div','matrix-proposals');
- navigator.setAttribute('aria-label','Propuestas');previous.setAttribute('aria-label','Propuesta anterior');next.setAttribute('aria-label','Propuesta siguiente');
+ const selectedIndex=matrix.rows.findIndex(row=>row.id===matrixSelectedId),selected=matrix.rows[selectedIndex];
+ const previous=el('button','matrix-arrow','‹'),next=el('button','matrix-arrow','›');
+previous.setAttribute('aria-label','Propuesta anterior');next.setAttribute('aria-label','Propuesta siguiente');
  previous.disabled=selectedIndex===0;next.disabled=selectedIndex===matrix.rows.length-1;
  const select=index=>{matrixSelectedId=matrix.rows[index].id;renderProposalMatrix(page)};
  previous.onclick=()=>select(selectedIndex-1);next.onclick=()=>select(selectedIndex+1);
- matrix.rows.slice(start,start+5).forEach((row,offset)=>{
-  const index=start+offset,button=el('button','matrix-proposal-card'),number=el('span','matrix-proposal-number',String(index+1).padStart(2,'0'));
-  button.setAttribute('aria-pressed',String(row.id===selected.id));button.setAttribute('aria-label','Propuesta '+(index+1)+': '+(row.title||'Sin título'));button.append(number,el('span','matrix-proposal-title',row.title||'Propuesta '+String(index+1).padStart(2,'0')),el('span','matrix-proposal-mark'));button.onclick=()=>select(index);cards.append(button)
- });
- navigator.append(previous,cards,next);page.append(navigator);cards.scrollLeft=cards.children[selectedIndex-start].offsetLeft-cards.offsetLeft;
- const detail=el('section','matrix-detail'),heading=el('div','matrix-detail-heading'),names=el('div'),label=el('p','matrix-detail-label','Propuesta '+String(selectedIndex+1).padStart(2,'0')),title=el('h2','',selected.title||'Sin título');
+ const detail=el('section','matrix-detail'),heading=el('div','matrix-detail-heading'),names=el('div'),title=el('h2','',selected.title||'Sin título');
  title.contentEditable='true';title.setAttribute('role','textbox');title.setAttribute('aria-label','Título de la propuesta');title.setAttribute('aria-multiline','false');title.setAttribute('spellcheck','false');
  title.onkeydown=event=>{if(event.key==='Enter'){event.preventDefault();title.blur()}else if(event.key==='Escape'){title.textContent=selected.title||'Sin título';title.blur()}};
  title.onpaste=event=>{event.preventDefault();document.execCommand('insertText',false,event.clipboardData.getData('text/plain').replace(/[\r\n]+/g,' '))};
  title.onblur=()=>{const value=title.textContent.trim();if(value===selected.title||(!selected.title&&value==='Sin título'))return;selected.title=value;save();renderProposalMatrix(page)};
- names.append(label,title);
+ names.append(title);
  const tools=el('div','matrix-detail-tools'),add=el('button','matrix-icon'),remove=el('button','matrix-icon');
  add.setAttribute('aria-label','Añadir propuesta');add.title='Añadir propuesta';add.append(lineIcon('<path d="M12 4v16M4 12h16"/>'));add.onclick=()=>{const row={id:uid(),title:'',scores:{}};matrix.rows.push(row);matrixSelectedId=row.id;save();renderProposalMatrix(page);page.querySelector('[contenteditable=true]').focus()};
  remove.setAttribute('aria-label','Eliminar propuesta');remove.title='Eliminar propuesta';remove.append(lineIcon('<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/>'));remove.onclick=()=>{matrix.impactComparisons=(matrix.impactComparisons||[]).filter(pair=>!pair.proposals.includes(selected.id));matrix.rows.splice(selectedIndex,1);matrixSelectedId=matrix.rows[Math.min(selectedIndex,matrix.rows.length-1)]?.id;save();renderProposalMatrix(page)};
- tools.append(add,remove);heading.append(names,tools);detail.append(heading);
+ tools.append(previous,next,add,remove);heading.append(names,tools);detail.append(heading);
  const metrics=el('div','matrix-metrics');
  MATRIX_CRITERIA.forEach(([key,name,icon])=>{
-  const card=el('section','matrix-metric'),head=el('div','matrix-metric-heading');head.append(lineIcon(icon),el('h3','',name));card.append(head);
+  const card=el('section','matrix-metric'),head=el('div','matrix-metric-heading');if(key!=='impact'){head.append(lineIcon(icon),el('h3','',name));card.append(head)}
   const controls=el('div','matrix-field-controls');
   const persist=()=>save();
   const dropdown=(label,options,value,changed)=>{
