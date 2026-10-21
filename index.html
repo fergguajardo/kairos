@@ -1458,7 +1458,7 @@ function editRedesCategory(calendar){
  tools.append(duplicate,remove);form.append(label,tools,actions);form.onsubmit=event=>{event.preventDefault();const value=input.value.trim();if(!value){input.setCustomValidity('Escribí un nombre');input.reportValidity();return}rPush();calendar.name=value;rSave();dialog.close();renderRedesMonth();refreshRedesButtons()};input.oninput=()=>input.setCustomValidity('');
  dialog.append(heading,form);dialog.onclose=()=>dialog.remove();document.body.append(dialog);dialog.showModal();input.focus();input.select()
 }
-function redesCategoryIsotype(name){
+function redesCategoryIsotype(name,index=-1,total=0){
  const key=name.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/^[•✦·\s]+/,'');
  const paths=[
  '<path d="M3 7c1 9 7 15 18 10l-4-3-3 2-6-6 2-3-4-4-3 4Z"/><path d="m8 10 3-4 4 2-1 8M11 6l6 8"/>',
@@ -1470,7 +1470,7 @@ function redesCategoryIsotype(name){
  '<path d="M3 8c3-4 6-5 9-3 3-2 6-1 9 3-2 4-5 6-9 6S5 12 3 8Z"/><path d="M3 8c5 3 13 3 18 0M8 11v6a4 4 0 0 0 8 0v-6M12 12v6"/>',
  '<circle cx="12" cy="12" r="8"/><path d="m6 18 12-12M3 12h4M17 12h4"/>'
  ];
- let i=/procesad/.test(key)?0:/noticia/.test(key)?1:/youtube|video/.test(key)?2:/musica/.test(key)?3:/whatsapp|mensaje/.test(key)?4:/llamada/.test(key)?5:/18|adult|contenido/.test(key)?6:7;
+ let i=index===0?0:index===total-1?6:/procesad/.test(key)?0:/noticia/.test(key)?1:/youtube|video/.test(key)?2:/musica/.test(key)?3:/whatsapp|mensaje/.test(key)?4:/llamada/.test(key)?5:/18|adult|contenido/.test(key)?6:7;
  const icon=lineIcon(paths[i]);icon.classList.add('redes-category-isotype');icon.setAttribute('aria-hidden','true');return icon;
 }
 function renderRedesMonth(){
@@ -1480,9 +1480,9 @@ function renderRedesMonth(){
  sidehead.append(el('h2','','✦ Categorías'),manage);sidebar.append(sidehead);
  const list=el('div','redes-category-list');list.setAttribute('aria-label','Categorías');list.setAttribute('role','region');list.tabIndex=0;
  if(!rCalendars.some(c=>c.id===rSelectedCalendar))rSelectedCalendar=rCalendars[0]?.id;
- rCalendars.forEach(calendar=>{
+ rCalendars.forEach((calendar,index)=>{
  const row=el('div','redes-category'+(calendar.id===rSelectedCalendar?' selected':'')),select=el('button','redes-category-select'),words=el('span','redes-category-copy');
- select.type='button';select.setAttribute('aria-pressed',String(calendar.id===rSelectedCalendar));select.setAttribute('aria-label',calendar.name);select.title=calendar.name;const categoryIcon=redesCategoryIsotype(calendar.name);words.append(categoryIcon);select.append(words);select.onclick=()=>{rSelectedCalendar=calendar.id;renderRedesMonth()};
+ select.type='button';select.setAttribute('aria-pressed',String(calendar.id===rSelectedCalendar));select.setAttribute('aria-label',calendar.name);select.title=calendar.name;const categoryIcon=redesCategoryIsotype(calendar.name,index,rCalendars.length);words.append(categoryIcon);select.append(words);select.onclick=()=>{rSelectedCalendar=calendar.id;renderRedesMonth()};
 
  row.append(select);attachRedesCalendarDrag(row,select,calendar.id);list.append(row)
  });
