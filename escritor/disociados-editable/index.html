@@ -1668,10 +1668,9 @@ function createDocumentCloud(){
  let client,ready=false,loading=false,saving=false,pending=null,stamp=null,timer,conflict=false,conflictingStamp=null;
  const controls=document.createElement('div');controls.className='document-cloud-tools';
  const login=document.createElement('a');login.href='../../';login.target='_blank';login.rel='noopener noreferrer';login.textContent='Ingresar en KAIROS';login.hidden=true;
- const retry=document.createElement('button');retry.type='button';retry.textContent='Guardar ahora';
  const keep=document.createElement('button');keep.type='button';keep.textContent='Conservar mi edición';keep.hidden=true;
  const remoteButton=document.createElement('button');remoteButton.type='button';remoteButton.textContent='Cargar copia de Supabase';remoteButton.hidden=true;
- controls.append(login,retry,keep,remoteButton);status.after(controls);
+ controls.append(login,keep,remoteButton);status.after(controls);
  main.inert=true;
  const report=text=>{status.textContent=text};
  const canonical=value=>Array.isArray(value)?value.map(canonical):value&&typeof value==='object'?Object.fromEntries(Object.keys(value).sort().map(key=>[key,canonical(value[key])])):value;
@@ -1706,7 +1705,7 @@ function createDocumentCloud(){
    if(pending===snapshot){pending=null;dirty=false}
    succeeded=true;report(pending?'Hay cambios pendientes de guardar en Supabase…':'Guardado confirmado en Supabase · '+new Date().toLocaleTimeString('es-AR'));
   }catch{reportError()}
-  finally{saving=false;if(succeeded&&pending&&!conflict)timer=setTimeout(flush,250)}
+  finally{saving=false;if(ready&&pending&&!conflict)timer=setTimeout(flush,succeeded?250:5000)}
  }
  async function start(){
   if(loading)return;if(ready){await flush();return}loading=true;main.inert=true;report('Cargando documento desde Supabase…');
@@ -1745,7 +1744,6 @@ function createDocumentCloud(){
   }catch{reportError()}
  }
  keep.onclick=()=>choose(true);remoteButton.onclick=()=>choose(false);
- retry.onclick=()=>ready?flush():start();
  window.addEventListener('online',()=>ready?flush():start());
  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')flush()});
  return {changed:markChanged,flush,start};
