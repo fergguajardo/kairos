@@ -884,7 +884,7 @@ main .bela-added-chapter[data-bela-chapter="4"]{padding-top:16.5pt!important}
   <div class="cover-content">
     <p class="cover-eyebrow">Disociados · FG</p>
     <h1 class="cover-title">Disociados</h1>
-    <p class="cover-desc">Tragedia, romance obsesivo, drama familiar, identidad sexual y horror cotidiano. Ocho historias independientes unidas por un hilo invisible: la necesidad de encontrarle un sentido a la vida.</p>
+    <p class="cover-desc">Tragedia, romance obsesivo, drama familiar, identidad sexual y horror cotidiano. Siete historias independientes unidas por un hilo invisible: la necesidad de encontrarle un sentido a la vida.</p>
   </div>
 </div>
 
@@ -921,7 +921,9 @@ const coverTitle=document.querySelector('.cover-title'),coverSynopsis=document.q
 const originalCover={title:coverTitle.textContent,synopsis:coverSynopsis.textContent};
 function applyCover(data){
  coverTitle.textContent=typeof data.coverTitle==='string'?data.coverTitle:originalCover.title;
- coverSynopsis.textContent=typeof data.coverSynopsis==='string'?data.coverSynopsis:originalCover.synopsis;
+ const savedSynopsis=typeof data.coverSynopsis==='string'?data.coverSynopsis:originalCover.synopsis;
+ coverSynopsis.textContent=savedSynopsis.replace(/\bOcho historias\b/g,'Siete historias');
+ if(savedSynopsis!==coverSynopsis.textContent)documentNeedsSync=true;
 }
 function setEditorInert(value){main.inert=value;coverTitle.inert=value;coverSynopsis.inert=value}
 for(const field of [coverTitle,coverSynopsis]){
