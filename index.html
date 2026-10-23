@@ -834,6 +834,9 @@ dialog.redes-editor :is(h2,label,input,button){font-family:'Outfit',sans-serif!i
 #page.redes-native .redes-category{min-width:0}
 }
 @media(max-width:500px){.redes-sidebar{padding:10px}}
+
+/* Matriz de decisión: propuestas y variables integradas */
+.decision-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.decision-card{display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:12px;padding:22px;min-height:128px;background:var(--bg);border:1px solid var(--line)}.decision-card strong{font-size:19px;font-weight:500;overflow-wrap:anywhere}.decision-card[aria-selected=true]{border-color:var(--gold,#e5b95c);background:#e5b95c0b}.decision-name{display:block;color:var(--muted);max-width:600px}.decision-name input{font-size:22px!important}.decision-scroll{overflow:auto}.decision-table{border-collapse:collapse;width:100%;min-width:680px;table-layout:fixed}.decision-table th,.decision-table td{padding:14px;text-align:left;border-bottom:1px solid var(--line);vertical-align:middle;overflow-wrap:anywhere}.decision-table th{font-weight:500;color:var(--muted)}.decision-table input,.decision-table select{margin:0;min-width:0;width:100%}.decision-table th:first-child{width:23%}.decision-derived output{color:var(--gold,#e5b95c);font-size:21px}.decision-derived{background:#e5b95c05}.decision-bar{height:5px;background:var(--line);border-radius:6px;margin:12px 0}.decision-bar span{display:block;height:100%;background:var(--gold,#e5b95c);border-radius:6px}.decision-comparison h2{font-weight:500;font-size:21px}@media(max-width:650px){.decision-cards{gap:8px}.decision-card{padding:12px;min-height:120px}.decision-card strong{font-size:15px}.decision-card span{font-size:12px}}
 </style></head><body>
 <section id="auth-gate" aria-label="Acceso a Kairos" hidden>
 
@@ -865,13 +868,14 @@ const uid=()=>globalThis.crypto?.randomUUID?.()||Date.now().toString(36)+Math.ra
 const $=id=>document.getElementById(id), el=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e};
 const sample=(title,state,items)=>({id:uid(),title,state,description:'',checks:[{id:uid(),title:'TAREAS',items:items.map(text=>({id:uid(),text,done:state===3}))}]});
 const initial=()=>({version:1,cards:[sample('Reponer insumos',0,['Revisar stock de café','Pedir leche y bebidas vegetales','Confirmar entrega con proveedor']),sample('Preparar apertura',0,['Encender máquina y calibrar molienda','Organizar vitrina','Revisar mesas y salón']),sample('Actualizar carta de temporada',1,['Calcular costos','Definir precios','Preparar diseño de carta']),sample('Controlar cierre de caja',2,['Comparar ventas y cobros','Revisar diferencias','Validar cierre']),sample('Limpieza de estación',3,['Limpiar molino','Purgar máquina','Ordenar utensilios'])]});
+const DECISION_FIELDS=[['alignment','Alineación',10],['readiness','Predisposición',10],['consulting','Entrenamiento consultivo',10],['literary','Retroalimentación literaria',10],['cost','Costo económico · ARS',null],['time','Tiempo · min',null]];
 let data=initial(),active=null,dragged=null,popup=null,toDelete=null;
 try{const stored=localStorage.getItem(KEY);if(stored)data=normalize(JSON.parse(stored))}catch{queueMicrotask(()=>toast('No se pudo recuperar el guardado anterior. Podés importar tu copia.'))}
 
 function normalizeProposalMatrix(raw){
  const scale=raw.scale===100?100:10;
  const numeric=(v,max=Number.MAX_SAFE_INTEGER)=>v!==''&&v!=null&&Number.isFinite(Number(v))&&Number(v)>=0&&Number(v)<=max?Number(v):'';
- return {impactComparisons:normalizeImpactComparisons(raw.impactComparisons,raw.rows),scale,presentationVersion:raw.presentationVersion===1?1:undefined,currency:['ARS','USD','EUR'].includes(raw.currency)?raw.currency:'ARS',rows:(Array.isArray(raw.rows)?raw.rows:[]).map(r=>({id:String(r.id||uid()),title:String(r.title||''),impact:r.impact!==''&&Number.isInteger(Number(r.impact))&&Number(r.impact)>=1?numeric(r.impact,scale):'',cost:numeric(r.cost),duration:typeof r.duration==='string'?r.duration:'',days:numeric(r.days),hours:numeric(r.hours),minutes:numeric(r.minutes),risk:['','Bajo','Medio','Alto'].includes(r.risk)?r.risk:'',riskPercent:numeric(r.riskPercent,100),timeAmount:numeric(r.timeAmount),timeUnit:['segundos','minutos','horas','días','semanas','meses','años'].includes(r.timeUnit)?r.timeUnit:'días',currency:['ARS','USD','EUR'].includes(r.currency)?r.currency:undefined,scores:Object.fromEntries(['impact','cost','time','risk'].map(key=>{const v=r.scores?.[key];return [key,Number.isInteger(v)&&v>=1&&v<=10?v:'']}))}))};
+ return {decision:raw.decision?normalizeDecisionMatrix(raw.decision):undefined,impactComparisons:normalizeImpactComparisons(raw.impactComparisons,raw.rows),scale,presentationVersion:raw.presentationVersion===1?1:undefined,currency:['ARS','USD','EUR'].includes(raw.currency)?raw.currency:'ARS',rows:(Array.isArray(raw.rows)?raw.rows:[]).map(r=>({id:String(r.id||uid()),title:String(r.title||''),impact:r.impact!==''&&Number.isInteger(Number(r.impact))&&Number(r.impact)>=1?numeric(r.impact,scale):'',cost:numeric(r.cost),duration:typeof r.duration==='string'?r.duration:'',days:numeric(r.days),hours:numeric(r.hours),minutes:numeric(r.minutes),risk:['','Bajo','Medio','Alto'].includes(r.risk)?r.risk:'',riskPercent:numeric(r.riskPercent,100),timeAmount:numeric(r.timeAmount),timeUnit:['segundos','minutos','horas','días','semanas','meses','años'].includes(r.timeUnit)?r.timeUnit:'días',currency:['ARS','USD','EUR'].includes(r.currency)?r.currency:undefined,scores:Object.fromEntries(['impact','cost','time','risk'].map(key=>{const v=r.scores?.[key];return [key,Number.isInteger(v)&&v>=1&&v<=10?v:'']}))}))};
 }
 
 const IMPACT_VARIABLES=[
@@ -951,72 +955,44 @@ const MATRIX_CRITERIA=[
  ['time','Plazo','<circle cx="12" cy="12" r="9"/><path d="M12 5v7l5 2"/>'],
  ['risk','Riesgo','<path d="m12 3 10 18H2Z M12 9v5M12 17v1"/>'],
 ];
+
+function normalizeDecisionMatrix(raw){
+ return {version:1,rows:Array.from({length:3},(_,i)=>{
+  const r=raw.rows?.[i]||{},values={},sources={};
+  DECISION_FIELDS.forEach(([key,,max])=>{const v=r.values?.[key];values[key]=v!==''&&v!=null&&Number.isFinite(Number(v))&&Number(v)>=0&&(max==null||Number(v)<=max)?Number(v):'';sources[key]=r.sources?.[key]==='observed'?'observed':'estimate'});
+  return {title:String(r.title||'Propuesta '+(i+1)).slice(0,160),values,sources};
+ })};
+}
+function decisionDefaults(){
+ const seeds=[['Palmares',8.5,7,9.5,3.5,3000,135],['Facultad de Artes y Diseño',9,6.5,9.5,4.5,3000,95],['Teatro El Taller',5,6,9.5,9,3000,65]];
+ const rows=seeds.map(([title,...v])=>({title,values:Object.fromEntries(DECISION_FIELDS.map(([k],i)=>[k,v[i]]))}));
+ return normalizeDecisionMatrix({rows});
+}
+function decisionResults(row){const v=row.values,valid=(...keys)=>keys.every(k=>v[k]!==''&&v[k]!=null);return {probability:valid('alignment','readiness')?v.alignment*v.readiness/100:null,impact:valid('consulting','literary')?(v.consulting+v.literary)/2:null,cost:v.cost===''?null:v.cost,time:v.time===''?null:v.time}}
+let decisionSelected=0;
 function renderProposalMatrix(page){
  page.replaceChildren();page.classList.add('matrix-view');
- if(!data.proposalMatrix){data.proposalMatrix=normalizeProposalMatrix({rows:(data.impactBoard?.cards||[]).map(c=>({title:c.title}))});save()}
+ data.proposalMatrix??=normalizeProposalMatrix({rows:[]});
  const matrix=data.proposalMatrix;
- // New workspaces start with five slots; existing rows are never discarded.
- if(!matrix.presentationVersion){if(!matrix.rows.length)matrix.rows=Array.from({length:5},()=>({id:uid(),title:'',scores:{}}));matrix.presentationVersion=1;save()}
- if(!matrix.rows.length){const empty=el('section','matrix-detail'),add=el('button','','＋ Añadir propuesta');add.onclick=()=>{const row={id:uid(),title:'',scores:{}};matrix.rows.push(row);matrixSelectedId=row.id;save();renderProposalMatrix(page)};empty.append(add);page.append(empty);return}
- if(!matrix.rows.some(row=>row.id===matrixSelectedId))matrixSelectedId=matrix.rows[0].id;
- const selectedIndex=matrix.rows.findIndex(row=>row.id===matrixSelectedId),selected=matrix.rows[selectedIndex];
- const previous=el('button','matrix-arrow','‹'),next=el('button','matrix-arrow','›');
-previous.setAttribute('aria-label','Propuesta anterior');next.setAttribute('aria-label','Propuesta siguiente');
- previous.disabled=selectedIndex===0;next.disabled=selectedIndex===matrix.rows.length-1;
- const select=index=>{matrixSelectedId=matrix.rows[index].id;renderProposalMatrix(page)};
- previous.onclick=()=>select(selectedIndex-1);next.onclick=()=>select(selectedIndex+1);
- const detail=el('section','matrix-detail'),heading=el('div','matrix-detail-heading'),names=el('div'),title=el('h2','',selected.title||'Sin título');
- title.contentEditable='true';title.setAttribute('role','textbox');title.setAttribute('aria-label','Título de la propuesta');title.setAttribute('aria-multiline','false');title.setAttribute('spellcheck','false');
- title.onkeydown=event=>{if(event.key==='Enter'){event.preventDefault();title.blur()}else if(event.key==='Escape'){title.textContent=selected.title||'Sin título';title.blur()}};
- title.onpaste=event=>{event.preventDefault();document.execCommand('insertText',false,event.clipboardData.getData('text/plain').replace(/[\r\n]+/g,' '))};
- title.onblur=()=>{const value=title.textContent.trim();if(value===selected.title||(!selected.title&&value==='Sin título'))return;selected.title=value;save();renderProposalMatrix(page)};
- names.append(title);
- const tools=el('div','matrix-detail-tools'),add=el('button','matrix-icon'),remove=el('button','matrix-icon');
- add.setAttribute('aria-label','Añadir propuesta');add.title='Añadir propuesta';add.append(lineIcon('<path d="M12 4v16M4 12h16"/>'));add.onclick=()=>{const row={id:uid(),title:'',scores:{}};matrix.rows.push(row);matrixSelectedId=row.id;save();renderProposalMatrix(page);page.querySelector('[contenteditable=true]').focus()};
- remove.setAttribute('aria-label','Eliminar propuesta');remove.title='Eliminar propuesta';remove.append(lineIcon('<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/>'));remove.onclick=()=>{matrix.impactComparisons=(matrix.impactComparisons||[]).filter(pair=>!pair.proposals.includes(selected.id));matrix.rows.splice(selectedIndex,1);matrixSelectedId=matrix.rows[Math.min(selectedIndex,matrix.rows.length-1)]?.id;save();renderProposalMatrix(page)};
- tools.append(previous,next,add,remove);heading.append(names,tools);detail.append(heading);
- const metrics=el('div','matrix-metrics');
- MATRIX_CRITERIA.forEach(([key,name,icon])=>{
-  const card=el('section','matrix-metric'),head=el('div','matrix-metric-heading');if(key!=='impact'){head.append(lineIcon(icon),el('h3','',name));card.append(head)}
-  const controls=el('div','matrix-field-controls');
-  const persist=()=>save();
-  const dropdown=(label,options,value,changed)=>{
-   const select=el('select','matrix-field-input');select.setAttribute('aria-label',label);
-   options.forEach(([v,text])=>{const option=el('option','',text);option.value=String(v);select.append(option)});
-   select.value=value==null?'':String(value);select.onchange=()=>{changed(select.value);persist()};controls.append(select);return select;
-  };
-  const number=(label,value,max,changed)=>{
-   const input=el('input','matrix-field-input');input.type='number';input.min='0';input.step='any';if(max!=null)input.max=String(max);input.inputMode='decimal';input.placeholder='Sin asignar';input.setAttribute('aria-label',label);input.value=value==null?'':String(value);
-   input.onchange=()=>{const valid=input.value===''||(Number.isFinite(Number(input.value))&&Number(input.value)>=0&&(max==null||Number(input.value)<=max));input.setCustomValidity(valid?'':'Ingresá un valor entre 0 y '+(max==null?'un número positivo':max));if(!valid){input.reportValidity();return}changed(input.value===''?'':Number(input.value));persist()};controls.append(input);return input;
-  };
-  const progress=(label,current,min,max,suffix,changed)=>{
-   const wrap=el('div','matrix-progress-control'),output=el('output','matrix-progress-value'),range=el('input','matrix-progress-range');
-   range.type='range';range.min=String(min);range.max=String(max);range.step='1';range.value=current==null||current===''?String(min):String(current);range.setAttribute('aria-label',label);
-   let assigned=current!=null&&current!=='';
-   const paint=()=>{const n=Number(range.value);range.style.setProperty('--level',(assigned?n/max*100:0)+'%');const ratio=assigned?n/max:0;const tone=[98,95,87].map((v,i)=>Math.round(v+([243,240,234][i]-v)*ratio));range.style.setProperty('--progress-tone','rgb('+tone.join(',')+')');output.textContent=assigned?n+suffix:'Sin evaluar';range.setAttribute('aria-valuetext',assigned?n+suffix:'Sin evaluar')};
-   range.oninput=()=>{assigned=true;paint();changed(Number(range.value))};range.onchange=()=>{assigned=true;paint();changed(Number(range.value));persist()};paint();wrap.append(output,range);const ends=el('div','matrix-progress-ends');ends.append(el('span','',min+suffix),el('span','',max+suffix));wrap.append(ends);controls.append(wrap);
-  };
-  if(key==='impact'){
-   card.classList.add('impact-comparison');renderImpactComparison(controls,matrix,selected);
-  }else if(key==='cost'){
-   const field=el('div','matrix-inline-field');number('Presupuesto en ARS',selected.cost,null,value=>{selected.cost=value;selected.currency='ARS'});field.append(controls.children[0],el('span','matrix-inline-unit','ARS'));controls.append(field);
-   if(selected.currency&&selected.currency!=='ARS')controls.append(el('p','matrix-legacy-value','Importe anterior en '+selected.currency+'. Al editar, se guardará en ARS.'));
-  }else if(key==='time'){
-   const units=['segundos','minutos','horas','días'];let amount=selected.timeAmount,unit=selected.timeUnit||'días';
-   if(amount==null||amount===''){for(const [field,u] of [['days','días'],['hours','horas'],['minutes','minutos']])if(selected[field]!==''&&selected[field]!=null){amount=selected[field];unit=u;break}}
-   if(!units.includes(unit)){const factors={semanas:7,meses:30,años:365};if(amount!==''&&amount!=null)amount*=factors[unit]||1;unit='días'}
-   const field=el('div','matrix-inline-field'),label=el('span','matrix-inline-unit',unit),arrows=el('span','matrix-unit-arrows');
-   const commit=value=>{selected.timeAmount=value;selected.timeUnit=unit;selected.days='';selected.hours='';selected.minutes=''};
-   const input=number('Cantidad de tiempo',amount,null,commit);field.append(input,label);
-   for(const [direction,symbol] of [[1,'▴'],[-1,'▾']]){const arrow=el('button','matrix-unit-arrow',symbol);arrow.type='button';arrow.setAttribute('aria-label',direction===1?'Unidad de tiempo siguiente':'Unidad de tiempo anterior');arrow.onclick=()=>{unit=units[(units.indexOf(unit)+direction+units.length)%units.length];label.textContent=unit;commit(input.value===''?'':Number(input.value));persist()};arrows.append(arrow)}field.append(arrows);controls.append(field);
-   if(selected.duration&&(selected.timeAmount==null||selected.timeAmount==='')&&(amount==null||amount===''))controls.append(el('p','matrix-legacy-value',selected.duration));
-  }else if(key==='risk'){
-   progress('Riesgo en porcentaje',selected.riskPercent,0,100,'%',value=>selected.riskPercent=value);
-   if(selected.risk&&(selected.riskPercent==null||selected.riskPercent===''))controls.append(el('p','matrix-legacy-value','Evaluación anterior: '+selected.risk));
-
-  }
-  card.append(controls);metrics.append(card);
- });detail.append(metrics);page.append(detail)
+ if(!matrix.decision){matrix.decision=decisionDefaults();save()}
+ const model=matrix.decision;
+ const cards=el('div','decision-cards');cards.setAttribute('role','tablist');cards.setAttribute('aria-label','Propuestas');
+ model.rows.forEach((row,i)=>{const button=el('button','decision-card');button.id='decision-tab-'+i;button.setAttribute('role','tab');button.setAttribute('aria-controls','decision-detail');button.setAttribute('aria-selected',String(i===decisionSelected));button.tabIndex=i===decisionSelected?0:-1;button.append(el('span','muted','Propuesta '+(i+1)),el('strong','',row.title));button.onclick=()=>{decisionSelected=i;renderProposalMatrix(page)};button.onkeydown=e=>{let n;if(e.key==='ArrowRight')n=(i+1)%3;if(e.key==='ArrowLeft')n=(i+2)%3;if(e.key==='Home')n=0;if(e.key==='End')n=2;if(n!==undefined){e.preventDefault();decisionSelected=n;renderProposalMatrix(page);$('decision-tab-'+n).focus()}};cards.append(button)});page.append(cards);
+ const selected=model.rows[decisionSelected],detail=el('section','matrix-detail');detail.id='decision-detail';detail.setAttribute('role','tabpanel');detail.setAttribute('aria-labelledby','decision-tab-'+decisionSelected);
+ const nameLabel=el('label','decision-name','Nombre de la propuesta'),name=el('input');name.value=selected.title;name.maxLength=160;name.setAttribute('aria-label','Nombre de la propuesta');name.oninput=()=>{selected.title=name.value;cards.children[decisionSelected].querySelector('strong').textContent=name.value||'Propuesta '+(decisionSelected+1);save();paintComparison()};nameLabel.append(name);detail.append(nameLabel);
+ detail.append(el('p','muted','Puntuaciones de 0 a 10. Indicá si cada valor es una estimación o un dato observado. Los valores iniciales se presentan como estimaciones hasta que los confirmes.'));
+ const wrap=el('div','decision-scroll'),table=el('table','decision-table'),head=el('thead'),hr=el('tr');['Variable','Subvariable','Valor','Origen'].forEach(t=>{const th=el('th','',t);th.scope='col';hr.append(th)});head.append(hr);table.append(head);const body=el('tbody');
+ const outputs={};
+ const groups=[['Probabilidad de éxito',['alignment','readiness'],'probability'],['Impacto',['consulting','literary'],'impact'],['Costo económico',['cost'],null],['Tiempo',['time'],null]];
+ groups.forEach(([label,keys,result])=>{keys.forEach((key,j)=>{const [,field,max]=DECISION_FIELDS.find(f=>f[0]===key),tr=el('tr');if(j===0){const th=el('th','',label);th.scope='rowgroup';th.rowSpan=keys.length+(result?1:0);tr.append(th)}tr.append(el('td','',field));const cell=el('td'),input=el('input');input.type='number';input.min='0';input.step='any';if(max!=null)input.max=String(max);input.value=selected.values[key];input.setAttribute('aria-label',field);input.oninput=()=>{if(!input.validity.valid)return;selected.values[key]=input.value===''?'':Number(input.value);save();paintResults();paintComparison()};input.onchange=()=>input.reportValidity();cell.append(input);tr.append(cell);const origin=el('td'),select=el('select');select.setAttribute('aria-label','Origen de '+field);[['estimate','Estimación subjetiva'],['observed','Dato observado']].forEach(([v,t])=>{const o=el('option','',t);o.value=v;select.append(o)});select.value=selected.sources[key];select.onchange=()=>{selected.sources[key]=select.value;save();paintResults();paintComparison()};origin.append(select);tr.append(origin);body.append(tr)});if(result){const tr=el('tr','decision-derived');tr.append(el('td','',result==='probability'?'Probabilidad conjunta':'Impacto promedio'));const td=el('td'),out=el('output');out.setAttribute('aria-live','polite');outputs[result]=out;td.append(out);tr.append(td,el('td','muted','Calculado'));body.append(tr)}});
+ table.append(body);wrap.append(table);detail.append(wrap,el('p','muted','Probabilidad conjunta = (alineación × predisposición) / 100. Impacto = (entrenamiento consultivo + retroalimentación literaria) / 2. La probabilidad es una estimación compuesta, no una frecuencia observada.'));page.append(detail);
+ const compare=el('section','matrix-detail decision-comparison');page.append(compare);
+ const fmt=v=>v==null?'Sin evaluar':new Intl.NumberFormat('es-AR',{maximumFractionDigits:2}).format(v);
+ function paintResults(){const r=decisionResults(selected);outputs.probability.textContent=r.probability==null?'Sin evaluar':fmt(r.probability*100)+' %';outputs.impact.textContent=r.impact==null?'Sin evaluar':fmt(r.impact)+' / 10'}
+ function paintComparison(){compare.replaceChildren(el('h2','','Comparación de alternativas'),el('p','muted','Cada variable conserva su unidad. No se calcula una puntuación global ni se elige una alternativa ganadora.'));
+ const sc=el('div','decision-scroll'),t=el('table','decision-table'),thead=el('thead'),h=el('tr');['Variable',...model.rows.map(r=>r.title||'Sin título')].forEach(v=>{const th=el('th','',v);th.scope='col';h.append(th)});thead.append(h);t.append(thead);const tb=el('tbody');
+ [['probability','Probabilidad conjunta',100,' %'],['impact','Impacto promedio',10,' / 10'],['cost','Costo económico',null,' ARS'],['time','Tiempo',null,' min']].forEach(([key,label,max,suffix])=>{const tr=el('tr'),th=el('th','',label);th.scope='row';tr.append(th);const results=model.rows.map(r=>decisionResults(r)[key]),limit=max||Math.max(1,...results.filter(v=>v!=null));model.rows.forEach((row,i)=>{let v=results[i];if(key==='probability'&&v!=null)v*=100;const td=el('td');td.append(el('div','',v==null?'Sin evaluar':fmt(v)+suffix));const bar=el('div','decision-bar'),fill=el('span');fill.style.width=(v==null?0:Math.min(100,v/limit*100))+'%';bar.setAttribute('aria-hidden','true');bar.append(fill);td.append(bar);const keys=key==='probability'?['alignment','readiness']:key==='impact'?['consulting','literary']:[key];td.append(el('small','muted',keys.every(k=>row.sources[k]==='observed')?'Datos observados'+(keys.length>1?' · calculado':''):'Incluye estimaciones'));tr.append(td)});tb.append(tr)});t.append(tb);sc.append(t);compare.append(sc)}
+ paintResults();paintComparison();
 }
 
 function normalize(raw){if(raw.listas&&raw.t){return {version:1,cards:raw.listas.flatMap((list,index)=>list.c.filter(id=>raw.t[id]&&!raw.t[id].ar).map(id=>{const c=raw.t[id];return {id:uid(),title:String(c.t||'Sin título'),state:[0,0,1,3][index]??0,description:String(c.d||''),checks:(c.ck||[]).map(g=>({id:uid(),title:String(g.t||'TAREAS'),items:(g.it||[]).map(i=>({id:uid(),text:String(i.t||''),done:!!i.ok}))}))}}))}}if(!raw||!Array.isArray(raw.cards))throw Error('Formato inválido');return {version:1,eisenhower:normalizeEisenhower(raw.eisenhower),eisenhowerBoard:raw.eisenhowerBoard?normalize(raw.eisenhowerBoard):undefined,impactBoard:raw.impactBoard?normalize(raw.impactBoard):undefined,proposalMatrix:raw.proposalMatrix?normalizeProposalMatrix(raw.proposalMatrix):undefined,hogarTransferred:!!raw.hogarTransferred,columnTitles:Array.isArray(raw.columnTitles)?STATES.map((name,i)=>String(raw.columnTitles[i]||name).slice(0,80)):undefined,balance:raw.balance?JSON.parse(JSON.stringify(raw.balance)):undefined,events:(raw.events||[]).map(e=>({id:String(e.id||uid()),title:String(e.title||'Sin título'),due:String(e.due||''),time:String(e.time||''),description:String(e.description||''),googleEventId:typeof e.googleEventId==='string'?e.googleEventId:undefined})),cards:raw.cards.map(c=>{if(!c||typeof c.title!=='string'||!Number.isInteger(c.state)||c.state<0||c.state>3)throw Error('Tarjeta inválida');return {id:uid(),title:c.title,description:String(c.description||''),due:String(c.due||''),time:String(c.time||''),googleEventId:typeof c.googleEventId==='string'?c.googleEventId:undefined,state:c.state,fontWeight:c.fontWeight===300?300:undefined,checks:(c.checks||[]).map(g=>({id:uid(),title:String(g.title||'TAREAS'),items:(g.items||[]).map(i=>({id:uid(),text:String(i.text||''),done:!!i.done}))}))}})}}
