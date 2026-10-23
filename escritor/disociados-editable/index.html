@@ -895,7 +895,7 @@ const spacingScale=[0,1,3,5,7,9,10];
 const validSpacing=value=>Number.isFinite(value)?spacingScale.reduce((best,next)=>Math.abs(next-value)<Math.abs(best-value)?next:best,1):10;
 const pageIds=Array.from(main.querySelectorAll('.sheet'),sheet=>sheet.id);
 const originalLayout=main.innerHTML;
-let startupLocalRaw=null;try{startupLocalRaw=localStorage.getItem(KEY)}catch{}
+
 let publishedMigration=4,editorialRevision=2;
 function rebuildNarrativeIndex(){
  const index=main.querySelector('#indice');if(!index)return;
@@ -1148,13 +1148,8 @@ function navigateDocumentHistory(direction){
 
 function save(){
  recordDocumentHistory();
- const snapshot=current();let localSaved=false;
- try{localStorage.setItem(KEY,JSON.stringify(snapshot));localSaved=true}catch{}
- archiveDraft(snapshot);
- if(documentCloud){documentCloud.changed();return}
- dirty=!localSaved;status.textContent=localSaved?'Guardado en este navegador.':'No se pudo guardar. Descargá una copia antes de cerrar.';
+ if(documentCloud)documentCloud.changed();
 }
-try{if(startupLocalRaw)apply(JSON.parse(startupLocalRaw))}catch{status.textContent='No se pudo cargar la copia local. Está conservada para recuperación.'}
 refreshLayout();
 main.addEventListener('input',()=>{rebuildNarrativeIndex();refreshLayout();save()});
 // Rich clipboard data retains list structure and source formatting.
@@ -1667,178 +1662,100 @@ document.getElementById('export').onclick=()=>{
  const link=document.createElement('a');link.href=url;link.download='editable.html';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 };
 
-// Recovery copies live separately from the document that is synchronized.
-let recoveryDBPromise=null;
-function recoveryDB(){
- if(!recoveryDBPromise)recoveryDBPromise=new Promise((resolve,reject)=>{
-  const request=indexedDB.open(KEY+'-recovery',1);
-  request.onupgradeneeded=()=>request.result.createObjectStore('copies',{keyPath:'id'});
-  request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);
- });
- return recoveryDBPromise;
-}
-async function archiveCopy(id,value,label){
- const db=await recoveryDB();
- await new Promise((resolve,reject)=>{const tx=db.transaction('copies','readwrite');tx.objectStore('copies').put({id,value,label,date:new Date().toISOString()});tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error)});
-}
-function archiveDraft(value){
- return archiveCopy('draft-'+Math.floor(Date.now()/60000),value,'Edición automática').catch(()=>false);
-}
-async function recoveryCopies(){
- const copies=[];
- try{
-  const db=await recoveryDB();
-  copies.push(...await new Promise((resolve,reject)=>{const req=db.transaction('copies').objectStore('copies').getAll();req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error)}));
- }catch{}
- try{
-  for(const key of Object.keys(localStorage).filter(key=>key===KEY||key.startsWith(KEY+'-'))){
-   let entry;try{entry=JSON.parse(localStorage.getItem(key))}catch{continue}
-   for(const [suffix,value] of [['',entry],[' · pendiente',entry?.snapshot],[' · local',entry?.local],[' · base',entry?.remote]]){
-    if(value?.format===FORMAT&&typeof value.html==='string')copies.push({id:key+suffix,value,label:key===KEY?'Última copia del navegador':key.replace(KEY+'-','')+suffix,date:entry.date||''});
-   }
-  }
- }catch{}
- return copies.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-}
-function createRecoveryControls(onRestore){
- const panel=document.createElement('details');panel.className='document-recovery';
- const summary=document.createElement('summary');summary.textContent='Recuperar versiones';
- const description=document.createElement('p');description.textContent='Elegí una copia y revisá el texto antes de recuperarla. La versión actual se conserva.';
- const select=document.createElement('select');select.setAttribute('aria-label','Copias de recuperación');
- const preview=document.createElement('textarea');preview.readOnly=true;preview.rows=8;preview.setAttribute('aria-label','Vista previa de la copia');preview.style.cssText='width:100%;max-width:720px;display:block;margin:8px 0';
- const load=document.createElement('button');load.textContent='Recuperar esta copia';load.type='button';
- const download=document.createElement('button');download.textContent='Descargar esta copia';download.type='button';
- const note=document.createElement('p');note.setAttribute('role','status');let copies=[];
- function show(){const copy=copies[Number(select.value)];const template=document.createElement('template');template.innerHTML=copy?.value.html||'';preview.value=template.content.textContent;load.disabled=download.disabled=!copy;}
- async function refresh(){copies=await recoveryCopies();select.replaceChildren();copies.forEach((copy,index)=>{const option=document.createElement('option');option.value=index;option.textContent=(copy.date?new Date(copy.date).toLocaleString('es-AR')+' · ':'')+copy.label+' · '+copy.value.html.length+' caracteres';select.append(option)});show();note.textContent=copies.length?'Las copias de este navegador están disponibles aquí.':'No hay copias disponibles en este navegador.';}
- select.onchange=show;panel.addEventListener('toggle',()=>{if(panel.open)refresh()});
- download.onclick=()=>{const copy=copies[Number(select.value)];if(!copy)return;const url=URL.createObjectURL(new Blob([JSON.stringify(copy.value,null,2)],{type:'application/json'}));const link=document.createElement('a');link.href=url;link.download='disociados-recuperacion.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};
- load.onclick=async()=>{
-  const copy=copies[Number(select.value)];if(!copy||!confirm('¿Recuperar la copia seleccionada? La edición actual se conservará en Recuperar versiones.'))return;
-  try{await archiveCopy('before-restore-'+Date.now(),current(),'Antes de recuperar');validate(copy.value);onRestore(copy.value);note.textContent='Copia recuperada. Revisá el estado del guardado antes de cerrar.';}catch{note.textContent='No se pudo conservar la versión actual. No se reemplazó el documento.';}
- };
- panel.append(summary,description,select,preview,load,download,note);status.after(panel);return panel;
-}
+// Document content is persisted exclusively in Supabase. Pending edits stay in memory.
 function createDocumentCloud(){
- const DOC='disociados-editable-fiel-v1',OWNER='58c60587-9559-4747-a7bc-a90d36147caa',META=KEY+'-cloud-v1-'+OWNER;
- let client,ready=false,loading=false,saving=false,pending=null,stamp=null,baseline='',localBaseline='',timer,conflict=false,conflictingRemote=null;
- 
+ const DOC='disociados-editable-fiel-v1',OWNER='58c60587-9559-4747-a7bc-a90d36147caa';
+ let client,ready=false,loading=false,saving=false,pending=null,stamp=null,timer,conflict=false,conflictingStamp=null;
  const controls=document.createElement('div');controls.className='document-cloud-tools';
  const login=document.createElement('a');login.href='../../';login.target='_blank';login.rel='noopener noreferrer';login.textContent='Ingresar en KAIROS';login.hidden=true;
  const retry=document.createElement('button');retry.type='button';retry.textContent='Guardar ahora';
  const keep=document.createElement('button');keep.type='button';keep.textContent='Conservar mi edición';keep.hidden=true;
- const remoteButton=document.createElement('button');remoteButton.type='button';remoteButton.textContent='Cargar copia de la base';remoteButton.hidden=true;
+ const remoteButton=document.createElement('button');remoteButton.type='button';remoteButton.textContent='Cargar copia de Supabase';remoteButton.hidden=true;
  controls.append(login,retry,keep,remoteButton);status.after(controls);
- createRecoveryControls(value=>{apply(value);refreshLayout();save()});
- function report(text){status.textContent=text;}
- function persist(){
-  let ok=true;try{localStorage.setItem(META,JSON.stringify({stamp,dirty:!!pending,snapshot:pending,baseline,localBaseline}));localStorage.setItem(KEY,JSON.stringify(current()))}catch{ok=false}
-  return ok;
- }
+ main.inert=true;
+ const report=text=>{status.textContent=text};
+ const canonical=value=>Array.isArray(value)?value.map(canonical):value&&typeof value==='object'?Object.fromEntries(Object.keys(value).sort().map(key=>[key,canonical(value[key])])):value;
+ const same=(a,b)=>JSON.stringify(canonical(a))===JSON.stringify(canonical(b));
  function reportError(){
-  main.inert=false;
-  report('No se confirmó el guardado en la base. '+(persist()?'Tu edición sigue en este navegador.':'Descargá el HTML antes de cerrar: el almacenamiento local está lleno o no está disponible.'));
+  main.inert=!ready;
+  report(ready?'No se confirmó el guardado en Supabase. Hay cambios pendientes en esta pestaña; mantenela abierta y reintentá.':'No se pudo cargar Supabase. Reintentá para habilitar la edición.');
  }
  function markChanged(){
-  const next=current();if(!pending&&matchesBaseline(next,baseline))return;pending=next;dirty=true;const cached=persist();archiveDraft(next);
-  report(cached?'Cambios guardados en este navegador; falta confirmar en la base.':'Cambios pendientes. Descargá el HTML antes de cerrar.');
-  if(ready&&!conflict){clearTimeout(timer);timer=setTimeout(flush,250)}
+  if(!ready)return;
+  pending=current();dirty=true;report('Cambios pendientes de guardar en Supabase…');
+  clearTimeout(timer);if(!conflict)timer=setTimeout(flush,250);
  }
  async function read(){const r=await client.from('kairos_documents').select('data,updated_at').eq('user_id',OWNER).eq('document_id',DOC).maybeSingle();if(r.error)throw r.error;return r.data;}
- async function showConflict(remote){
-  conflict=true;conflictingRemote=remote;main.inert=false;keep.hidden=remoteButton.hidden=false;
-  await Promise.all([archiveCopy('conflict-local-'+Date.now(),pending||current(),'Edición local en conflicto'),remote?archiveCopy('conflict-base-'+Date.now(),remote.data,'Copia de la base en conflicto'):Promise.resolve()]).catch(()=>{});
-  persist();report('Hay dos versiones diferentes. Tu edición sigue visible y se conserva; elegí cuál continuar. Podés revisar las copias en Recuperar versiones.');
+ function showConflict(remote){
+  conflict=true;conflictingStamp=remote?.updated_at||null;keep.hidden=remoteButton.hidden=false;
+  report('Supabase tiene otra versión. Tu edición sigue en esta pestaña. Elegí cuál conservar.');
  }
- function signature(value){
-  if(Array.isArray(value))return '['+value.map(signature).join(',')+']';
-  if(value&&typeof value==='object')return '{'+Object.keys(value).sort().map(key=>JSON.stringify(key)+':'+signature(value[key])).join(',')+'}';
-  return JSON.stringify(value);
- }
- function same(a,b){return signature(a)===signature(b);}
- function matchesBaseline(value,raw){try{return same(value,JSON.parse(raw))}catch{return false}}
  async function flush(){
   clearTimeout(timer);if(!ready||!pending||saving||conflict)return;
-  saving=true;const snapshot=pending;report('Guardando en la base…');
+  saving=true;const snapshot=pending;report('Guardando en Supabase…');
+  let succeeded=false;
   try{
    const nextStamp=new Date(Math.max(Date.now(),Date.parse(stamp||'')+1||0)).toISOString();
    const table=client.from('kairos_documents');
    const query=stamp?table.update({data:snapshot,updated_at:nextStamp}).eq('user_id',OWNER).eq('document_id',DOC).eq('updated_at',stamp):table.insert({user_id:OWNER,document_id:DOC,data:snapshot,updated_at:nextStamp});
    const r=await query.select('updated_at').maybeSingle();
    if(r.error&&r.error.code!=='23505')throw r.error;
-   if(r.error||!r.data){const remote=await read();if(remote&&same(remote.data,snapshot)){stamp=remote.updated_at;baseline=JSON.stringify(snapshot)}else{await showConflict(remote);return}}
-   else{
-    // Confirm content by reading it back, not only by accepting a write response.
-    const remote=await read();
-    if(!remote||!same(remote.data,snapshot)){await showConflict(remote);return}
-    stamp=remote.updated_at;baseline=JSON.stringify(remote.data);
-   }
-   if(pending===snapshot){pending=null;dirty=false;localBaseline=JSON.stringify(snapshot)}
-   persist();report(pending?'Quedan cambios por guardar en la base.':'Guardado confirmado en la base · '+new Date().toLocaleTimeString('es-AR'));
+   const remote=await read();
+   if(!remote||!same(remote.data,snapshot)){showConflict(remote);return}
+   stamp=remote.updated_at;
+   if(pending===snapshot){pending=null;dirty=false}
+   succeeded=true;report(pending?'Hay cambios pendientes de guardar en Supabase…':'Guardado confirmado en Supabase · '+new Date().toLocaleTimeString('es-AR'));
   }catch{reportError()}
-  finally{saving=false;if(pending&&ready&&!conflict)timer=setTimeout(flush,1000)}
+  finally{saving=false;if(succeeded&&pending&&!conflict)timer=setTimeout(flush,250)}
  }
  async function start(){
-  if(loading)return;if(ready){await flush();return}loading=true;main.inert=true;report('Comprobando la copia de la base…');
+  if(loading)return;if(ready){await flush();return}loading=true;main.inert=true;report('Cargando documento desde Supabase…');
   try{
    if(!client){
     if(!window.supabase?.createClient)throw Error('SDK no disponible');
     client=window.supabase.createClient('https://etbtwbxdouedjpwwendg.supabase.co','sb_publishable_upAQWEUODK2TXIrERiGEWg_IXIgtJ9V',{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
-    client.auth.onAuthStateChange(event=>{if(event==='SIGNED_OUT'){ready=false;main.inert=false;login.hidden=false;report('Sesión cerrada. Los cambios quedan pendientes de guardar en la base.')}else if(event==='SIGNED_IN'&&!ready&&!loading)setTimeout(start,0)});
+    client.auth.onAuthStateChange(event=>{
+     if(event==='SIGNED_OUT'){ready=false;main.inert=true;login.hidden=false;report(dirty?'Sesión cerrada. Hay cambios sin guardar; mantené esta pestaña abierta e ingresá en KAIROS.':'Ingresá en KAIROS para editar y guardar en Supabase.')}
+     else if(event==='SIGNED_IN'&&!ready&&!loading)setTimeout(start,0);
+    });
    }
    const session=await client.auth.getSession();if(session.error)throw session.error;
-   if(session.data.session?.user.id!==OWNER){login.hidden=false;main.inert=false;report('Ingresá en KAIROS para guardar en la base. Podés editar; los cambios quedarán pendientes en este navegador.');return}
+   if(session.data.session?.user.id!==OWNER){login.hidden=false;report('Ingresá en KAIROS para editar y guardar en Supabase.');return}
    const verified=await client.auth.getUser();if(verified.error||verified.data.user?.id!==OWNER)throw Error('Sesión no válida');login.hidden=true;
-   let meta=null;try{meta=JSON.parse(localStorage.getItem(META)||'null')}catch{}
-   localBaseline=meta?.localBaseline||'';
    const remote=await read();
-   // Archive every existing backup before offering any replacement.
-   if(startupLocalRaw){try{await archiveCopy('startup-'+Date.now(),JSON.parse(startupLocalRaw),'Copia al abrir el editor')}catch{}}
-   if(remote)await archiveCopy('base-'+remote.updated_at,remote.data,'Copia leída de la base').catch(()=>{});
-   const local=pending||(meta?.dirty&&meta.snapshot?meta.snapshot:null);
-   if(local){
-    validate(local);pending=local;apply(local);refreshLayout();dirty=true;stamp=meta?.stamp||null;baseline=meta?.baseline||'';
-    if(remote&&!same(remote.data,local)&&!matchesBaseline(remote.data,baseline)){ready=true;await showConflict(remote);return}
-    stamp=remote?.updated_at||null;
-   }else if(remote){
-    // A differing saved local document must never disappear silently.
-    let previous=null;try{previous=startupLocalRaw?JSON.parse(startupLocalRaw):null}catch{}
-    if(previous&&!same(previous,remote.data)&&!matchesBaseline(previous,meta?.baseline||'')&&!matchesBaseline(previous,meta?.localBaseline||'')){
-     pending=previous;apply(previous);refreshLayout();dirty=true;ready=true;await showConflict(remote);return;
-    }
-    apply(remote.data);refreshLayout();stamp=remote.updated_at;baseline=JSON.stringify(remote.data);localBaseline=JSON.stringify(current());pending=null;dirty=false;
-   }else{pending=current();dirty=true;stamp=null;}
-   ready=true;main.inert=false;persist();
-   if(pending)await flush();else report('Copia cargada desde la base. Sin cambios pendientes.');
+   if(pending){if((remote?.updated_at||null)!==stamp){ready=true;main.inert=false;showConflict(remote);return}}
+   else if(remote){apply(remote.data);refreshLayout();stamp=remote.updated_at;dirty=false}
+   else{pending=current();dirty=true;stamp=null}
+   ready=true;main.inert=false;
+   if(pending)await flush();else report('Documento cargado desde Supabase. Sin cambios pendientes.');
   }catch{ready=false;reportError()}
-  finally{loading=false;main.inert=false}
+  finally{loading=false}
  }
- async function choose(local){
+ async function choose(useMemory){
+  if(saving)return;
   try{
-   const remote=await read();
-   if((remote?.updated_at||null)!==(conflictingRemote?.updated_at||null)){await showConflict(remote);return}
-   await archiveCopy('before-choice-'+Date.now(),pending||current(),'Antes de elegir versión');
-   if(remote)await archiveCopy('before-choice-base-'+Date.now(),remote.data,'Base antes de elegir versión');
-   if(!local&&remote){apply(remote.data);refreshLayout();pending=null;dirty=false;baseline=JSON.stringify(remote.data);localBaseline=JSON.stringify(current())}
-   else{pending=current();dirty=true;baseline=remote?JSON.stringify(remote.data):''}
-   stamp=remote?.updated_at||null;conflict=false;keep.hidden=remoteButton.hidden=true;persist();
-   if(pending)await flush();else report('Copia de la base cargada; versión anterior disponible en Recuperar versiones.');
+   const remote=await read();if((remote?.updated_at||null)!==conflictingStamp){showConflict(remote);return}
+   if(!useMemory){
+    if(!remote){report('La copia de Supabase ya no existe. Conservá tu edición para guardarla.');return}
+    if(!confirm('¿Descartar los cambios pendientes de esta pestaña y cargar la copia de Supabase?'))return;
+    apply(remote.data);refreshLayout();pending=null;dirty=false;
+   }else{pending=current();dirty=true}
+   stamp=remote?.updated_at||null;conflict=false;keep.hidden=remoteButton.hidden=true;
+   if(pending)await flush();else report('Documento cargado desde Supabase. Sin cambios pendientes.');
   }catch{reportError()}
  }
  keep.onclick=()=>choose(true);remoteButton.onclick=()=>choose(false);
  retry.onclick=()=>ready?flush():start();
  window.addEventListener('online',()=>ready?flush():start());
- document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){if(pending)archiveDraft(pending);flush()}});
- window.addEventListener('pagehide',()=>{if(pending){persist();archiveDraft(pending)}});
- // Preserve earlier migration backups without deleting their originals.
- recoveryCopies().then(copies=>Promise.all(copies.filter(copy=>copy.id.startsWith(KEY)).map(copy=>archiveCopy('legacy-'+copy.id,copy.value,copy.label)))).catch(()=>{});
+ document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')flush()});
  return {changed:markChanged,flush,start};
 }
 
 refreshLayout();historyReady=true;resetDocumentHistory();
-if(location.protocol!=='file:'){documentCloud=createDocumentCloud();documentCloud.start();}
+documentCloud=createDocumentCloud();documentCloud.start();
 
 window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue=''}});
 })();
 </script></body></html>
+
 
