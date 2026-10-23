@@ -936,7 +936,7 @@ function normalizeStoryNumbers(){
 }
 function decorateSedanteAside(){
  const story=Array.from(main.querySelectorAll('.published-story')).find(node=>/SEDANTE/i.test(node.querySelector('h1')?.textContent||''));if(!story)return false;
- const paragraph=Array.from(story.querySelectorAll('p,.doc-line')).find(node=>node.textContent.replace(/\u00a0/g,' ').includes('No seas trolo, man.'));if(!paragraph||paragraph.querySelector('.sedante-gold-aside'))return false;
+ const paragraph=Array.from(story.querySelectorAll('p,.doc-line,div')).filter(node=>!node.querySelector('p,.doc-line,div')).find(node=>node.textContent.replace(/\u00a0/g,' ').includes('No seas trolo, man.'));if(!paragraph||paragraph.querySelector('.sedante-gold-aside'))return false;
  const aside=document.createElement('span');aside.className='sedante-gold-aside';
  aside.style.cssText='display:inline-block;border-left:1px solid #E5B95C;border-right:1px solid #E5B95C;padding-left:16px;padding-right:16px;max-width:100%';
  aside.append(...paragraph.childNodes);paragraph.append(aside);return true;
@@ -960,6 +960,25 @@ function decoratePrincipitaAside(){
   const adjacent=aside[side];if(adjacent?.matches('hr,.tda-flashback-separator'))adjacent.remove();
  }
  return true;
+}
+
+
+function refineNarrativeAsides(){
+ let changed=false;
+ function set(node,property,value,priority=''){
+  const before=node.style.cssText;node.style.setProperty(property,value,priority);if(node.style.cssText!==before)changed=true;
+ }
+ main.querySelectorAll('.sedante-gold-aside').forEach(aside=>{
+  const paragraph=aside.parentElement;
+  for(const node of [paragraph,aside,...aside.querySelectorAll('*')]){
+   set(node,'text-indent','0px');set(node,'text-align','left');
+   if(node!==aside){set(node,'margin-left','0px');set(node,'padding-left','0px')}
+  }
+  set(aside,'margin-left','-17px');set(aside,'padding-left','16px');
+  set(aside,'border-left','1px solid #e5b95c');set(aside,'border-right','1px solid #e5b95c');
+ });
+ main.querySelectorAll('.principita-gold-aside').forEach(aside=>set(aside,'margin-bottom','1.5em','important'));
+ return changed;
 }
 
 function rebuildNarrativeIndex(){
@@ -1157,6 +1176,7 @@ function refreshLayout(){
  if(normalizeStoryNumbers())documentNeedsSync=true;
  if(decorateSedanteAside())documentNeedsSync=true;
  if(decoratePrincipitaAside())documentNeedsSync=true;
+ if(refineNarrativeAsides())documentNeedsSync=true;
  picker.replaceChildren();
  main.querySelectorAll('h1,h2,h3,h4,h5,h6').forEach((heading,index)=>{
   if(!heading.id)heading.id='doc-heading-'+index;
