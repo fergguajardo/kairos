@@ -964,7 +964,7 @@ function decoratePrincipitaAside(){
 
 
 function refineNarrativeAsides(){
- let changed=false;
+ const original=main.innerHTML;let changed=false;
  function set(node,property,value,priority=''){
   const before=node.style.cssText;node.style.setProperty(property,value,priority);if(node.style.cssText!==before)changed=true;
  }
@@ -978,7 +978,7 @@ function refineNarrativeAsides(){
   set(aside,'border-left','1px solid #e5b95c');set(aside,'border-right','1px solid #e5b95c');
  });
  main.querySelectorAll('.principita-gold-aside').forEach(aside=>set(aside,'margin-bottom','1.5em','important'));
- return changed;
+ return main.innerHTML!==original;
 }
 
 function rebuildNarrativeIndex(){
