@@ -990,7 +990,39 @@ function applyCover(data){
  coverSynopsis.textContent=savedSynopsis.replace(/\b(?:Siete|Ocho) historias\b/g,'Diez historias');
  if(savedSynopsis!==coverSynopsis.textContent)documentNeedsSync=true;
 }
-function setEditorInert(value){main.inert=value;coverTitle.inert=value;coverSynopsis.inert=value}
+// Drafts stay in the private document; the existing publication trigger only
+// receives the six top-level fields of the last confirmed public version.
+let publicationMode='compatibility',publicationSnapshot=null,publicationBusy=false;
+const publicationFields=value=>Object.fromEntries(['html','coverTitle','coverSynopsis','titleSpacing','chapterSpacing','textSpacing'].map(key=>[key,value[key]]));
+const modeButton=document.createElement('button');modeButton.type='button';modeButton.id='publication-mode-button';modeButton.setAttribute('aria-haspopup','dialog');modeButton.setAttribute('aria-label','Modo de publicación');
+modeButton.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3"/><circle cx="15" cy="17" r="3"/></svg><span>Compatibilidad</span>';
+document.querySelector('.toolbar').append(modeButton);
+const modeDialog=document.createElement('dialog');modeDialog.id='publication-mode-dialog';modeDialog.setAttribute('aria-labelledby','publication-mode-title');
+modeDialog.innerHTML='<div class="publication-mode-heading"><h2 id="publication-mode-title">Modo de publicación</h2><button type="button" aria-label="Cerrar modos de publicación">×</button></div><fieldset><legend>Elegí cómo trabajar</legend><label><input type="radio" name="publication-mode" value="compatibility"><span><strong>Compatibilidad</strong><small>El editable y la antología publicada se sincronizan. Al activarlo, se publica el contenido actual.</small></span></label><label><input type="radio" name="publication-mode" value="creation"><span><strong>Creación</strong><small>Guardá tus ideas y borradores. La antología conserva la última versión publicada.</small></span></label></fieldset><p id="publication-mode-status" role="status"></p>';
+document.body.append(modeDialog);
+const modeInputs=[...modeDialog.querySelectorAll('input')];
+function updatePublicationMode(){
+ modeButton.querySelector('span').textContent=publicationMode==='creation'?'Creación':'Compatibilidad';
+ modeButton.dataset.mode=publicationMode;
+ modeInputs.forEach(input=>{input.checked=input.value===publicationMode;input.disabled=main.inert||publicationBusy});
+ document.getElementById('publication-mode-status').textContent=main.inert?'Ingresá en KAIROS para cambiar el modo.':publicationBusy?'Guardando…':publicationMode==='creation'?'Tus cambios se guardan como borrador, sin cambiar la publicación.':'Los cambios guardados se publican automáticamente.';
+}
+modeButton.onclick=()=>{updatePublicationMode();modeDialog.showModal()};
+modeDialog.querySelector('button').onclick=()=>modeDialog.close();
+modeDialog.addEventListener('click',event=>{if(event.target===modeDialog)modeDialog.close()});
+modeInputs.forEach(input=>input.addEventListener('change',()=>{
+ if(main.inert||publicationBusy){updatePublicationMode();return}
+ if(input.value==='creation'&&!publicationSnapshot){updatePublicationMode();return}
+ publicationMode=input.value;updatePublicationMode();save();
+}));
+const modeStyle=document.createElement('style');modeStyle.textContent=`
+#publication-mode-button{display:inline-flex;align-items:center;gap:8px;white-space:nowrap}#publication-mode-button[data-mode="creation"]{color:var(--gold);border-color:var(--gold)}
+#publication-mode-dialog{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:16px;padding:24px;width:min(440px,calc(100% - 32px));font:400 16px Outfit,sans-serif;box-shadow:0 20px 80px #0009}#publication-mode-dialog::backdrop{background:#0009}
+.publication-mode-heading{display:flex;align-items:center;justify-content:space-between;gap:16px}.publication-mode-heading h2{margin:0;font-size:20px}.publication-mode-heading button{background:none;border:0;color:var(--ink);font-size:28px;cursor:pointer}
+#publication-mode-dialog fieldset{border:0;padding:0;margin:20px 0 0}#publication-mode-dialog legend{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}#publication-mode-dialog label{display:flex;gap:12px;padding:16px 0;border-top:1px solid var(--line);cursor:pointer}#publication-mode-dialog input{accent-color:var(--gold);margin:4px 0;align-self:flex-start}#publication-mode-dialog strong{display:block;font-weight:500}#publication-mode-dialog small{display:block;line-height:1.5;color:#bcb7ad;margin-top:6px;font-size:14px}#publication-mode-status{font-size:13px;color:var(--light);line-height:1.5;margin:12px 0 0}`;
+document.head.append(modeStyle);updatePublicationMode();
+
+function setEditorInert(value){main.inert=value;coverTitle.inert=value;coverSynopsis.inert=value;updatePublicationMode()}
 for(const field of [coverTitle,coverSynopsis]){
  field.contentEditable='plaintext-only';field.spellcheck=true;
  field.addEventListener('input',()=>save());
@@ -1328,7 +1360,12 @@ function refreshLayout(){
  if(historyReady&&historyNeedsReset&&!historyRestoring)resetDocumentHistory();
 }
 
-const current=()=>({format:FORMAT,version:2,title:'Editable',coverTitle:coverTitle.textContent,coverSynopsis:coverSynopsis.textContent,editorialRevision,publishedMigration,titleSpacing,chapterSpacing,textSpacing,html:main.innerHTML});
+const editableState=()=>({format:FORMAT,version:2,title:'Editable',coverTitle:coverTitle.textContent,coverSynopsis:coverSynopsis.textContent,editorialRevision,publishedMigration,titleSpacing,chapterSpacing,textSpacing,html:main.innerHTML});
+function current(){
+ const draft=editableState();
+ if(publicationMode==='creation'&&publicationSnapshot)return {...draft,...publicationSnapshot,publicationMode,creationDraft:draft};
+ return {...draft,publicationMode};
+}
 function sanitize(value){const template=document.createElement('template');template.innerHTML=value;const allowed=new Set(['SECTION','HR','BLOCKQUOTE','ARTICLE','DIV','SPAN','P','BR','STRONG','B','EM','I','U','A','UL','OL','LI','H1','H2','H3','H4','H5','H6','IMG']);for(const node of Array.from(template.content.querySelectorAll('*'))){if(!allowed.has(node.tagName)){if(['SCRIPT','STYLE','IFRAME','OBJECT','EMBED','IMG','LINK','META'].includes(node.tagName))node.remove();else node.replaceWith(...node.childNodes);continue}for(const attribute of Array.from(node.attributes)){if(attribute.name==='src'&&node.tagName==='IMG'){if(!/^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(attribute.value))node.removeAttribute('src')}else if(attribute.name==='alt'&&node.tagName==='IMG'){}else if(attribute.name==='href'&&node.tagName==='A'){if(!/^(?:https?:\/\/|#[A-Za-z][\w-]*)/i.test(attribute.value))node.removeAttribute('href')}else if(attribute.name==='style'){const safe=Array.from(node.style).filter(k=>['font-family','font-size','font-weight','font-style','color','margin-top','margin-left','margin-right','padding-left','line-height','list-style-type','text-decoration','width','padding-right','padding-top','padding-bottom','margin-bottom','text-align','text-indent','max-width','height','display','border','border-top','border-left','border-right','border-left-width','border-left-style','border-left-color','border-right-width','border-right-style','border-right-color'].includes(k)).map(k=>k+':'+node.style.getPropertyValue(k)).join(';');node.setAttribute('style',safe)}else if(attribute.name==='data-bela-chapter'&&/^[1-9]\d*$/.test(attribute.value)){}else if(attribute.name==='aria-label'){}else if(attribute.name==='class'&&/^(?:principita-gold-aside|sedante-gold-aside|sheet story-start bela-added-chapter|sheet bela-added-chapter|published-story|toc|toc-num|toc-title|toc-chapters|indice-title|back-to-index|tda-flashback-separator)$/.test(attribute.value)){}else if(attribute.name==='class'&&/^((?:voz|capitulo|flashback-muted|flashback-boundary-start|flashback-boundary-end|passage-start|passage-end|passage-top-gap|aside-start|aside-end)(?: (?:voz|capitulo|flashback-muted|flashback-boundary-start|flashback-boundary-end|passage-start|passage-end|passage-top-gap|aside-start|aside-end))*|doc-image|doc-block|doc-line|doc-heading|doc-marker|marker-gap|clipboard-block|page-break|page-content|sheet(?: (?:empty-section|story-start|chapter-start))*)$/.test(attribute.value)){}else if(node.tagName==='OL'&&attribute.name==='start'&&/^\d+$/.test(attribute.value)){}else if(node.tagName==='LI'&&attribute.name==='value'&&/^\d+$/.test(attribute.value)){}else if(attribute.name==='data-kairos-clipboard'&&['blocks','inline'].includes(attribute.value)){}else if(attribute.name==='data-marker-removed'&&attribute.value==='true'){}else if(attribute.name==='data-layout-version'&&attribute.value==='3'){}else if(attribute.name==='id'&&(pageIds.includes(attribute.value)||/^(?:indice|cuento-\d+(?:-encabezado-\d+)?|doc-heading-\d+)$/.test(attribute.value))){}else node.removeAttribute(attribute.name)}if(node.tagName==='A'){node.target='_blank';node.rel='noopener noreferrer'}}return template.innerHTML}
 function validate(data){
  if(data?.format!==FORMAT)throw Error('El archivo no es un respaldo de este documento.');
@@ -1337,6 +1374,10 @@ function validate(data){
  return data.pages.map(sanitize);
 }
 function apply(data){
+ publicationMode=data?.publicationMode==='creation'?'creation':'compatibility';
+ publicationSnapshot=publicationFields(data);
+ if(publicationMode==='creation'&&data.creationDraft){data=data.creationDraft}
+ updatePublicationMode();
  if(historyReady&&!historyRestoring)historyNeedsReset=true;
  const contents=validate(data);applyCover(data);editorialRevision=data.editorialRevision===2?2:0;publishedMigration=[1,2,3,4].includes(data.publishedMigration)?data.publishedMigration:0;
  titleSpacing=validSpacing(data.titleSpacing);
@@ -1346,7 +1387,7 @@ function apply(data){
  else{main.innerHTML=originalLayout;pageIds.forEach((id,i)=>{const node=main.querySelector('#'+id+' .page-content');if(node)node.innerHTML=contents[i]})}
  inheritEditing();main.querySelectorAll('.page-break').forEach(node=>node.contentEditable="false");upgradeDocument();
 }
-function historySnapshot(){return {value:JSON.stringify(current())}}
+function historySnapshot(){return {value:JSON.stringify(editableState())}}
 function resetDocumentHistory(){if(historyRestoring)return;documentHistory=[historySnapshot()];historyPosition=0;historyNeedsReset=false;updateHistoryControls()}
 function updateHistoryControls(){
  const undo=formatTools.querySelector('[data-format="undo"]'),redo=formatTools.querySelector('[data-format="redo"]');
@@ -1949,7 +1990,7 @@ function createDocumentCloud(){
  }
  async function flush(){
   clearTimeout(timer);if(!ready||!pending||saving||conflict)return;
-  saving=true;const snapshot=pending;report('Guardando en Supabase…');
+  saving=true;publicationBusy=true;updatePublicationMode();const snapshot=pending;report('Guardando en Supabase…');
   let succeeded=false;
   try{
    const nextStamp=new Date(Math.max(Date.now(),Date.parse(stamp||'')+1||0)).toISOString();
@@ -1960,10 +2001,11 @@ function createDocumentCloud(){
    const remote=await read();
    if(!remote||!same(remote.data,snapshot)){showConflict(remote);return}
    stamp=remote.updated_at;
+   if(snapshot.publicationMode!=='creation')publicationSnapshot=publicationFields(snapshot);
    if(pending===snapshot){pending=null;dirty=false}
    succeeded=true;report(pending?'Hay cambios pendientes de guardar en Supabase…':'Guardado confirmado en Supabase · '+new Date().toLocaleTimeString('es-AR'));
   }catch{reportError()}
-  finally{saving=false;if(ready&&pending&&!conflict)timer=setTimeout(flush,succeeded?250:5000)}
+  finally{saving=false;publicationBusy=false;updatePublicationMode();if(ready&&pending&&!conflict)timer=setTimeout(flush,succeeded?250:5000)}
  }
  async function start(){
   if(loading)return;if(ready){await flush();return}loading=true;setEditorInert(true);report('Cargando documento desde Supabase…');
