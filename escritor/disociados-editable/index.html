@@ -1261,6 +1261,7 @@ function applyNarrativeArchitecture(main){
   const section=document.createElement('section');section.className='published-story';section.append(range.extractContents());parent.after(section);
  }
  const stories=[...main.querySelectorAll('.published-story')];
+ const needsReorder=stories.map(story=>title(story.querySelector('h1'))).join('|')!==order.join('|');
  for(const name of order){
   const story=stories.find(s=>title([...s.querySelectorAll('h1')].find(h=>order.includes(title(h))))===name);
   if(!story)continue;
@@ -1272,7 +1273,7 @@ function applyNarrativeArchitecture(main){
   heading.id=slug+'-encabezado-0';
   story.querySelectorAll('h2').forEach((h,i)=>h.id=slug+'-encabezado-'+(i+1));
   if(!story.querySelector('.back-to-index')){const link=document.createElement('a');link.className='back-to-index';link.href='#indice';link.textContent='Volver al índice';story.append(link)}
-  main.append(story);
+  if(needsReorder)main.append(story);
  }
  const index=main.querySelector('#indice');
  if(index){const list=document.createElement('ul');list.className='toc';
@@ -1357,7 +1358,7 @@ function save(){
  if(documentCloud)documentCloud.changed();
 }
 refreshLayout();
-main.addEventListener('input',()=>{refreshLayout();save()});
+main.addEventListener('input',()=>{normalizeEmptyChapterLines();refreshLayout();selectionInEditor();save()});
 // Rich clipboard data retains list structure and source formatting.
 function clipboardSequence(event,cut){
  if(main.inert||!event.clipboardData)return;
@@ -1431,41 +1432,77 @@ function clipboardSequence(event,cut){
 }
 document.addEventListener('copy',event=>clipboardSequence(event,false));
 document.addEventListener('cut',event=>clipboardSequence(event,true));
+// Pasted text always uses the document's body model, never the source app's CSS.
+const bodyTextStyle='font-family:Outfit,sans-serif;font-size:16.5px;font-weight:300;font-style:normal;color:#F3F0EA;line-height:1.5';
+const bodyParagraphStyle=bodyTextStyle+';margin-top:0;margin-bottom:0;margin-left:0;margin-right:0;padding-top:0;padding-bottom:0;padding-left:0;padding-right:0;text-indent:0;text-align:start';
+function clipboardPlainText(data){
+ const plain=data.getData('text/plain');if(plain)return plain;
+ const template=document.createElement('template');template.innerHTML=data.getData('text/html');
+ template.content.querySelectorAll('script,style,iframe,object').forEach(node=>node.remove());
+ template.content.querySelectorAll('br').forEach(node=>node.replaceWith('\n'));
+ template.content.querySelectorAll('p,div,li,h1,h2,h3,h4,h5,h6,blockquote,pre').forEach(node=>node.append('\n'));
+ return template.content.textContent.replace(/\n$/,'');
+}
 main.addEventListener('paste',event=>{
- if(main.inert||!event.target.closest('[contenteditable=true]')||!event.clipboardData)return;
+ if(main.inert||!event.clipboardData)return;
+ const selection=window.getSelection();if(!selection.rangeCount||!main.contains(selection.anchorNode)||!main.contains(selection.focusNode))return;
  event.preventDefault();selectBullets(false);
- const html=event.clipboardData.getData('text/html');
- if(html){
-  const safe=sanitize(html),template=document.createElement('template');template.innerHTML=safe;
-  const payload=template.content.querySelector('[data-kairos-clipboard="blocks"]');
-  const selection=window.getSelection();
-  if(payload&&selection.rangeCount){
-   const range=selection.getRangeAt(0);range.deleteContents();
-   const element=range.startContainer.nodeType===1?range.startContainer:range.startContainer.parentElement;
-   const item=element.closest('li,.doc-block,p,h1,h2,h3,h4')||element.closest('.doc-line');
-   if(item&&main.contains(item)){
-    const tail=document.createRange();tail.selectNodeContents(item);tail.setStart(range.startContainer,range.startOffset);
-    const after=item.cloneNode(false);after.removeAttribute('id');after.append(tail.extractContents());
-    const hasText=node=>!!node.textContent.replace(/[\s\u200b]/g,'')||!!node.querySelector('.page-break');
-    if(item.tagName==='LI'){
-     const list=item.parentElement,nextList=list.cloneNode(false);nextList.removeAttribute('id');
-     if(hasText(after)){if(nextList.tagName==='OL')nextList.start=parseInt(item.querySelector('.doc-marker')?.textContent)||Number(list.start||1);nextList.append(after)}
-     while(item.nextSibling)nextList.append(item.nextSibling);
-     list.after(payload);if(nextList.children.length)payload.after(nextList);
-     const body=item.cloneNode(true);body.querySelectorAll('.doc-marker,.marker-gap').forEach(node=>node.remove());
-     if(!hasText(body))item.remove();if(!list.children.length)list.remove();
-    }else{item.after(payload);if(hasText(after))payload.after(after);if(!hasText(item))item.remove();}
-    const caret=document.createRange();caret.setStartAfter(payload);caret.collapse(true);selection.removeAllRanges();selection.addRange(caret);
-   }else{range.insertNode(payload);range.setStartAfter(payload);range.collapse(true);selection.removeAllRanges();selection.addRange(range);}
-  }else if(selection.rangeCount){
-   const range=selection.getRangeAt(0);range.deleteContents();
-   const fragment=template.content,last=fragment.lastChild;
-   range.insertNode(fragment);if(last){range.setStartAfter(last);range.collapse(true);selection.removeAllRanges();selection.addRange(range);}
-  }
- }
- else document.execCommand('insertText',false,event.clipboardData.getData('text/plain'));
+ const text=clipboardPlainText(event.clipboardData).replace(/\r\n?/g,'\n');if(!text)return;
+ const escape=text=>{const node=document.createElement('span');node.textContent=text;return node.innerHTML};
+ const element=selection.anchorNode.nodeType===1?selection.anchorNode:selection.anchorNode.parentElement;
+ const heading=element.closest('h1,h2,h3,h4,h5,h6');
+ // A single line pasted into a title remains a title; body text is regular Outfit.
+ const html=heading&&!text.includes('\n')?escape(text):text.includes('\n')?
+  text.split('\n').map(line=>'<p style="'+bodyParagraphStyle+'">'+(line?'<span style="'+bodyTextStyle+'">'+escape(line)+'</span>':'<br>')+'</p>').join(''):
+  '<span style="'+bodyTextStyle+'">'+escape(text)+'</span>';
+ document.execCommand('insertHTML',false,html);
  refreshLayout();selectionInEditor();save();
 });
+
+// Keep paragraphs and headings separate when deleting an empty line at their boundary.
+function deleteDocumentSpacer(event){
+ if(main.inert||!['deleteContentBackward','deleteContentForward'].includes(event.inputType))return false;
+ const selection=window.getSelection();if(!selection.rangeCount||!selection.isCollapsed)return false;
+ const range=selection.getRangeAt(0),element=range.startContainer.nodeType===1?range.startContainer:range.startContainer.parentElement;
+ const story=element.closest('.published-story');if(!story)return false;
+ const blocks=[...story.querySelectorAll('h1,h2,h3,h4,h5,h6,p,.doc-line,li,div')].filter(node=>!node.closest('#indice,.page-break,.back-to-index')&&!node.querySelector('h1,h2,h3,h4,h5,h6,p,.doc-line,li,div,img'));
+ const block=blocks.find(node=>node===element||node.contains(element));if(!block)return false;
+ const backwards=event.inputType==='deleteContentBackward';
+ const edge=document.createRange();edge.selectNodeContents(block);
+ if(backwards)edge.setEnd(range.startContainer,range.startOffset);else edge.setStart(range.startContainer,range.startOffset);
+ if(edge.toString().replace(/[\s\u200b]/g,''))return false;
+ // A BR in the middle of a paragraph is a real editable line, not a block boundary.
+ if(block.textContent.trim()&&edge.cloneContents().querySelector('br,img,.page-break'))return false;
+ const index=blocks.indexOf(block),neighbor=blocks[index+(backwards?-1:1)];if(!neighbor)return false;
+ const between=document.createRange();
+ if(backwards){between.setStartAfter(neighbor);between.setEndBefore(block)}else{between.setStartAfter(block);between.setEndBefore(neighbor)}
+ if(between.cloneContents().querySelector('.page-break,img'))return false;
+ const empty=node=>!node.textContent.replace(/[\s\u200b]/g,'')&&!node.querySelector('img,.page-break');
+ const place=(node,end)=>{const caret=document.createRange();caret.selectNodeContents(node);caret.collapse(!end);selection.removeAllRanges();selection.addRange(caret)};
+ const remove=node=>{
+  let parent=node.parentElement;node.remove();
+  while(parent&&parent!==story&&!parent.textContent.trim()&&!parent.querySelector('img,.page-break,h1,h2,h3,h4,h5,h6,p,li')){const next=parent.parentElement;parent.remove();parent=next}
+ };
+ if(empty(block)){
+  event.preventDefault();remove(block);place(neighbor,backwards);
+ }else if(empty(neighbor)){
+  event.preventDefault();remove(neighbor);place(block,!backwards);
+ }else if(block.matches('h1,h2,h3,h4,h5,h6')||neighbor.matches('h1,h2,h3,h4,h5,h6')){
+  // Delete/Backspace must never turn the first body paragraph into an italic chapter.
+  event.preventDefault();return true;
+ }else return false;
+ refreshLayout();selectionInEditor();save();return true;
+}
+function normalizeEmptyChapterLines(){
+ const selection=window.getSelection();
+ main.querySelectorAll('h2,h3,h4,h5,h6').forEach(heading=>{
+  if(heading.textContent.replace(/[\s\u200b]/g,'')||heading.querySelector('img'))return;
+  const active=selection.rangeCount&&heading.contains(selection.anchorNode);
+  const paragraph=document.createElement('p');paragraph.style.cssText=bodyParagraphStyle;paragraph.append(document.createElement('br'));heading.replaceWith(paragraph);
+  if(active){const range=document.createRange();range.selectNodeContents(paragraph);range.collapse(true);selection.removeAllRanges();selection.addRange(range)}
+ });
+}
+
 main.contentEditable="true";
 
 const formatTools=document.getElementById('format-tools');
@@ -1551,6 +1588,7 @@ main.addEventListener('click',openDocumentLink,true);
 
 main.addEventListener('beforeinput',event=>{
  if(['historyUndo','historyRedo'].includes(event.inputType)){event.preventDefault();navigateDocumentHistory(event.inputType==='historyUndo'?'undo':'redo');return}
+ if(deleteDocumentSpacer(event))return;
  if(!['deleteContentBackward','deleteContentForward'].includes(event.inputType)||main.inert)return;
  const selection=window.getSelection();if(!selection.rangeCount)return;
  const range=selection.getRangeAt(0);
