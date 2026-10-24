@@ -995,17 +995,17 @@ function applyCover(data){
 let publicationMode='compatibility',publicationSnapshot=null,publicationBusy=false;
 const publicationFields=value=>Object.fromEntries(['html','coverTitle','coverSynopsis','titleSpacing','chapterSpacing','textSpacing'].map(key=>[key,value[key]]));
 const modeButton=document.createElement('button');modeButton.type='button';modeButton.id='publication-mode-button';modeButton.setAttribute('aria-haspopup','dialog');modeButton.setAttribute('aria-label','Modo de publicación');
-modeButton.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3"/><circle cx="15" cy="17" r="3"/></svg><span>Compatibilidad</span>';
+modeButton.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3"/><circle cx="15" cy="17" r="3"/></svg>';
 document.querySelector('.toolbar').append(modeButton);
 const modeDialog=document.createElement('dialog');modeDialog.id='publication-mode-dialog';modeDialog.setAttribute('aria-labelledby','publication-mode-title');
-modeDialog.innerHTML='<div class="publication-mode-heading"><h2 id="publication-mode-title">Modo de publicación</h2><button type="button" aria-label="Cerrar modos de publicación">×</button></div><fieldset><legend>Elegí cómo trabajar</legend><label><input type="radio" name="publication-mode" value="compatibility"><span><strong>Compatibilidad</strong><small>El editable y la antología publicada se sincronizan. Al activarlo, se publica el contenido actual.</small></span></label><label><input type="radio" name="publication-mode" value="creation"><span><strong>Creación</strong><small>Guardá tus ideas y borradores. La antología conserva la última versión publicada.</small></span></label></fieldset><p id="publication-mode-status" role="status"></p>';
+modeDialog.innerHTML='<div class="publication-mode-heading"><h2 id="publication-mode-title">Modo de publicación</h2><button type="button" aria-label="Cerrar modos de publicación">×</button></div><fieldset><legend>Elegí cómo trabajar</legend><label><input type="radio" name="publication-mode" value="compatibility"><span><strong>Compatibilidad</strong></span></label><label><input type="radio" name="publication-mode" value="creation"><span><strong>Creación</strong></span></label></fieldset>';
 document.body.append(modeDialog);
 const modeInputs=[...modeDialog.querySelectorAll('input')];
 function updatePublicationMode(){
- modeButton.querySelector('span').textContent=publicationMode==='creation'?'Creación':'Compatibilidad';
+ modeButton.setAttribute('aria-label','Modo de publicación: '+(publicationMode==='creation'?'Creación':'Compatibilidad'));
+ modeButton.title='Modo de publicación';
  modeButton.dataset.mode=publicationMode;
  modeInputs.forEach(input=>{input.checked=input.value===publicationMode;input.disabled=main.inert||publicationBusy});
- document.getElementById('publication-mode-status').textContent=main.inert?'Ingresá en KAIROS para cambiar el modo.':publicationBusy?'Guardando…':publicationMode==='creation'?'Tus cambios se guardan como borrador, sin cambiar la publicación.':'Los cambios guardados se publican automáticamente.';
 }
 modeButton.onclick=()=>{updatePublicationMode();modeDialog.showModal()};
 modeDialog.querySelector('button').onclick=()=>modeDialog.close();
@@ -1019,7 +1019,7 @@ const modeStyle=document.createElement('style');modeStyle.textContent=`
 #publication-mode-button{display:inline-flex;align-items:center;gap:8px;white-space:nowrap}#publication-mode-button[data-mode="creation"]{color:var(--gold);border-color:var(--gold)}
 #publication-mode-dialog{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:16px;padding:24px;width:min(440px,calc(100% - 32px));font:400 16px Outfit,sans-serif;box-shadow:0 20px 80px #0009}#publication-mode-dialog::backdrop{background:#0009}
 .publication-mode-heading{display:flex;align-items:center;justify-content:space-between;gap:16px}.publication-mode-heading h2{margin:0;font-size:20px}.publication-mode-heading button{background:none;border:0;color:var(--ink);font-size:28px;cursor:pointer}
-#publication-mode-dialog fieldset{border:0;padding:0;margin:20px 0 0}#publication-mode-dialog legend{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}#publication-mode-dialog label{display:flex;gap:12px;padding:16px 0;border-top:1px solid var(--line);cursor:pointer}#publication-mode-dialog input{accent-color:var(--gold);margin:4px 0;align-self:flex-start}#publication-mode-dialog strong{display:block;font-weight:500}#publication-mode-dialog small{display:block;line-height:1.5;color:#bcb7ad;margin-top:6px;font-size:14px}#publication-mode-status{font-size:13px;color:var(--light);line-height:1.5;margin:12px 0 0}`;
+#publication-mode-dialog fieldset{border:0;padding:0;margin:20px 0 0}#publication-mode-dialog legend{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}#publication-mode-dialog label{display:flex;gap:12px;padding:16px 0;border-top:1px solid var(--line);cursor:pointer}#publication-mode-dialog input{accent-color:var(--gold);margin:4px 0;align-self:flex-start}#publication-mode-dialog strong{display:block;font-weight:500}`;
 document.head.append(modeStyle);updatePublicationMode();
 
 function setEditorInert(value){main.inert=value;coverTitle.inert=value;coverSynopsis.inert=value;updatePublicationMode()}
