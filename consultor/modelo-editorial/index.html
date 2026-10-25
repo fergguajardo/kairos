@@ -986,18 +986,33 @@ const coverTitle=document.querySelector('.cover-title'),coverSynopsis=document.q
 const originalCover={title:coverTitle.textContent,synopsis:coverSynopsis.textContent};
 function applyCover(data){
  coverTitle.textContent=typeof data.coverTitle==='string'?data.coverTitle:originalCover.title;
- const savedSynopsis=typeof data.coverSynopsis==='string'?data.coverSynopsis:originalCover.synopsis;
- coverSynopsis.textContent=savedSynopsis.replace(/\b(?:Siete|Ocho) historias\b/g,'Diez historias');
- if(savedSynopsis!==coverSynopsis.textContent)documentNeedsSync=true;
+ coverSynopsis.textContent=typeof data.coverSynopsis==='string'?data.coverSynopsis:originalCover.synopsis;
+ updateCoverTitle();
 }
-function setEditorInert(value){main.inert=value;coverTitle.inert=value;coverSynopsis.inert=value}
+const coverEditButton=document.createElement('button');coverEditButton.type='button';coverEditButton.id='model-cover-edit-button';coverEditButton.title='Editar título y subtítulo';coverEditButton.setAttribute('aria-label','Editar título y subtítulo');coverEditButton.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m16 3 5 5-12 12H4v-5L16 3ZM13 6l5 5"/></svg>';document.querySelector('.cover-content').append(coverEditButton);
+const coverDialog=document.createElement('dialog');coverDialog.id='model-cover-dialog';coverDialog.setAttribute('aria-labelledby','model-cover-dialog-title');
+coverDialog.innerHTML='<form><div class="model-cover-dialog-heading"><h2 id="model-cover-dialog-title">Editar portada</h2><button type="button" aria-label="Cerrar edición de portada">×</button></div><label>Título<input name="cover-title" type="text" autocomplete="off"></label><label>Subtítulo (opcional)<textarea name="cover-subtitle" rows="4"></textarea></label><button type="submit">Guardar</button></form>';
+document.body.append(coverDialog);const coverTitleInput=coverDialog.querySelector('input'),coverSubtitleInput=coverDialog.querySelector('textarea');
+function updateCoverTitle(){document.title=(coverTitle.textContent.trim()||'Modelo')+' | Kairos'}
+coverEditButton.onclick=()=>{if(main.inert)return;coverTitleInput.value=coverTitle.textContent;coverSubtitleInput.value=coverSynopsis.textContent;coverDialog.showModal();coverTitleInput.focus()};
+coverDialog.querySelector('button[type="button"]').onclick=()=>coverDialog.close();
+coverDialog.querySelector('form').onsubmit=event=>{event.preventDefault();if(main.inert)return;coverTitle.textContent=coverTitleInput.value;coverSynopsis.textContent=coverSubtitleInput.value;updateCoverTitle();save();coverDialog.close()};
+coverTitle.addEventListener('input',updateCoverTitle);
+const coverStyle=document.createElement('style');coverStyle.id='model-cover-style';coverStyle.textContent=`
+.cover-content{position:relative}#model-cover-edit-button{position:absolute;right:24px;top:20px;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--gold);cursor:pointer}#model-cover-edit-button svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.5}#model-cover-edit-button:disabled{opacity:.4;cursor:default}.cover-title[contenteditable],.cover-desc[contenteditable]{cursor:text;min-height:1.5em}.cover-desc[contenteditable]:empty{min-height:0;margin:0}.cover-desc[contenteditable]:empty:focus{min-height:1.5em}.cover-desc[contenteditable]:empty:focus::before{content:'Subtítulo';color:#b8b0a2;opacity:.6}.cover-title[contenteditable]:empty::before{content:'Título';color:#b8b0a2;opacity:.6}
+#model-cover-dialog{width:min(460px,calc(100% - 32px));border:1px solid var(--line);border-radius:16px;background:var(--panel);color:var(--ink);padding:24px;font-family:Outfit,sans-serif}#model-cover-dialog::backdrop{background:#0009}.model-cover-dialog-heading{display:flex;align-items:center;justify-content:space-between}.model-cover-dialog-heading h2{font-size:20px;font-weight:400;margin:0}.model-cover-dialog-heading button{background:none;border:0;color:var(--ink);font-size:28px}#model-cover-dialog label{display:grid;gap:8px;font-size:14px;margin-top:20px}#model-cover-dialog input,#model-cover-dialog textarea{width:100%;box-sizing:border-box;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:10px;font:300 16px Outfit,sans-serif}#model-cover-dialog button[type=submit]{display:block;margin:20px 0 0 auto;background:transparent;color:var(--gold);border:1px solid var(--line);border-radius:8px;padding:9px 16px;font:400 14px Outfit,sans-serif}`;
+document.head.append(coverStyle);
+
+function setEditorInert(value){main.inert=value;coverTitle.inert=value;coverSynopsis.inert=value;coverEditButton.disabled=value}
 for(const field of [coverTitle,coverSynopsis]){
- field.contentEditable='plaintext-only';field.spellcheck=true;
+ field.contentEditable='plaintext-only';field.setAttribute('contenteditable','plaintext-only');field.setAttribute('role','textbox');field.tabIndex=0;field.spellcheck=true;
  field.addEventListener('input',()=>save());
  field.addEventListener('beforeinput',event=>{if(['historyUndo','historyRedo'].includes(event.inputType)){event.preventDefault();navigateDocumentHistory(event.inputType==='historyUndo'?'undo':'redo')}});
 }
-coverTitle.setAttribute('aria-label','Título de la obra');
-coverSynopsis.setAttribute('aria-label','Sinopsis de la obra');
+coverTitle.setAttribute('aria-label','Título del documento');
+coverTitle.setAttribute('aria-multiline','false');
+coverSynopsis.setAttribute('aria-label','Subtítulo del documento, opcional');
+coverSynopsis.setAttribute('aria-multiline','true');
 coverTitle.addEventListener('keydown',event=>{if(event.key==='Enter')event.preventDefault()});
 
 
@@ -1907,6 +1922,7 @@ main.contentEditable='true';
 document.getElementById('export').onclick=()=>{
  const clone=document.documentElement.cloneNode(true);
  clone.querySelector('main').innerHTML=main.innerHTML;
+ clone.querySelectorAll('#model-cover-edit-button,#model-cover-dialog,#model-cover-style').forEach(node=>node.remove());
  clone.querySelector('#status').textContent='';
  clone.querySelectorAll('.document-cloud-tools').forEach(node=>node.remove());
  const url=URL.createObjectURL(new Blob(['<!doctype html>\n'+clone.outerHTML],{type:'text/html;charset=utf-8'}));
