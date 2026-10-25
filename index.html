@@ -848,6 +848,9 @@ dialog.redes-editor :is(h2,label,input,button){font-family:'Outfit',sans-serif!i
 .proposal-risk-bars{align-items:center;justify-content:space-between;gap:6px;height:32px}.proposal-risk-bar{flex:0 1 20px;aspect-ratio:1;max-width:20px;border-radius:50%;background:linear-gradient(to right,var(--gold,#e5b95c) var(--filled,0%),var(--line) var(--filled,0%))}
 .proposal-impact-scale{position:relative;flex:1;min-width:100px;height:52px;display:flex;align-items:flex-end}.proposal-impact-bars{display:flex;align-items:flex-end;gap:5px;width:100%;height:48px;pointer-events:none}.proposal-impact-bar{flex:1;min-width:0;border-radius:3px 3px 0 0;background:var(--line)}.proposal-impact-bar.filled{background:var(--gold,#e5b95c)}.proposal-impact-scale .proposal-impact-range{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0;opacity:0;cursor:pointer;touch-action:pan-y}.proposal-impact-scale:focus-within{outline:2px solid var(--gold);outline-offset:4px;border-radius:4px}
 @media(max-width:600px){.proposal-risk-bars{gap:4px}.proposal-impact-bars{gap:4px}}
+</style><style id="risk-growing-diamonds">
+.proposal-risk-bars{height:38px;align-items:center;justify-content:space-between;gap:6px}.proposal-risk-bar{flex:0 1 auto;width:calc(7px + var(--diamond-order)*2px);max-width:none;aspect-ratio:1;border-radius:0;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);background:linear-gradient(to right,var(--gold,#e5b95c) var(--filled,0%),var(--line) var(--filled,0%))}
+@media(max-width:600px){.proposal-risk-bars{gap:4px}}
 </style></head><body>
 <section id="auth-gate" aria-label="Acceso a Kairos" hidden>
 
@@ -1019,7 +1022,7 @@ function renderProposalMatrix(page){
   const row=el('tr'),term=el('th');term.scope='row';term.textContent=label;const cell=el('td'),weightCell=el('td');
   if(key==='risk'){
    const control=el('div','proposal-risk'),scale=el('div','proposal-risk-scale'),bars=el('div','proposal-risk-bars'),range=el('input','proposal-risk-range'),value=el('output');
-   bars.setAttribute('aria-hidden','true');for(let i=0;i<10;i++)bars.append(el('span','proposal-risk-bar'));
+   bars.setAttribute('aria-hidden','true');for(let i=0;i<10;i++){const mark=el('span','proposal-risk-bar');mark.style.setProperty('--diamond-order',String(i+1));bars.append(mark)}
    range.type='range';range.min='0';range.max='100';range.step='1';range.value=proposal.values.risk===''?0:proposal.values.risk;range.setAttribute('aria-label','Probabilidad de fracaso');range.title='Probabilidad de fracaso: de 0 a 100%';
    const sync=()=>{value.textContent=proposal.values.risk===''?'Sin evaluar':proposal.values.risk.toLocaleString('es-AR')+'%';range.setAttribute('aria-valuetext',value.textContent);Array.from(bars.children).forEach((bar,i)=>bar.style.setProperty('--filled',Math.max(0,Math.min(100,(Number(range.value)-i*10)*10))+'%'))};
    range.oninput=()=>{proposal.values.risk=Number(range.value);sync();save()};sync();scale.append(bars,range);control.append(scale,value);cell.append(control);
