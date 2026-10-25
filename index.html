@@ -851,6 +851,13 @@ dialog.redes-editor :is(h2,label,input,button){font-family:'Outfit',sans-serif!i
 </style><style id="risk-growing-diamonds">
 .proposal-risk-bars{height:38px;align-items:center;justify-content:space-between;gap:6px}.proposal-risk-bar{flex:0 1 auto;width:calc(7px + var(--diamond-order)*2px);max-width:none;aspect-ratio:1;border-radius:0;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);background:linear-gradient(to right,var(--gold,#e5b95c) var(--filled,0%),var(--line) var(--filled,0%))}
 @media(max-width:600px){.proposal-risk-bars{gap:4px}}
+</style><style id="matrix-matched-geometries">
+.proposal-risk-scale,.proposal-impact-scale{height:44px;align-items:center}
+.proposal-risk-bars,.proposal-impact-bars{display:flex;align-items:center;justify-content:space-between;height:38px;gap:6px}
+.proposal-risk-bar,.proposal-impact-bar{flex:0 1 auto;width:calc(7px + var(--diamond-order)*2px);height:auto;max-width:none;aspect-ratio:1}
+.proposal-risk-bar{clip-path:none;border-radius:50%}
+.proposal-impact-bar{border-radius:0;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
+@media(max-width:600px){.proposal-risk-bars,.proposal-impact-bars{gap:4px}}
 </style></head><body>
 <section id="auth-gate" aria-label="Acceso a Kairos" hidden>
 
@@ -1028,7 +1035,7 @@ function renderProposalMatrix(page){
    range.oninput=()=>{proposal.values.risk=Number(range.value);sync();save()};sync();scale.append(bars,range);control.append(scale,value);cell.append(control);
   }else if(key==='impact'){
    const control=el('div','proposal-impact'),scale=el('div','proposal-impact-scale'),bars=el('div','proposal-impact-bars'),range=el('input','proposal-impact-range'),value=el('output');
-   bars.setAttribute('aria-hidden','true');for(let i=0;i<10;i++){const bar=el('span','proposal-impact-bar');bar.style.height=(12+(i+1)*3.6)+'px';bars.append(bar)}
+   bars.setAttribute('aria-hidden','true');for(let i=0;i<10;i++){const bar=el('span','proposal-impact-bar');bar.style.setProperty('--diamond-order',String(i+1));bars.append(bar)}
    range.type='range';range.min='1';range.max='10';range.step='1';range.value=proposal.values.impact===''?1:proposal.values.impact;range.setAttribute('aria-label','Impacto');
    const sync=()=>{value.textContent=proposal.values.impact===''?'Sin evaluar':proposal.values.impact+' / 10';range.setAttribute('aria-valuetext',value.textContent);Array.from(bars.children).forEach((bar,i)=>bar.classList.toggle('filled',proposal.values.impact!==''&&i<Number(range.value)))};
    range.oninput=()=>{proposal.values.impact=Number(range.value);sync();save()};sync();scale.append(bars,range);control.append(scale,value);cell.append(control);
