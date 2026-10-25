@@ -858,6 +858,10 @@ dialog.redes-editor :is(h2,label,input,button){font-family:'Outfit',sans-serif!i
 .proposal-risk-bar{clip-path:none;border-radius:50%}
 .proposal-impact-bar{border-radius:0;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
 @media(max-width:600px){.proposal-risk-bars,.proposal-impact-bars{gap:4px}}
+</style><style id="matrix-discrete-figure-drag">
+.proposal-risk-bars,.proposal-impact-bars{pointer-events:auto;touch-action:none}
+.proposal-risk-bar,.proposal-impact-bar{cursor:ew-resize;touch-action:none;user-select:none}
+.proposal-risk-scale .proposal-risk-range,.proposal-impact-scale .proposal-impact-range{pointer-events:none}
 </style></head><body>
 <section id="auth-gate" aria-label="Acceso a Kairos" hidden>
 
@@ -998,6 +1002,22 @@ function decisionCriterionLabel(label){
  const labelNode=el('span','decision-criterion');labelNode.append(lineIcon(icons[label]),el('span','',label));return labelNode;
 }
 let decisionSelected=0;
+function attachMatrixFigureDrag(scale,bars,range){
+ let pointer=null;
+ const setIndex=index=>{const next=String((index+1)*Number(range.step));if(range.value!==next){range.value=next;range.oninput()}else if(range.getAttribute('aria-valuetext')==='Sin evaluar')range.oninput()};
+ bars.onpointerdown=event=>{
+  if(pointer!==null||event.isPrimary===false||event.button!==0)return;
+  const mark=event.target.closest('.proposal-risk-bar,.proposal-impact-bar');if(!mark||mark.parentElement!==bars)return;
+  event.preventDefault();pointer=event.pointerId;scale.setPointerCapture(pointer);range.focus({preventScroll:true});setIndex(Array.from(bars.children).indexOf(mark))
+ };
+ scale.onpointermove=event=>{
+  if(event.pointerId!==pointer)return;
+  const centers=Array.from(bars.children).map(mark=>{const rect=mark.getBoundingClientRect();return rect.left+rect.width/2});
+  let nearest=0;centers.forEach((x,i)=>{if(Math.abs(event.clientX-x)<Math.abs(event.clientX-centers[nearest]))nearest=i});setIndex(nearest)
+ };
+ const end=event=>{if(event.pointerId!==pointer)return;const id=pointer;pointer=null;if(scale.hasPointerCapture(id))scale.releasePointerCapture(id)};
+ scale.onpointerup=end;scale.onpointercancel=end;scale.onlostpointercapture=()=>{pointer=null}
+}
 function renderProposalMatrix(page){
  page.replaceChildren();page.classList.add('matrix-view');
  data.proposalMatrix??=normalizeProposalMatrix({rows:[]});
@@ -1030,15 +1050,15 @@ function renderProposalMatrix(page){
   if(key==='risk'){
    const control=el('div','proposal-risk'),scale=el('div','proposal-risk-scale'),bars=el('div','proposal-risk-bars'),range=el('input','proposal-risk-range'),value=el('output');
    bars.setAttribute('aria-hidden','true');for(let i=0;i<10;i++){const mark=el('span','proposal-risk-bar');mark.style.setProperty('--diamond-order',String(i+1));bars.append(mark)}
-   range.type='range';range.min='0';range.max='100';range.step='1';range.value=proposal.values.risk===''?0:proposal.values.risk;range.setAttribute('aria-label','Probabilidad de fracaso');range.title='Probabilidad de fracaso: de 0 a 100%';
-   const sync=()=>{value.textContent=proposal.values.risk===''?'Sin evaluar':proposal.values.risk.toLocaleString('es-AR')+'%';range.setAttribute('aria-valuetext',value.textContent);Array.from(bars.children).forEach((bar,i)=>bar.style.setProperty('--filled',Math.max(0,Math.min(100,(Number(range.value)-i*10)*10))+'%'))};
-   range.oninput=()=>{proposal.values.risk=Number(range.value);sync();save()};sync();scale.append(bars,range);control.append(scale,value);cell.append(control);
+   range.type='range';range.min='0';range.max='100';range.step='10';range.value=proposal.values.risk===''?0:Math.round(proposal.values.risk/10)*10;range.setAttribute('aria-label','Probabilidad de fracaso');range.title='Probabilidad de fracaso: de 0 a 100%';
+   const sync=()=>{value.textContent=proposal.values.risk===''?'Sin evaluar':Number(range.value).toLocaleString('es-AR')+'%';range.setAttribute('aria-valuetext',value.textContent);Array.from(bars.children).forEach((bar,i)=>bar.style.setProperty('--filled',(i<Number(range.value)/10?100:0)+'%'))};
+   range.oninput=()=>{proposal.values.risk=Number(range.value);sync();save()};sync();attachMatrixFigureDrag(scale,bars,range);scale.append(bars,range);control.append(scale,value);cell.append(control);
   }else if(key==='impact'){
    const control=el('div','proposal-impact'),scale=el('div','proposal-impact-scale'),bars=el('div','proposal-impact-bars'),range=el('input','proposal-impact-range'),value=el('output');
    bars.setAttribute('aria-hidden','true');for(let i=0;i<10;i++){const bar=el('span','proposal-impact-bar');bar.style.setProperty('--diamond-order',String(i+1));bars.append(bar)}
    range.type='range';range.min='1';range.max='10';range.step='1';range.value=proposal.values.impact===''?1:proposal.values.impact;range.setAttribute('aria-label','Impacto');
    const sync=()=>{value.textContent=proposal.values.impact===''?'Sin evaluar':proposal.values.impact+' / 10';range.setAttribute('aria-valuetext',value.textContent);Array.from(bars.children).forEach((bar,i)=>bar.classList.toggle('filled',proposal.values.impact!==''&&i<Number(range.value)))};
-   range.oninput=()=>{proposal.values.impact=Number(range.value);sync();save()};sync();scale.append(bars,range);control.append(scale,value);cell.append(control);
+   range.oninput=()=>{proposal.values.impact=Number(range.value);sync();save()};sync();attachMatrixFigureDrag(scale,bars,range);scale.append(bars,range);control.append(scale,value);cell.append(control);
   }else if(key==='time'){
    const value=proposal.values.time,fields=el('div','proposal-unified-field'),days=numeric(value===''?'':Math.floor(value/1440),'Plazo en días',null,'1'),hours=numeric(value===''?'':Number(((value%1440)/60).toFixed(6)),'Plazo en horas',23.999999);
    days.placeholder='0';hours.placeholder='0';fields.append(days,el('span','','días'),hours,el('span','','h'));
