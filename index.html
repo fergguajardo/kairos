@@ -871,7 +871,7 @@ dialog.redes-editor :is(h2,label,input,button){font-family:'Outfit',sans-serif!i
 .proposal-risk-bar:hover{background:linear-gradient(to right,var(--gold,#e5b95c) var(--filled,0%),var(--line) var(--filled,0%))}
 .proposal-risk-bars,.proposal-impact-bars{touch-action:manipulation}
 .proposal-risk-bar:focus-visible,.proposal-impact-bar:focus-visible{outline:none;filter:brightness(1.5);box-shadow:inset 0 0 0 2px var(--ink)}
-</style></head><body>
+</style><style id="matrix-centered-cost">.proposal-cost-field input{ text-align:center }</style></head><body>
 <section id="auth-gate" aria-label="Acceso a Kairos" hidden>
 
 <div class="auth-card">
@@ -1063,11 +1063,11 @@ function renderProposalMatrix(page){
    const sync=()=>{value.textContent=proposal.values.impact===''?'Sin evaluar':proposal.values.impact+' / 10';range.setAttribute('aria-valuetext',value.textContent);Array.from(bars.children).forEach((bar,i)=>bar.classList.toggle('filled',proposal.values.impact!==''&&i<Number(range.value)))};
    range.oninput=()=>{proposal.values.impact=Number(range.value);sync();save()};sync();attachMatrixFigureClick(scale,bars,range);scale.append(bars,range);control.append(scale,value);cell.append(control);
   }else if(key==='time'){
-   const value=proposal.values.time,fields=el('div','proposal-unified-field'),days=numeric(value===''?'':Math.floor(value/1440),'Plazo en días',null,'1'),hours=numeric(value===''?'':Number(((value%1440)/60).toFixed(6)),'Plazo en horas',23.999999);
-   days.placeholder='0';hours.placeholder='0';fields.append(days,el('span','','días'),hours,el('span','','h'));
-   [days,hours].forEach(input=>input.oninput=()=>{if(!days.validity.valid||!hours.validity.valid)return;proposal.values.time=days.value===''&&hours.value===''?'':Math.round((Number(days.value||0)*1440+Number(hours.value||0)*60)*1e6)/1e6;save()});cell.append(fields);
+   const value=proposal.values.time,field=el('div','proposal-unified-field proposal-days-field'),days=numeric(value===''?'':Number((value/1440).toFixed(8)),'Plazo en días',null);
+   days.placeholder='0';field.append(days,el('span','','días'));
+   days.oninput=()=>{if(!days.validity.valid)return;proposal.values.time=days.value===''?'':Math.round(Number(days.value)*1440*1e6)/1e6;save()};cell.append(field);
   }else{
-   const field=el('div','proposal-unified-field'),input=numeric(proposal.values[key],label,key==='risk'?100:null);input.placeholder='0';input.oninput=()=>{if(!input.validity.valid)return;proposal.values[key]=input.value===''?'':Number(input.value);save()};field.append(input,el('span','',unit));cell.append(field);
+   const field=el('div','proposal-unified-field proposal-cost-field'),input=numeric(proposal.values[key],label,key==='risk'?100:null);input.placeholder='0';input.oninput=()=>{if(!input.validity.valid)return;proposal.values[key]=input.value===''?'':Number(input.value);save()};field.append(input,el('span','',unit));cell.append(field);
   }
   const weightField=el('div','proposal-unified-field'),weight=numeric(proposal.weights[key],'Ponderación de '+label,100);weight.oninput=()=>{if(!weight.validity.valid||weight.value==='')return;proposal.weights[key]=Number(weight.value);updateTotal();save()};weightField.append(weight,el('span','','%'));weightCell.append(weightField);row.append(term,cell,weightCell);body.append(row);
  });
