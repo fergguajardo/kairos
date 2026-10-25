@@ -877,6 +877,11 @@ dialog.redes-editor :is(h2,label,input,button){font-family:'Outfit',sans-serif!i
 .proposal-cost-field input,.proposal-days-field input{width:100%;min-width:0;border:1px solid var(--line);border-radius:8px;background:#ffffff03;padding:10px 12px}
 .proposal-risk>output,.proposal-impact>output,.proposal-cost-field>span,.proposal-days-field>span{width:80px;min-width:80px;text-align:left;font-size:14px;color:var(--muted);line-height:1.5}
 @media(max-width:600px){.proposal-risk,.proposal-impact,.proposal-cost-field,.proposal-days-field{gap:10px}}
+</style><style id="matrix-zero-option">
+.proposal-risk-scale,.proposal-impact-scale{gap:10px}
+.proposal-risk-bars,.proposal-impact-bars{flex:1;min-width:0;width:auto}
+.proposal-zero{flex:0 0 26px;width:26px;height:26px;padding:0;border:1px solid var(--line);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:transparent;color:var(--muted);font-size:12px}
+.proposal-zero[aria-pressed=true]{border-color:var(--gold);color:var(--gold);background:#e5b95c10}
 </style></head><body>
 <section id="auth-gate" aria-label="Acceso a Kairos" hidden>
 
@@ -1019,13 +1024,17 @@ function decisionCriterionLabel(label){
 let decisionSelected=0;
 function attachMatrixFigureClick(scale,bars,range){
  bars.removeAttribute('aria-hidden');range.tabIndex=-1;range.setAttribute('aria-hidden','true');
+ const zero=el('button','proposal-zero','0');zero.type='button';
+ zero.setAttribute('aria-label',range.getAttribute('aria-label')+': '+(Number(range.step)===10?'0%':'0 de 10'));
+ zero.setAttribute('aria-pressed',String(range.getAttribute('aria-valuetext')!=='Sin evaluar'&&Number(range.value)===0));
+ zero.onclick=()=>{range.value='0';range.oninput()};scale.append(zero);
  Array.from(bars.children).forEach((mark,index)=>{
   mark.type='button';const score=(index+1)*Number(range.step);
   mark.setAttribute('aria-label',range.getAttribute('aria-label')+': '+score+(Number(range.step)===10?'%':' de 10'));
   mark.onclick=()=>{range.value=String(score);range.oninput()};
   mark.setAttribute('aria-pressed',String(range.getAttribute('aria-valuetext')!=='Sin evaluar'&&Number(range.value)===score))
  });
- const update=range.oninput;range.oninput=()=>{update();Array.from(bars.children).forEach((mark,index)=>mark.setAttribute('aria-pressed',String(Number(range.value)===(index+1)*Number(range.step))))}
+ const update=range.oninput;range.oninput=()=>{update();zero.setAttribute('aria-pressed',String(Number(range.value)===0));Array.from(bars.children).forEach((mark,index)=>mark.setAttribute('aria-pressed',String(Number(range.value)===(index+1)*Number(range.step))))}
 }
 function renderProposalMatrix(page){
  page.replaceChildren();page.classList.add('matrix-view');
@@ -1065,7 +1074,7 @@ function renderProposalMatrix(page){
   }else if(key==='impact'){
    const control=el('div','proposal-impact'),scale=el('div','proposal-impact-scale'),bars=el('div','proposal-impact-bars'),range=el('input','proposal-impact-range'),value=el('output');
    bars.setAttribute('aria-hidden','true');for(let i=0;i<10;i++){const bar=el('button','proposal-impact-bar');bar.style.setProperty('--diamond-order',String(i+1));bars.append(bar)}
-   range.type='range';range.min='1';range.max='10';range.step='1';range.value=proposal.values.impact===''?1:proposal.values.impact;range.setAttribute('aria-label','Impacto');
+   range.type='range';range.min='0';range.max='10';range.step='1';range.value=proposal.values.impact===''?0:proposal.values.impact;range.setAttribute('aria-label','Impacto');
    const sync=()=>{value.textContent=proposal.values.impact===''?'Sin evaluar':proposal.values.impact+' / 10';range.setAttribute('aria-valuetext',value.textContent);Array.from(bars.children).forEach((bar,i)=>bar.classList.toggle('filled',proposal.values.impact!==''&&i<Number(range.value)))};
    range.oninput=()=>{proposal.values.impact=Number(range.value);sync();save()};sync();attachMatrixFigureClick(scale,bars,range);scale.append(bars,range);control.append(scale,value);cell.append(control);
   }else if(key==='time'){
