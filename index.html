@@ -1308,6 +1308,17 @@ $('balanceconfirm').addEventListener('cancel',()=>pendingBalanceDelete=null);
 $('balanceyes').onclick=()=>{const pending=pendingBalanceDelete;pendingBalanceDelete=null;$('balanceconfirm').close();if(!pending||data.balance!==pending.balance)return;const index=pending.balance.categorias.indexOf(pending.category);if(index<0)return;pending.balance.categorias.splice(index,1);save();renderBalance();toast('Categoría eliminada')};
 
 function moveBalanceProduct(balance,fromCategory,fromItem,toCategory,toItem){const source=balance.categorias[fromCategory]?.items,target=balance.categorias[toCategory]?.items;if(!source||!target||!Number.isInteger(fromItem)||fromItem<0||fromItem>=source.length||!Number.isInteger(toItem)||toItem<0||toItem>target.length)return false;if(source===target)return reorderEntry(source,fromItem,toItem);target.splice(toItem,0,source.splice(fromItem,1)[0]);return true}
+function balanceCategoryIcon(name){
+ const key=String(name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/^[^a-z0-9]+/,'');
+ if(/dieta|aliment|comida/.test(key))return '<path d="M5 3v7a3 3 0 0 0 6 0V3M8 3v18M16 3v18M16 3c3 2 4 5 4 9h-4"/>';
+ if(/evento|ropa|vestimenta/.test(key))return '<path d="m8 4-5 3 2 5 3-1v9h8v-9l3 1 2-5-5-3c-.5 1.4-2 2-4 2S8.5 5.4 8 4Z"/>';
+ if(/higiene|aseo/.test(key))return '<path d="M9 8V5h6v3M8 5h8M12 5V3h5M7 8h10a1 1 0 0 1 1 1v11H6V9a1 1 0 0 1 1-1ZM9 14h6M12 11v6"/>';
+ if(/interior.*(\+|mas)|hogar.*(\+|mas)/.test(key))return '<path d="M4 10h16v3a7 7 0 0 1-7 7h-2a7 7 0 0 1-7-7v-3ZM3 10h18M8 7h8M12 4v3"/>';
+ if(/interior|hogar|casa/.test(key))return '<path d="m3 11 9-7 9 7M5 10v10h14V10M9 20v-6h6v6"/>';
+ if(/servicio/.test(key))return '<path d="M13 3 5 14h6l-1 7 9-12h-6l0-6Z"/>';
+ if(/proyecto/.test(key))return '<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>';
+ return '<path d="M4 5h7l9 9-6 6-9-9-1-6Z"/><circle cx="8" cy="9" r="1"/>';
+}
 function balanceCategorySection(category){
  const name=category.name.replace(/^[✦\s]+/g,'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().trim();
  if(['DIETA','EVENTOS','HIGIENE'].includes(name))return 'esencial';
@@ -1387,13 +1398,7 @@ const workspace=el('div','balance-focus-workspace'),sidebar=el('aside','balance-
  if(!balanceViews.some(v=>v.category===balanceSelectedCategory))balanceSelectedCategory=balanceViews[0]?.category||null;
  const nav=el('div','balance-focus-nav');nav.setAttribute('role','group');nav.setAttribute('aria-label','Elegir categoría');
  const draw=()=>{center.replaceChildren();const selected=balanceViews.find(v=>v.category===balanceSelectedCategory);nav.querySelectorAll('button').forEach((button,i)=>button.setAttribute('aria-pressed',String(balanceViews[i]?.category===balanceSelectedCategory)));if(selected){center.append(selected.card);enableScrollKeyboard(selected.card.querySelector('.items'),'Artículos de '+selected.category.name);enableProductKeyboard(selected.card.querySelector('.items'))}else center.append(el('p','muted','Añadí una categoría para comenzar.'))};
- let lastGroup='';balanceViews.forEach(({category,section},i)=>{if(section!==lastGroup){nav.append(el('p','balance-focus-group',section));lastGroup=section}const button=el('button','balance-focus-category'),icon=lineIcon([
- '<path d="M4 12c0-9 16-9 16 0s-16 9-16 0ZM8 5l8 14M16 5 8 19"/>',
- '<path d="m12 3 9 9-9 9-9-9 9-9ZM8 12h8"/>',
- '<circle cx="12" cy="12" r="8"/><path d="M12 4v16M4 12h16"/>',
- '<path d="m4 7 8-4 8 4v10l-8 4-8-4V7ZM4 7l8 5 8-5M12 12v9"/>',
- '<path d="M4 18 12 3l8 15H4ZM8 18l4-7 4 7"/>'
- ][i%5]);icon.setAttribute('aria-hidden','true');button.type='button';button.title=category.name;button.append(icon,el('span','',category.name.replace(/^[✦•·\\s]+/,'')));button.setAttribute('aria-pressed',String(category===balanceSelectedCategory));button.onclick=()=>{balanceSelectedCategory=category;draw()};nav.append(button)});
+ let lastGroup='';balanceViews.forEach(({category,section},i)=>{if(section!==lastGroup){nav.append(el('p','balance-focus-group',section));lastGroup=section}const button=el('button','balance-focus-category'),icon=lineIcon(balanceCategoryIcon(category.name));icon.setAttribute('aria-hidden','true');button.type='button';button.title=category.name;button.append(icon,el('span','',category.name.replace(/^[✦•·\\s]+/,'')));button.setAttribute('aria-pressed',String(category===balanceSelectedCategory));button.onclick=()=>{balanceSelectedCategory=category;draw()};nav.append(button)});
  enableCategoryKeyboard(nav,'.balance-focus-category',()=>document.querySelector('.balance-focus-nav'));enableScrollKeyboard(center,'Detalle de la categoría de Balance');sidebar.append(el('h2','','Categorías'),nav);const adds=el('div','balance-focus-adds');balanceAddButtons.forEach(({button,label})=>{button.textContent='+ '+label;button.setAttribute('aria-label','Añadir categoría en '+label);adds.append(button)});sidebar.append(adds);
  if(balanceSummary){const symbols=['<path d="M4 17 12 5l8 12M12 5v16"/>','<path d="m4 7 8 12 8-12M12 3v16"/>','<path d="M4 8h16M4 16h16"/><circle cx="12" cy="12" r="9"/>'];[...balanceSummary.children].filter(card=>card.matches('.ing-card,.egr-card,.mar-card')).forEach((card,i)=>{const title=card.querySelector('.cat-name');if(title){title.textContent=title.textContent.replace(/^[✦•·\\s]+/,'');const icon=lineIcon(symbols[i]);icon.setAttribute('aria-hidden','true');title.prepend(icon)}if(i===0){const entries=card.querySelector('.items'),add=card.querySelector('.add-item');if(entries){const edit=el('details','balance-income-editor');edit.append(el('summary','','Editar ingresos'),entries);if(add)edit.append(add);card.append(edit)}}});summary.append(balanceSummary)}
  workspace.append(sidebar,center,summary);page.querySelectorAll('.balance-section').forEach(section=>section.remove());page.append(workspace);draw();
