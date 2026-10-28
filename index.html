@@ -872,6 +872,15 @@ dialog.redes-editor :is(h2,label,input,button){font-family:'Outfit',sans-serif!i
 .proposal-risk-bar:hover{background:linear-gradient(to right,var(--gold,#e5b95c) var(--filled,0%),var(--line) var(--filled,0%))}
 .proposal-risk-bars,.proposal-impact-bars{touch-action:manipulation}
 .proposal-risk-bar:focus-visible,.proposal-impact-bar:focus-visible{outline:none;filter:brightness(1.5);box-shadow:inset 0 0 0 2px var(--ink)}
+</style><style id="matrix-variable-presentation">
+.proposal-variable-label{display:flex;align-items:center;gap:10px}
+.proposal-variable-label .browser-icon{color:var(--gold);flex-shrink:0}
+.proposal-variable-label svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.4}
+.proposal-detail-table .proposal-weight-field{position:relative;padding:0}
+.proposal-detail-table .proposal-weight-field input{text-align:center;padding:10px 30px;appearance:textfield}
+.proposal-weight-field input::-webkit-inner-spin-button,.proposal-weight-field input::-webkit-outer-spin-button{appearance:none;margin:0}
+.proposal-weight-field>span{position:absolute;right:12px}
+.proposal-detail-table tbody th:first-child{width:23%}
 </style><style id="matrix-centered-cost">.proposal-cost-field input,.proposal-days-field input{ text-align:center }</style><style id="matrix-aligned-units">
 .proposal-risk,.proposal-impact,.proposal-cost-field,.proposal-days-field{display:grid;grid-template-columns:minmax(100px,1fr) 80px;align-items:center;gap:18px}
 .proposal-cost-field,.proposal-days-field{border:0;padding:0;background:transparent;border-radius:0}
@@ -1060,12 +1069,18 @@ function renderProposalMatrix(page){
  const remove=el('button','matrix-icon');remove.type='button';remove.title='Eliminar propuesta';remove.setAttribute('aria-label','Eliminar propuesta');remove.append(lineIcon('<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/>'));
  remove.onclick=()=>{if(!confirm('¿Eliminar la propuesta «'+proposal.title+'»?'))return;model.rows.splice(decisionSelected,1);save();renderProposalMatrix(page)};heading.append(name,remove);detail.append(heading);
  const scroll=el('div','decision-scroll'),table=el('table','decision-table proposal-detail-table');table.setAttribute('aria-label','Matriz de '+proposal.title);
- const head=el('thead'),header=el('tr');['Variable','Valor','Ponderación'].forEach(label=>{const th=el('th','',label);th.scope='col';header.append(th)});head.append(header);table.append(head);
- const body=el('tbody'),total=el('output');total.setAttribute('aria-live','polite');
- const updateTotal=()=>{const sum=Object.values(proposal.weights).reduce((a,b)=>a+b,0);total.textContent='Ponderación total: '+sum.toLocaleString('es-AR')+'%'+(sum===100?'':' · Ajustá los pesos hasta sumar 100%');total.classList.toggle('incomplete',sum!==100)};
+ const body=el('tbody');
  const numeric=(value,label,max,step='any')=>{const input=el('input');input.type='number';input.min='0';input.step=step;if(max!=null)input.max=String(max);input.value=value;input.setAttribute('aria-label',label);input.onchange=()=>input.reportValidity();return input};
  [['impact','Impacto','/ 10'],['cost','Costo','ARS'],['time','Plazo','días · h'],['risk','Riesgo','%']].forEach(([key,label,unit])=>{
-  const row=el('tr'),term=el('th');term.scope='row';term.textContent=label;const cell=el('td'),weightCell=el('td');
+  const row=el('tr'),term=el('th');term.scope='row';
+  const symbols={
+   impact:'<path d="m12 2 2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5Z"/>',
+   cost:'<circle cx="9" cy="12" r="6"/><circle cx="15" cy="12" r="6"/>',
+   time:'<path d="m12 3 9 9-9 9-9-9 9-9Z"/><path d="M7 12h10"/>',
+   risk:'<path d="m12 3 9 16H3L12 3Z"/><circle cx="12" cy="13" r="2"/>'
+  };
+  const category=el('span','proposal-variable-label');category.append(lineIcon(symbols[key]),el('span','',label));term.append(category);
+  const cell=el('td'),weightCell=el('td');
   if(key==='risk'){
    const control=el('div','proposal-impact'),scale=el('div','proposal-impact-scale'),bars=el('div','proposal-impact-bars'),range=el('input','proposal-impact-range'),value=el('output');
    bars.setAttribute('aria-hidden','true');for(let i=0;i<10;i++){const mark=el('button','proposal-impact-bar');mark.style.setProperty('--diamond-order',String(i+1));bars.append(mark)}
@@ -1091,9 +1106,9 @@ function renderProposalMatrix(page){
    input.onblur=()=>{const value=readCost();if(!input.validity.valid){input.reportValidity();return}input.value=formatCost(value)};
    field.append(input,el('span','',unit));cell.append(field);
   }
-  const weightField=el('div','proposal-unified-field'),weight=numeric(proposal.weights[key],'Ponderación de '+label,100);weight.oninput=()=>{if(!weight.validity.valid||weight.value==='')return;proposal.weights[key]=Number(weight.value);updateTotal();save()};weightField.append(weight,el('span','','%'));weightCell.append(weightField);row.append(term,cell,weightCell);body.append(row);
+  const weightField=el('div','proposal-unified-field proposal-weight-field'),weight=numeric(proposal.weights[key],'Ponderación de '+label,100);weight.oninput=()=>{if(!weight.validity.valid||weight.value==='')return;proposal.weights[key]=Number(weight.value);save()};weightField.append(weight,el('span','','%'));weightCell.append(weightField);row.append(term,cell,weightCell);body.append(row);
  });
- table.append(body);scroll.append(table);updateTotal();detail.append(scroll,total);page.append(detail);
+ table.append(body);scroll.append(table);detail.append(scroll);page.append(detail);
 }
 
 function normalize(raw){if(raw.listas&&raw.t){return {version:1,cards:raw.listas.flatMap((list,index)=>list.c.filter(id=>raw.t[id]&&!raw.t[id].ar).map(id=>{const c=raw.t[id];return {id:uid(),title:String(c.t||'Sin título'),state:[0,0,1,3][index]??0,description:String(c.d||''),checks:(c.ck||[]).map(g=>({id:uid(),title:String(g.t||'TAREAS'),items:(g.it||[]).map(i=>({id:uid(),text:String(i.t||''),done:!!i.ok}))}))}}))}}if(!raw||!Array.isArray(raw.cards))throw Error('Formato inválido');return {version:1,eisenhower:normalizeEisenhower(raw.eisenhower),eisenhowerBoard:raw.eisenhowerBoard?normalize(raw.eisenhowerBoard):undefined,impactBoard:raw.impactBoard?normalize(raw.impactBoard):undefined,proposalMatrix:raw.proposalMatrix?normalizeProposalMatrix(raw.proposalMatrix):undefined,hogarTransferred:!!raw.hogarTransferred,columnTitles:Array.isArray(raw.columnTitles)?STATES.map((name,i)=>String(raw.columnTitles[i]||name).slice(0,80)):undefined,balance:raw.balance?JSON.parse(JSON.stringify(raw.balance)):undefined,events:(raw.events||[]).map(e=>({id:String(e.id||uid()),title:String(e.title||'Sin título'),due:String(e.due||''),time:String(e.time||''),description:String(e.description||''),googleEventId:typeof e.googleEventId==='string'?e.googleEventId:undefined})),cards:raw.cards.map(c=>{if(!c||typeof c.title!=='string'||!Number.isInteger(c.state)||c.state<0||c.state>3)throw Error('Tarjeta inválida');return {id:uid(),title:c.title,description:String(c.description||''),due:String(c.due||''),time:String(c.time||''),googleEventId:typeof c.googleEventId==='string'?c.googleEventId:undefined,state:c.state,fontWeight:c.fontWeight===300?300:undefined,checks:(c.checks||[]).map(g=>({id:uid(),title:String(g.title||'TAREAS'),items:(g.items||[]).map(i=>({id:uid(),text:String(i.text||''),done:!!i.done}))}))}})}}
