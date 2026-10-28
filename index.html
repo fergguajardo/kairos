@@ -1064,13 +1064,13 @@ function renderProposalMatrix(page){
  const body=el('tbody'),total=el('output');total.setAttribute('aria-live','polite');
  const updateTotal=()=>{const sum=Object.values(proposal.weights).reduce((a,b)=>a+b,0);total.textContent='Ponderación total: '+sum.toLocaleString('es-AR')+'%'+(sum===100?'':' · Ajustá los pesos hasta sumar 100%');total.classList.toggle('incomplete',sum!==100)};
  const numeric=(value,label,max,step='any')=>{const input=el('input');input.type='number';input.min='0';input.step=step;if(max!=null)input.max=String(max);input.value=value;input.setAttribute('aria-label',label);input.onchange=()=>input.reportValidity();return input};
- [['risk','Riesgo','%'],['impact','Impacto','/ 10'],['cost','Costo','ARS'],['time','Plazo','días · h']].forEach(([key,label,unit])=>{
+ [['impact','Impacto','/ 10'],['cost','Costo','ARS'],['time','Plazo','días · h'],['risk','Riesgo','%']].forEach(([key,label,unit])=>{
   const row=el('tr'),term=el('th');term.scope='row';term.textContent=label;const cell=el('td'),weightCell=el('td');
   if(key==='risk'){
-   const control=el('div','proposal-risk'),scale=el('div','proposal-risk-scale'),bars=el('div','proposal-risk-bars'),range=el('input','proposal-risk-range'),value=el('output');
-   bars.setAttribute('aria-hidden','true');for(let i=0;i<10;i++){const mark=el('button','proposal-risk-bar');mark.style.setProperty('--diamond-order',String(i+1));bars.append(mark)}
+   const control=el('div','proposal-impact'),scale=el('div','proposal-impact-scale'),bars=el('div','proposal-impact-bars'),range=el('input','proposal-impact-range'),value=el('output');
+   bars.setAttribute('aria-hidden','true');for(let i=0;i<10;i++){const mark=el('button','proposal-impact-bar');mark.style.setProperty('--diamond-order',String(i+1));bars.append(mark)}
    range.type='range';range.min='0';range.max='100';range.step='10';range.value=proposal.values.risk===''?0:Math.round(proposal.values.risk/10)*10;range.setAttribute('aria-label','Probabilidad de fracaso');range.title='Probabilidad de fracaso: de 0 a 100%';
-   const sync=()=>{value.textContent=proposal.values.risk===''?'Sin evaluar':Number(range.value).toLocaleString('es-AR')+'%';range.setAttribute('aria-valuetext',value.textContent);Array.from(bars.children).forEach((bar,i)=>bar.style.setProperty('--filled',(i<Number(range.value)/10?100:0)+'%'))};
+   const sync=()=>{value.textContent=proposal.values.risk===''?'Sin evaluar':Number(range.value).toLocaleString('es-AR')+'%';range.setAttribute('aria-valuetext',value.textContent);Array.from(bars.children).forEach((bar,i)=>bar.classList.toggle('filled',proposal.values.risk!==''&&i<Number(range.value)/10))};
    range.oninput=()=>{proposal.values.risk=Number(range.value);sync();save()};sync();attachMatrixFigureClick(scale,bars,range);scale.append(bars,range);control.append(scale,value);cell.append(control);
   }else if(key==='impact'){
    const control=el('div','proposal-impact'),scale=el('div','proposal-impact-scale'),bars=el('div','proposal-impact-bars'),range=el('input','proposal-impact-range'),value=el('output');
@@ -1083,7 +1083,13 @@ function renderProposalMatrix(page){
    days.placeholder='0';field.append(days,el('span','','días'));
    days.oninput=()=>{if(!days.validity.valid)return;proposal.values.time=days.value===''?'':Math.round(Number(days.value)*1440*1e6)/1e6;save()};cell.append(field);
   }else{
-   const field=el('div','proposal-unified-field proposal-cost-field'),input=numeric(proposal.values[key],label,key==='risk'?100:null);input.placeholder='0';input.oninput=()=>{if(!input.validity.valid)return;proposal.values[key]=input.value===''?'':Number(input.value);save()};field.append(input,el('span','',unit));cell.append(field);
+   const field=el('div','proposal-unified-field proposal-cost-field'),input=el('input');
+   const formatCost=value=>value===''?'':Number(value).toLocaleString('es-AR',{maximumFractionDigits:20});
+   input.type='text';input.inputMode='decimal';input.setAttribute('aria-label',label);input.placeholder='0';input.value=formatCost(proposal.values.cost);
+   const readCost=()=>{const value=balanceInputNumber(input.value);input.setCustomValidity(value===null||value!==''&&value<0?'Ingresá un importe válido, por ejemplo 1.000,25.':'');return value};
+   input.oninput=()=>{const value=readCost();if(!input.validity.valid)return;proposal.values.cost=value;save()};
+   input.onblur=()=>{const value=readCost();if(!input.validity.valid){input.reportValidity();return}input.value=formatCost(value)};
+   field.append(input,el('span','',unit));cell.append(field);
   }
   const weightField=el('div','proposal-unified-field'),weight=numeric(proposal.weights[key],'Ponderación de '+label,100);weight.oninput=()=>{if(!weight.validity.valid||weight.value==='')return;proposal.weights[key]=Number(weight.value);updateTotal();save()};weightField.append(weight,el('span','','%'));weightCell.append(weightField);row.append(term,cell,weightCell);body.append(row);
  });
