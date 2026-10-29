@@ -908,6 +908,23 @@ body{padding-bottom:calc(90px + env(safe-area-inset-bottom,0px))}
   #kairos-app .nav{padding-bottom:calc(6px + env(safe-area-inset-bottom,0px))}
 }
 </style>
+
+<style id="matrix-thumbnail-controls">
+.proposal-thumbnail{position:relative;flex:0 0 210px;min-width:0}
+.proposal-thumbnail .proposal-control{width:100%;height:100%;padding:14px 44px 43px 18px;cursor:grab}
+.proposal-thumbnail .proposal-control:active{cursor:grabbing}
+.proposal-thumbnail-remove{position:absolute;top:5px;right:5px}
+.proposal-thumbnail-moves{position:absolute;bottom:4px;right:5px;display:flex;gap:2px}
+.proposal-thumbnail-moves .matrix-icon{width:30px;height:30px;padding:6px}
+.proposal-thumbnail.dragging{opacity:.4}
+.proposal-thumbnail.drop-target .proposal-control{outline:2px solid var(--gold);outline-offset:0}
+.proposal-detail-table .proposal-cost-field input,.proposal-detail-table .proposal-days-field input{
+ appearance:textfield;-moz-appearance:textfield;text-align:center;
+ padding:10px 12px;margin:0;font-variant-numeric:tabular-nums;
+}
+.proposal-days-field input::-webkit-inner-spin-button,.proposal-days-field input::-webkit-outer-spin-button{appearance:none;margin:0}
+@media(max-width:600px){.proposal-thumbnail{flex-basis:170px}}
+</style>
 </head><body>
 <section id="auth-gate" aria-label="Acceso a Kairos" hidden>
 
@@ -1062,6 +1079,10 @@ function attachMatrixFigureClick(scale,bars,range){
  });
  const update=range.oninput;range.oninput=()=>{update();zero.setAttribute('aria-pressed',String(Number(range.value)===0));Array.from(bars.children).forEach((mark,index)=>mark.setAttribute('aria-pressed',String(Number(range.value)===(index+1)*Number(range.step))))}
 }
+function swapProposalRows(rows,from,to){
+ if(!Number.isInteger(from)||!Number.isInteger(to)||from<0||to<0||from>=rows.length||to>=rows.length||from===to)return false;
+ [rows[from],rows[to]]=[rows[to],rows[from]];return true;
+}
 function renderProposalMatrix(page){
  page.replaceChildren();page.classList.add('matrix-view');
  data.proposalMatrix??=normalizeProposalMatrix({rows:[]});
@@ -1070,10 +1091,32 @@ function renderProposalMatrix(page){
  matrix.decision=normalizeDecisionMatrix(matrix.decision);
  const model=matrix.decision;decisionSelected=Math.max(0,Math.min(decisionSelected,model.rows.length-1));
  const rail=el('section','proposal-rail');rail.setAttribute('aria-label','Propuestas');
+ let draggedProposal=null;
+ const swap=(from,to)=>{
+  if(!swapProposalRows(model.rows,from,to))return;
+  if(decisionSelected===from)decisionSelected=to;else if(decisionSelected===to)decisionSelected=from;
+  save();renderProposalMatrix(page);
+  page.querySelectorAll('.proposal-control')[to]?.focus();
+ };
  model.rows.forEach((proposal,index)=>{
-  const card=el('button','proposal-control');card.type='button';card.setAttribute('aria-pressed',String(index===decisionSelected));
+  const thumbnail=el('article','proposal-thumbnail');
+  const card=el('button','proposal-control');card.type='button';card.draggable=true;card.setAttribute('aria-pressed',String(index===decisionSelected));
+  card.title='Arrastrá sobre otra propuesta para intercambiarlas. Alt + flechas para mover.';
   card.append(el('span','proposal-control-index',String(index+1).padStart(2,'0')),el('strong','',proposal.title));
-  card.onclick=()=>{decisionSelected=index;renderProposalMatrix(page)};rail.append(card);
+  card.onclick=()=>{decisionSelected=index;renderProposalMatrix(page)};
+  card.onkeydown=event=>{if(event.altKey&&['ArrowLeft','ArrowRight'].includes(event.key)){event.preventDefault();swap(index,index+(event.key==='ArrowLeft'?-1:1))}};
+  card.ondragstart=event=>{draggedProposal=index;event.dataTransfer.effectAllowed='move';event.dataTransfer.setData('application/x-kairos-proposal',String(index));thumbnail.classList.add('dragging')};
+  card.ondragend=()=>{draggedProposal=null;rail.querySelectorAll('.dragging,.drop-target').forEach(node=>node.classList.remove('dragging','drop-target'))};
+  thumbnail.ondragover=event=>{if(draggedProposal===null||draggedProposal===index)return;event.preventDefault();event.dataTransfer.dropEffect='move';thumbnail.classList.add('drop-target')};
+  thumbnail.ondragleave=event=>{if(!thumbnail.contains(event.relatedTarget))thumbnail.classList.remove('drop-target')};
+  thumbnail.ondrop=event=>{if(draggedProposal===null)return;event.preventDefault();swap(draggedProposal,index)};
+  const remove=el('button','matrix-icon proposal-thumbnail-remove');remove.type='button';remove.title='Eliminar propuesta';remove.setAttribute('aria-label','Eliminar propuesta '+proposal.title);remove.append(lineIcon('<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/>'));
+  remove.onclick=()=>{if(!confirm('¿Eliminar la propuesta «'+proposal.title+'»?'))return;model.rows.splice(index,1);if(index<decisionSelected)decisionSelected--;save();renderProposalMatrix(page)};
+  const moves=el('div','proposal-thumbnail-moves');
+  [[-1,'Mover a la izquierda','M14 6l-6 6 6 6'],[1,'Mover a la derecha','M10 6l6 6-6 6']].forEach(([offset,label,path])=>{
+   const move=el('button','matrix-icon');move.type='button';move.title=label;move.setAttribute('aria-label',label+': '+proposal.title);move.disabled=index+offset<0||index+offset>=model.rows.length;move.append(lineIcon('<path d="'+path+'"/>'));move.onclick=()=>swap(index,index+offset);moves.append(move)
+  });
+  thumbnail.append(card,remove,moves);rail.append(thumbnail);
  });
  const add=el('button','proposal-control-add');add.type='button';add.title='Añadir propuesta';add.setAttribute('aria-label','Añadir propuesta');add.append(lineIcon('<path d="M12 5v14M5 12h14"/>'));
  add.onclick=()=>{model.rows.push(normalizeDecisionMatrix({rows:[{title:'Propuesta '+(model.rows.length+1)}]}).rows[0]);decisionSelected=model.rows.length-1;save();renderProposalMatrix(page);page.querySelector('.proposal-name')?.focus()};rail.append(add);page.append(rail);
@@ -1082,8 +1125,7 @@ function renderProposalMatrix(page){
  name.value=proposal.title;name.maxLength=160;name.setAttribute('aria-label','Nombre de la propuesta');
  name.oninput=()=>{proposal.title=name.value;rail.querySelectorAll('.proposal-control strong')[decisionSelected].textContent=name.value;save()};
  name.onblur=()=>{if(!name.value.trim()){proposal.title='Propuesta '+(decisionSelected+1);name.value=proposal.title;rail.querySelectorAll('.proposal-control strong')[decisionSelected].textContent=proposal.title;save()}};
- const remove=el('button','matrix-icon');remove.type='button';remove.title='Eliminar propuesta';remove.setAttribute('aria-label','Eliminar propuesta');remove.append(lineIcon('<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/>'));
- remove.onclick=()=>{if(!confirm('¿Eliminar la propuesta «'+proposal.title+'»?'))return;model.rows.splice(decisionSelected,1);save();renderProposalMatrix(page)};heading.append(name,remove);detail.append(heading);
+ heading.append(name);detail.append(heading);
  const scroll=el('div','decision-scroll'),table=el('table','decision-table proposal-detail-table');table.setAttribute('aria-label','Matriz de '+proposal.title);
  const body=el('tbody');
  const numeric=(value,label,max,step='any')=>{const input=el('input');input.type='number';input.min='0';input.step=step;if(max!=null)input.max=String(max);input.value=value;input.setAttribute('aria-label',label);input.onchange=()=>input.reportValidity();return input};
