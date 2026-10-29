@@ -926,11 +926,18 @@ function applyCover(data){
 }
 // Drafts stay in the private document; the existing publication trigger only
 // receives the six top-level fields of the last confirmed public version.
-let publicationMode='compatibility',publicationSnapshot=null,publicationBusy=false;
+let publicationMode='compatibility',publicationSnapshot=null,publicationBusy=false,publicationChecking=false;
 const publicationFields=value=>Object.fromEntries(['html','coverTitle','coverSynopsis','titleSpacing','chapterSpacing','textSpacing'].map(key=>[key,value[key]]));
 const modeButton=document.createElement('button');modeButton.type='button';modeButton.id='publication-mode-button';modeButton.setAttribute('aria-haspopup','dialog');modeButton.setAttribute('aria-label','Modo de publicación');
 modeButton.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3"/><circle cx="15" cy="17" r="3"/></svg>';
 document.querySelector('.toolbar').append(modeButton);
+const publishButton=document.createElement('button');publishButton.type='button';publishButton.id='publish-disociados';publishButton.textContent='Publicar en Disociados';
+publishButton.title='Enviar la versión actual de Compatibilidad y comprobar su publicación';
+document.querySelector('.toolbar').append(publishButton);
+publishButton.onclick=async()=>{
+ if(main.inert||publicationBusy||publicationChecking||publicationMode!=='compatibility')return;
+ refreshLayout();save();await documentCloud.publish();
+};
 const modeDialog=document.createElement('dialog');modeDialog.id='publication-mode-dialog';modeDialog.setAttribute('aria-labelledby','publication-mode-title');
 modeDialog.innerHTML='<div class="publication-mode-heading"><h2 id="publication-mode-title">Modo de publicación</h2><button type="button" aria-label="Cerrar modos de publicación">×</button></div><fieldset><legend>Elegí cómo trabajar</legend><label><input type="radio" name="publication-mode" value="compatibility"><span><svg class="publication-mode-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4c-9 0-9 16 0 16M12 4c9 0 9 16 0 16M5 12h14"/></svg><strong>Compatibilidad</strong></span></label><label><input type="radio" name="publication-mode" value="creation"><span><svg class="publication-mode-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 14.5 9.5 22 12 14.5 14.5 12 22 9.5 14.5 2 12 9.5 9.5Z"/><circle cx="12" cy="12" r="2"/></svg><strong>Creación</strong></span></label></fieldset>';
 document.body.append(modeDialog);
@@ -939,7 +946,8 @@ function updatePublicationMode(){
  modeButton.setAttribute('aria-label','Modo de publicación: '+(publicationMode==='creation'?'Creación':'Compatibilidad'));
  modeButton.title='Modo de publicación';
  modeButton.dataset.mode=publicationMode;
- modeInputs.forEach(input=>{input.checked=input.value===publicationMode;input.disabled=main.inert||publicationBusy});
+ publishButton.disabled=main.inert||publicationBusy||publicationChecking||publicationMode!=='compatibility';
+ modeInputs.forEach(input=>{input.checked=input.value===publicationMode;input.disabled=main.inert||publicationBusy||publicationChecking});
 }
 modeButton.onclick=()=>{updatePublicationMode();modeDialog.showModal()};
 modeDialog.querySelector('button').onclick=()=>modeDialog.close();
@@ -1059,7 +1067,22 @@ function rebuildNarrativeIndex(){
 
 function inheritEditing(){main.querySelectorAll('[contenteditable]').forEach(node=>{if(!node.matches('.page-break,.doc-marker,.marker-gap'))node.removeAttribute('contenteditable')});main.querySelectorAll('.page-number').forEach(node=>node.remove());}
 inheritEditing();
-function normalizeLegacyHeadings(){}
+function normalizeLegacyHeadings(){
+ let changed=false;
+ main.querySelectorAll('.published-story').forEach(story=>{
+  const name=story.querySelector('h1')?.textContent.replace(/^\s*(?:✦\s*)?\d+[.)]\s*/,'').trim();
+  if(!/^(?:LATTE|BELA)$/i.test(name||''))return;
+  story.querySelectorAll('p,.doc-line,.capitulo,h3,h4,h5,h6,div').forEach(block=>{
+   if(block.closest('h1,h2,.back-to-index')||block.querySelector('p,.doc-line,.capitulo,h1,h2,h3,h4,h5,h6,div'))return;
+   const text=block.textContent.replace(/[\u200b\uFEFF]/g,'').trim();
+   if(!/^(?:Cap[ií]tulo|Escena)\s+\d+\s*[.:]?$/i.test(text))return;
+   const heading=document.createElement('h2');heading.className='doc-heading';
+   if(block.hasAttribute('style'))heading.setAttribute('style',block.getAttribute('style'));
+   heading.append(...block.childNodes);block.replaceWith(heading);changed=true;
+  });
+ });
+ return changed;
+}
 function labelResourceLinks(){}
 function upgradeDocument(){
  if(main.querySelector('[data-layout-version="3"]'))return;
@@ -1274,6 +1297,7 @@ function applyNarrativeArchitecture(main){
 }
 
 function refreshLayout(){
+ if(normalizeLegacyHeadings())documentNeedsSync=true;
  if(applyNarrativeArchitecture(main))documentNeedsSync=true;
  if(normalizeStoryNumbers())documentNeedsSync=true;
  if(decorateSedanteAside())documentNeedsSync=true;
@@ -1298,7 +1322,7 @@ const editableState=()=>({format:FORMAT,version:2,title:'Editable',coverTitle:co
 function current(){
  const draft=editableState();
  if(publicationMode==='creation'&&publicationSnapshot)return {...draft,...publicationSnapshot,publicationMode,creationDraft:draft};
- return {...draft,publicationMode};
+ return {...draft,publicationMode,creationDraft:null};
 }
 function sanitize(value){const template=document.createElement('template');template.innerHTML=value;const allowed=new Set(['SECTION','HR','BLOCKQUOTE','ARTICLE','DIV','SPAN','P','BR','STRONG','B','EM','I','U','A','UL','OL','LI','H1','H2','H3','H4','H5','H6','IMG']);for(const node of Array.from(template.content.querySelectorAll('*'))){if(!allowed.has(node.tagName)){if(['SCRIPT','STYLE','IFRAME','OBJECT','EMBED','IMG','LINK','META'].includes(node.tagName))node.remove();else node.replaceWith(...node.childNodes);continue}for(const attribute of Array.from(node.attributes)){if(attribute.name==='src'&&node.tagName==='IMG'){if(!/^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(attribute.value))node.removeAttribute('src')}else if(attribute.name==='alt'&&node.tagName==='IMG'){}else if(attribute.name==='href'&&node.tagName==='A'){if(!/^(?:https?:\/\/|#[A-Za-z][\w-]*)/i.test(attribute.value))node.removeAttribute('href')}else if(attribute.name==='style'){const safe=Array.from(node.style).filter(k=>['font-family','font-size','font-weight','font-style','color','margin-top','margin-left','margin-right','padding-left','line-height','list-style-type','text-decoration','width','padding-right','padding-top','padding-bottom','margin-bottom','text-align','text-indent','max-width','height','display','border','border-top','border-left','border-right','border-left-width','border-left-style','border-left-color','border-right-width','border-right-style','border-right-color'].includes(k)).map(k=>k+':'+node.style.getPropertyValue(k)).join(';');node.setAttribute('style',safe)}else if(attribute.name==='data-bela-chapter'&&/^[1-9]\d*$/.test(attribute.value)){}else if(attribute.name==='aria-label'){}else if(attribute.name==='class'&&/^(?:principita-gold-aside|sedante-gold-aside|sheet story-start bela-added-chapter|sheet bela-added-chapter|published-story|toc|toc-num|toc-title|toc-chapters|indice-title|back-to-index|tda-flashback-separator)$/.test(attribute.value)){}else if(attribute.name==='class'&&/^((?:voz|capitulo|flashback-muted|flashback-boundary-start|flashback-boundary-end|passage-start|passage-end|passage-top-gap|aside-start|aside-end)(?: (?:voz|capitulo|flashback-muted|flashback-boundary-start|flashback-boundary-end|passage-start|passage-end|passage-top-gap|aside-start|aside-end))*|doc-image|doc-block|doc-line|doc-heading|doc-marker|marker-gap|clipboard-block|page-break|page-content|sheet(?: (?:empty-section|story-start|chapter-start))*)$/.test(attribute.value)){}else if(node.tagName==='OL'&&attribute.name==='start'&&/^\d+$/.test(attribute.value)){}else if(node.tagName==='LI'&&attribute.name==='value'&&/^\d+$/.test(attribute.value)){}else if(attribute.name==='data-kairos-clipboard'&&['blocks','inline'].includes(attribute.value)){}else if(attribute.name==='data-marker-removed'&&attribute.value==='true'){}else if(attribute.name==='data-layout-version'&&attribute.value==='3'){}else if(attribute.name==='id'&&(pageIds.includes(attribute.value)||/^(?:indice|cuento-\d+(?:-encabezado-\d+)?|doc-heading-\d+)$/.test(attribute.value))){}else node.removeAttribute(attribute.name)}if(node.tagName==='A'){node.target='_blank';node.rel='noopener noreferrer'}}return template.innerHTML}
 function validate(data){
@@ -1980,7 +2004,50 @@ function createDocumentCloud(){
  keep.onclick=()=>choose(true);remoteButton.onclick=()=>choose(false);
  window.addEventListener('online',()=>ready?flush():start());
  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')flush()});
- return {changed:markChanged,flush,start};
+ async function publish(){
+  if(!ready||main.inert||publicationMode!=='compatibility'||publicationChecking)return;
+  publicationChecking=true;updatePublicationMode();
+  const requested=current();
+  const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+  const signature=(root,title,synopsis)=>{
+   const copy=root.cloneNode(true);copy.querySelectorAll('#indice,.back-to-index').forEach(node=>node.remove());
+   return JSON.stringify([title,synopsis,copy.textContent].map(text=>(text||'').replace(/[\s\u200b\uFEFF]+/g,' ').trim()));
+  };
+  const template=document.createElement('template');template.innerHTML=requested.html;
+  const expected=signature(template.content,requested.coverTitle,requested.coverSynopsis);
+  try{
+   const saveDeadline=Date.now()+30000;
+   while(saving||pending){
+    if(conflict)throw Error('conflict');
+    if(Date.now()>saveDeadline)throw Error('save');
+    if(!saving)await flush();
+    if(pending||saving)await pause(250);
+   }
+   if(conflict||dirty)throw Error('save');
+   report('Guardado confirmado. Comprobando la publicación en Disociados…');
+   const publicUrl=new URL('/cuentos/',location.origin);
+   for(let attempt=0;attempt<30;attempt++){
+    if(publicationMode!=='compatibility')throw Error('mode');
+    publicUrl.searchParams.set('publication',String(Date.now()));
+    const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),8000);
+    try{
+     const response=await fetch(publicUrl,{cache:'no-store',signal:controller.signal});
+     if(response.ok){
+      const page=new DOMParser().parseFromString(await response.text(),'text/html');
+      const published=page.querySelector('main');
+      if(published&&signature(published,page.querySelector('.cover-title')?.textContent,page.querySelector('.cover-desc')?.textContent)===expected){
+       report('Publicación verificada en Disociados · '+new Date().toLocaleTimeString('es-AR'));return;
+      }
+     }
+    }catch{}finally{clearTimeout(timeout)}
+    if(attempt<29)await pause(4000);
+   }
+   report('La versión quedó guardada. Disociados aún no refleja esta edición: falta confirmar la conexión de publicación. Podés reintentar sin descargar archivos.');
+  }catch(error){
+   report(error.message==='conflict'?'Hay otra versión en Supabase. Resolvé el conflicto antes de publicar.':'No se pudo confirmar el envío. Tus cambios siguen en el Editable; revisá el guardado y reintentá.');
+  }finally{publicationChecking=false;updatePublicationMode()}
+ }
+ return {changed:markChanged,flush,start,publish};
 }
 
 refreshLayout();historyReady=true;resetDocumentHistory();
