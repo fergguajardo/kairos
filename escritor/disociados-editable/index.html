@@ -2035,6 +2035,15 @@ function createDocumentCloud(){
      if(response.ok){
       const page=new DOMParser().parseFromString(await response.text(),'text/html');
       const published=page.querySelector('main');
+      if(published&&page.querySelector('#disociados-publication-reader')){
+       const live=await client.from('disociados_publication').select('data,updated_at').eq('id','disociados').maybeSingle();
+       if(live.error)throw live.error;
+       const data=live.data?.data;
+       if(typeof data?.html!=='string')throw Error('publication');
+       published.innerHTML=sanitize(data.html);
+       page.querySelector('.cover-title').textContent=data.coverTitle||'';
+       page.querySelector('.cover-desc').textContent=data.coverSynopsis||'';
+      }
       if(published&&signature(published,page.querySelector('.cover-title')?.textContent,page.querySelector('.cover-desc')?.textContent)===expected){
        report('Publicación verificada en Disociados · '+new Date().toLocaleTimeString('es-AR'));return;
       }
