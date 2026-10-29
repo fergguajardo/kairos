@@ -892,7 +892,23 @@ dialog.redes-editor :is(h2,label,input,button){font-family:'Outfit',sans-serif!i
 .proposal-risk-bars,.proposal-impact-bars{flex:1;min-width:0;width:auto}
 .proposal-zero{flex:0 0 26px;width:26px;height:26px;padding:0;border:1px solid var(--line);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:transparent;color:var(--muted);font-size:12px}
 .proposal-zero[aria-pressed=true]{border-color:var(--gold);color:var(--gold);background:#e5b95c10}
-</style><style>.popup.menu.card-icon-menu{display:flex;gap:4px;width:max-content;padding:6px}.popup.menu.card-icon-menu button{display:flex;align-items:center;justify-content:center;width:44px;height:44px;padding:10px}.popup.menu.card-icon-menu .browser-icon{margin:0}</style></head><body>
+</style><style>.popup.menu.card-icon-menu{display:flex;gap:4px;width:max-content;padding:6px}.popup.menu.card-icon-menu button{display:flex;align-items:center;justify-content:center;width:44px;height:44px;padding:10px}.popup.menu.card-icon-menu .browser-icon{margin:0}</style>
+<style id="fixed-bottom-navigation">
+/* Barra inferior acoplada al borde de la ventana. */
+#kairos-app .nav{
+  position:fixed;left:0;right:0;bottom:0;transform:none;
+  width:100%;max-width:none;
+  height:calc(66px + env(safe-area-inset-bottom,0px));
+  padding-bottom:calc(7px + env(safe-area-inset-bottom,0px));
+  justify-content:center;border-radius:0;border-width:1px 0 0;
+  box-shadow:none;overflow-x:auto;
+}
+body{padding-bottom:calc(90px + env(safe-area-inset-bottom,0px))}
+@media(max-width:600px){
+  #kairos-app .nav{padding-bottom:calc(6px + env(safe-area-inset-bottom,0px))}
+}
+</style>
+</head><body>
 <section id="auth-gate" aria-label="Acceso a Kairos" hidden>
 
 <div class="auth-card">
