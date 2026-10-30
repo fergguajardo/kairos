@@ -938,8 +938,10 @@ publishButton.onclick=async()=>{
 function updatePublicationMode(){
  publishButton.disabled=main.inert||publicationChecking;
  publishButton.setAttribute('aria-busy',String(publicationChecking));
+ main.querySelectorAll('[data-editor-only] button').forEach(button=>button.disabled=main.inert||publicationChecking);
 }
 const modeStyle=document.createElement('style');modeStyle.textContent=`
+.chapter-add-control{display:flex;justify-content:center;margin:20px 0;user-select:none}.chapter-add-control button{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;padding:8px;border:1px solid #E5B95C;border-radius:50%;background:transparent;color:#E5B95C;cursor:pointer}.chapter-add-control button:hover{background:#e5b95c20}.chapter-add-control button:focus-visible{outline:2px solid #E5B95C;outline-offset:4px}.chapter-add-control button:disabled{opacity:.45;cursor:default}.chapter-add-control svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}@media print{.chapter-add-control{display:none}}
 #publish-disociados{display:inline-flex;align-items:center;justify-content:center;color:var(--gold);border-color:var(--gold);width:40px;height:40px;padding:8px}#publish-disociados svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}#publish-disociados:hover{background:#e5b95c20}#publish-disociados:disabled{opacity:.45}
 `;
 document.head.append(modeStyle);updatePublicationMode();
@@ -1045,7 +1047,7 @@ function rebuildNarrativeIndex(){
  main.querySelectorAll('.back-to-index').forEach(link=>{link.href='#indice';link.setAttribute('contenteditable','false');link.removeAttribute('target')});
 }
 
-function inheritEditing(){main.querySelectorAll('[contenteditable]').forEach(node=>{if(!node.matches('.page-break,.doc-marker,.marker-gap'))node.removeAttribute('contenteditable')});main.querySelectorAll('.page-number').forEach(node=>node.remove());}
+function inheritEditing(){main.querySelectorAll('[contenteditable]').forEach(node=>{if(!node.matches('.page-break,.doc-marker,.marker-gap,[data-editor-only]'))node.removeAttribute('contenteditable')});main.querySelectorAll('.page-number').forEach(node=>node.remove());}
 inheritEditing();
 function normalizeLegacyHeadings(){
  let changed=false;
@@ -1276,7 +1278,54 @@ function applyNarrativeArchitecture(main){
  return before!==main.innerHTML;
 }
 
+// Editor controls never belong to the saved or published manuscript.
+function manuscriptHTML(){
+ const copy=main.cloneNode(true);
+ copy.querySelectorAll('[data-editor-only]').forEach(node=>node.remove());
+ return copy.innerHTML;
+}
+function nextChapterNumber(story){
+ const numbers=Array.from(story.querySelectorAll('h2'),heading=>{
+  const match=heading.textContent.trim().match(/^(?:Cap[ií]tulo|Escena)\s+(\d+)/i);
+  return match?Number(match[1]):0;
+ });
+ return Math.max(0,...numbers)+1;
+}
+function renderChapterControls(){
+ main.querySelectorAll('.published-story').forEach(story=>{
+  const name=story.querySelector('h1')?.textContent.replace(/^\s*(?:✦\s*)?\d+[.)]\s*/,'').trim();
+  if(!/^(?:BELA|LATTE)$/i.test(name||''))return;
+  const control=document.createElement('div'),button=document.createElement('button');
+  control.className='chapter-add-control';control.dataset.editorOnly='true';control.contentEditable='false';
+  button.type='button';button.disabled=main.inert||publicationChecking;
+  button.title='Agregar capítulo '+nextChapterNumber(story)+' a '+name;
+  button.setAttribute('aria-label',button.title);
+  button.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v16M4 12h16"/></svg>';
+  button.addEventListener('mousedown',event=>event.preventDefault());
+  button.addEventListener('click',()=>{
+   if(main.inert||publicationChecking)return;
+   recordDocumentHistory();
+   const number=nextChapterNumber(story),heading=document.createElement('h2'),paragraph=document.createElement('p');
+   heading.className='doc-heading';heading.textContent='Capítulo '+number;
+   paragraph.style.cssText=bodyParagraphStyle;paragraph.append(document.createElement('br'));
+   // Keep the new chapter after all existing text, before the return link.
+   control.remove();
+   const backLink=story.querySelector('.back-to-index');
+   story.append(heading,paragraph);if(backLink)story.append(backLink);
+   refreshLayout();
+   main.focus();const range=document.createRange();range.selectNodeContents(paragraph);range.collapse(true);
+   const selection=window.getSelection();selection.removeAllRanges();selection.addRange(range);
+   selectionInEditor();updateFormatButtons();save();
+   paragraph.scrollIntoView({behavior:'smooth',block:'center'});
+  });
+  control.append(button);
+  const backLink=story.querySelector('.back-to-index');
+  if(backLink)backLink.before(control);else story.append(control);
+ });
+}
+
 function refreshLayout(){
+ main.querySelectorAll('[data-editor-only]').forEach(node=>node.remove());
  if(normalizeLegacyHeadings())documentNeedsSync=true;
  if(applyNarrativeArchitecture(main))documentNeedsSync=true;
  if(normalizeStoryNumbers())documentNeedsSync=true;
@@ -1296,9 +1345,10 @@ function refreshLayout(){
  rebuildNarrativeIndex();
  const index=main.querySelector('#indice');if(index)index.contentEditable='false';
  if(historyReady&&historyNeedsReset&&!historyRestoring)resetDocumentHistory();
+ renderChapterControls();
 }
 
-const editableState=()=>({format:FORMAT,version:2,title:'Editable',coverTitle:coverTitle.textContent,coverSynopsis:coverSynopsis.textContent,editorialRevision,publishedMigration,titleSpacing,chapterSpacing,textSpacing,html:main.innerHTML});
+const editableState=()=>({format:FORMAT,version:2,title:'Editable',coverTitle:coverTitle.textContent,coverSynopsis:coverSynopsis.textContent,editorialRevision,publishedMigration,titleSpacing,chapterSpacing,textSpacing,html:manuscriptHTML()});
 function current(){
  const draft=editableState();
  if(publicationMode==='creation'&&publicationSnapshot)return {...draft,...publicationSnapshot,publicationMode,creationDraft:draft};
