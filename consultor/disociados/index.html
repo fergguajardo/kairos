@@ -929,6 +929,7 @@ main .bela-added-chapter[data-bela-chapter="4"]{padding-top:16.5pt!important}
 .cover-desc{font-family:Outfit,sans-serif;font-size:18.5px!important;font-weight:400;color:#F3F0EA}
 .cover-eyebrow{font-family:Outfit,sans-serif;font-size:12px!important;font-weight:300;letter-spacing:.35em;color:#d9a441;text-transform:uppercase}
 @media(max-width:639px){.cover-title{font-size:45px!important}.cover-desc{font-size:17.5px!important}}
+.cover-desc p{margin:0}.cover-desc p+p{margin-top:1em}
 #cloud-panel{max-width:720px;margin:0 auto;padding:16px 24px 28px;font:300 13px/1.5 Outfit,sans-serif;color:#E5B95C}
 #cloud-panel[hidden],#cloud-login[hidden]{display:none!important}#cloud-login{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}#cloud-login input,#cloud-login button{font:inherit;color:#F3F0EA;background:#11100E;border:1px solid #A97A2F55;border-radius:7px;padding:10px}#cloud-login button{color:#E5B95C;cursor:pointer}
 @media print{#cloud-panel{display:none!important}}
@@ -937,8 +938,7 @@ main .bela-added-chapter[data-bela-chapter="4"]{padding-top:16.5pt!important}
   <div class="cover-content">
     <p class="cover-eyebrow">Disociados · FG</p>
     <h1 class="cover-title" aria-label="Título de la obra">Disociados</h1>
-    <p class="cover-desc" aria-label="Sinopsis de la obra">Tragedia, soledad, romance obsesivo, humor y sexualidad.
-Diez historias independientes. Un mismo hilo invisible: sobrevivir.</p>
+    <div class="cover-desc" aria-label="Sinopsis de la obra"><p>Tragedia, soledad, romance obsesivo, humor y sexualidad.</p><p>Once historias independientes. Un mismo hilo invisible: sobrevivir.</p></div>
   </div>
 </div>
 
@@ -958,9 +958,10 @@ panel.hidden=!editRequested;
 const report=message=>{status.textContent=message;status.hidden=/^(Documento cargado de Supabase|Guardando en Supabase|Cambios pendientes|Guardado confirmado|Verificando sesión)/.test(message)};
 function enable(value){ready=value;for(const element of [main,title,synopsis,signature]){if(value&&editRequested)element.contentEditable='true';else element.removeAttribute('contenteditable')}main.querySelector('#indice')?.setAttribute('contenteditable','false');main.querySelector('.kairos-org')?.setAttribute('contenteditable','false')}
 function clean(value){const t=document.createElement('template');t.innerHTML=value;for(const n of t.content.querySelectorAll('*')){if(['SCRIPT','IFRAME','OBJECT','EMBED','STYLE','LINK','META','FORM','INPUT','BUTTON'].includes(n.tagName)){n.remove();continue}for(const a of [...n.attributes]){if(/^on/i.test(a.name)||['srcdoc','contenteditable'].includes(a.name)||(['href','src'].includes(a.name)&&! /^(#|https:\/\/|data:image\/(png|jpeg|webp);base64,)/i.test(a.value)))n.removeAttribute(a.name)}}return t.innerHTML}
-function snapshot(){return {format:'kairos-project-disociados',version:1,html:clean(main.innerHTML),coverTitle:title.textContent,coverSynopsis:synopsis.textContent,coverSignature:signature.textContent}}
+function snapshot(){return {format:'kairos-project-disociados',version:1,html:clean(main.innerHTML),coverTitle:title.textContent,coverSynopsis:synopsis.innerText,coverSignature:signature.textContent}}
+function applySynopsis(value){const text=typeof value==='string'?value:'';const updated=text.replace(/(?:Diez|Once|10|11) historias independientes/gi,'Once historias independientes');const parts=updated.split(/\s*(?=Once historias independientes)/);synopsis.replaceChildren(...parts.filter(Boolean).map(part=>{const p=document.createElement('p');p.textContent=part.trim();return p}));}
 const projectOrg=main.querySelector('.kairos-org').cloneNode(true);
-function apply(data){if(data?.format!=='kairos-project-disociados'||typeof data.html!=='string')throw Error('Formato incompatible');main.innerHTML=clean(data.html);const savedOrg=main.querySelector('.kairos-org');if(savedOrg)savedOrg.replaceWith(projectOrg.cloneNode(true));else main.querySelector('#cuento-3 .page-content')?.append(projectOrg.cloneNode(true));title.textContent=data.coverTitle;synopsis.textContent=data.coverSynopsis;signature.textContent=data.coverSignature}
+function apply(data){if(data?.format!=='kairos-project-disociados'||typeof data.html!=='string')throw Error('Formato incompatible');main.innerHTML=clean(data.html);const savedOrg=main.querySelector('.kairos-org');if(savedOrg)savedOrg.replaceWith(projectOrg.cloneNode(true));else main.querySelector('#cuento-3 .page-content')?.append(projectOrg.cloneNode(true));title.textContent=data.coverTitle;applySynopsis(data.coverSynopsis);signature.textContent=data.coverSignature}
 async function read(){const r=await client.from('kairos_documents').select('data,updated_at').eq('user_id',OWNER).eq('document_id',DOC).maybeSingle();if(r.error)throw r.error;if(!r.data)throw Error('Documento no encontrado');return r.data}
 async function start(){
  try{enable(false);const verified=await client.auth.getUser();if(verified.error||!verified.data.user){if(editRequested){form.hidden=false;report('Ingresá con tu cuenta de Kairos para editar y guardar en Supabase.')}return}if(verified.data.user.id!==OWNER){form.hidden=false;report('Esta cuenta no es la propietaria del documento.');return}
