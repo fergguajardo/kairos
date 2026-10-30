@@ -898,12 +898,13 @@ dialog.redes-editor :is(h2,label,input,button){font-family:'Outfit',sans-serif!i
 #kairos-app .nav{
  position:fixed;left:50%;right:auto;bottom:24px;
  transform:translateX(-50%);width:max-content;max-width:calc(100vw - 16px);
- height:66px;padding:7px 10px;gap:6px;justify-content:center;
+ height:60px;padding:7px 10px;gap:6px;justify-content:center;align-items:center;
  border:1px solid #B98A35;border-radius:999px;
  background:linear-gradient(180deg,#080808,#0B0A08);
  box-shadow:0 8px 30px #0008;overflow-x:auto;
  transition:transform .22s ease,opacity .22s ease,visibility .22s;
 }
+#kairos-app .nav button{height:44px}
 #kairos-app .nav.nav-scroll-hidden{
  transform:translate(-50%,calc(100% + 40px + env(safe-area-inset-bottom,0px)));
  opacity:0;visibility:hidden;pointer-events:none;
