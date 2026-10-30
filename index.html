@@ -894,19 +894,25 @@ dialog.redes-editor :is(h2,label,input,button){font-family:'Outfit',sans-serif!i
 .proposal-zero[aria-pressed=true]{border-color:var(--gold);color:var(--gold);background:#e5b95c10}
 </style><style>.popup.menu.card-icon-menu{display:flex;gap:4px;width:max-content;padding:6px}.popup.menu.card-icon-menu button{display:flex;align-items:center;justify-content:center;width:44px;height:44px;padding:10px}.popup.menu.card-icon-menu .browser-icon{margin:0}</style>
 <style id="fixed-bottom-navigation">
-/* Barra inferior acoplada al borde de la ventana. */
+/* Panel redondeado, fijo a la ventana y sensible a la dirección de desplazamiento. */
 #kairos-app .nav{
-  position:fixed;left:0;right:0;bottom:0;transform:none;
-  width:100%;max-width:none;
-  height:calc(66px + env(safe-area-inset-bottom,0px));
-  padding-bottom:calc(7px + env(safe-area-inset-bottom,0px));
-  justify-content:center;border-radius:0;border-width:1px 0 0;
-  box-shadow:none;overflow-x:auto;
+ position:fixed;left:50%;right:auto;bottom:24px;
+ transform:translateX(-50%);width:max-content;max-width:calc(100vw - 16px);
+ height:66px;padding:7px 10px;gap:6px;justify-content:center;
+ border:1px solid #B98A35;border-radius:999px;
+ background:linear-gradient(180deg,#080808,#0B0A08);
+ box-shadow:0 8px 30px #0008;overflow-x:auto;
+ transition:transform .22s ease,opacity .22s ease,visibility .22s;
 }
-body{padding-bottom:calc(90px + env(safe-area-inset-bottom,0px))}
-@media(max-width:600px){
-  #kairos-app .nav{padding-bottom:calc(6px + env(safe-area-inset-bottom,0px))}
+#kairos-app .nav.nav-scroll-hidden{
+ transform:translate(-50%,calc(100% + 40px + env(safe-area-inset-bottom,0px)));
+ opacity:0;visibility:hidden;pointer-events:none;
 }
+body{padding-bottom:calc(110px + env(safe-area-inset-bottom,0px))}
+@media(max-width:600px){#kairos-app .nav{
+ bottom:max(10px,env(safe-area-inset-bottom));padding:6px 5px;gap:4px;
+}}
+@media(prefers-reduced-motion:reduce){#kairos-app .nav{transition:none}}
 </style>
 
 <style id="matrix-thumbnail-controls">
@@ -1267,12 +1273,12 @@ for(const id of ['editor','confirm'])$(id).addEventListener('click',e=>{const r=
 document.addEventListener('click',e=>{if(popup&&!popup.contains(e.target)&&!e.target.closest('.dots,.checkbtn'))closePopup()});document.addEventListener('keydown',e=>{if(e.key==='Escape')closePopup()});window.addEventListener('resize',closePopup);document.addEventListener('scroll',e=>{if(popup&&!popup.contains(e.target))closePopup()},true);
 /* Storage updates */window.addEventListener('storage',e=>{if(window.KairosCloud){if(e.key===KEY||e.key===BOARDS_KEY||e.key===REDES_KEY)window.KairosCloud.lock('Tus datos cambiaron en otra pestaña. Recargá para continuar con la versión actual.');return;}if(e.key===KEY&&e.newValue&&!$('editor').open){try{data=normalize(JSON.parse(e.newValue));closePopup();render()}catch{}}});
 const BOARDS_KEY=KEY+'-boards';
-let boards=[{id:uid(),name:'Procesos',data}],boardId=boards[0].id,currentPage=(()=>{try{const page=sessionStorage.getItem(KEY+'-page');return ['board','priority','balance','impact','redes','mail','consulting'].includes(page)?page:'board'}catch{return 'board'}})();
+let boards=[{id:uid(),name:'Procesos',data}],boardId=boards[0].id,currentPage=(()=>{try{const page=sessionStorage.getItem(KEY+'-page');return ['board','balance','impact','redes','mail','consulting'].includes(page)?page:'board'}catch{return 'board'}})();
 try{const raw=JSON.parse(localStorage.getItem(BOARDS_KEY)||'null');if(raw&&Array.isArray(raw.boards)&&raw.boards.length){boards=raw.boards.map(b=>({id:String(b.id),name:String(b.name),priorityOf:typeof b.priorityOf==='string'?b.priorityOf:undefined,pinned:!!b.pinned,lastOpened:Number(b.lastOpened)||0,background:typeof b.background==='string'&&/^data:image\/(jpeg|png|webp);base64,/.test(b.background)?b.background:'',data:normalize(b.data)}));boardId=boards.some(b=>b.id===raw.active)?raw.active:boards[0].id;data=boards.find(b=>b.id===boardId).data}}catch{toast('No se pudieron recuperar los tableros. Importá tu respaldo.')}
 function bullet(t){return '• '+String(t).replace(/^[•·]\s*/, '')}
 
 function kpis(cards){const total=cards.length,completed=cards.filter(c=>c.state===3).length,inProgress=cards.filter(c=>c.state===1).length;return {total,completed,inProgress,efficacy:total?completed/total:null,efficiency:total?inProgress/total:null}}
-function switchPage(name){if(name==='eisenhower')name='board';if(name==='calendar')name='board';closePopup();const budget=name==='balance',target=boards.find(b=>budget?!!b.data.balance:!b.data.balance);if(name!=='consulting'&&target&&!!data.balance!==budget){boards.find(b=>b.id===boardId).data=data;boardId=target.id;data=target.data;localStorage.setItem(BOARDS_KEY,JSON.stringify({active:boardId,boards}))}currentPage=name;try{sessionStorage.setItem(KEY+'-page',name)}catch{}render()}
+function switchPage(name){if(name==='priority')name='board';if(name==='eisenhower')name='board';if(name==='calendar')name='board';closePopup();const budget=name==='balance',target=boards.find(b=>budget?!!b.data.balance:!b.data.balance);if(name!=='consulting'&&target&&!!data.balance!==budget){boards.find(b=>b.id===boardId).data=data;boardId=target.id;data=target.data;localStorage.setItem(BOARDS_KEY,JSON.stringify({active:boardId,boards}))}currentPage=name;try{sessionStorage.setItem(KEY+'-page',name)}catch{}render()}
 function workspaceHeading(){return '• '+({board:'Tablero · Kanban',priority:'Tablero · Prioridad',eisenhower:'Tablero · Eisenhower',impact:'Tablero · Matriz',calendar:'Tablero',mail:'Apps',balance:'Tablero · Balance',consulting:'Consultoría',redes:'Tablero · Redes'}[currentPage]||'Tareas')}
 const AGENDA_SECTION_ICONS={"balance":"<path d=\"M2 2a10.3 10.3 0 0 1 0 20M22 2a10.3 10.3 0 0 0 0 20\"/>","mail":"<rect x=\"3\" y=\"3\" width=\"7\" height=\"7\" rx=\"1.4\"/><rect x=\"14\" y=\"3\" width=\"7\" height=\"7\" rx=\"1.4\"/><rect x=\"3\" y=\"14\" width=\"7\" height=\"7\" rx=\"1.4\"/><rect x=\"14\" y=\"14\" width=\"7\" height=\"7\" rx=\"1.4\"/>","board":"<path d=\"m3 6 8-4a2 2 0 0 1 2 0l8 4a1.5 1.5 0 0 1 0 2.5l-8 4a2 2 0 0 1-2 0l-8-4A1.5 1.5 0 0 1 3 6Z\"/><path d=\"m4 11-1 .5a1.5 1.5 0 0 0 0 2.5l8 4a2 2 0 0 0 2 0l8-4a1.5 1.5 0 0 0 0-2.5L20 11M4 16.5l-1 .5a1.5 1.5 0 0 0 0 2.5l8 4a2 2 0 0 0 2 0l8-4a1.5 1.5 0 0 0 0-2.5l-1-.5\"/>","calendar":"<rect x=\"3\" y=\"4\" width=\"18\" height=\"18\" rx=\"2.5\"/><path d=\"M8 2v5M16 2v5M3 10h18\"/><g class=\"agenda-calendar-dots\"><circle cx=\"8\" cy=\"14\" r=\".75\"/><circle cx=\"12\" cy=\"14\" r=\".75\"/><circle cx=\"16\" cy=\"14\" r=\".75\"/><circle cx=\"8\" cy=\"18\" r=\".75\"/><circle cx=\"12\" cy=\"18\" r=\".75\"/><circle cx=\"16\" cy=\"18\" r=\".75\"/></g>","redes":"<path d=\"M11 6 8 3a4.2 4.2 0 0 0-6 6l13 12a4.2 4.2 0 0 0 6-6L15 9M13 18l3 3a4.2 4.2 0 0 0 6-6L9 3a4.2 4.2 0 0 0-6 6l6 6\"/><path d=\"m3 15 12-12a4.2 4.2 0 0 1 6 6L9 21a4.2 4.2 0 0 1-6-6Z\"/>","impact":"<path d=\"M9 2H2v7M15 2h7v7M22 15v7h-7M9 22H2v-7\"/><circle cx=\"12\" cy=\"12\" r=\"2.4\" fill=\"currentColor\" stroke=\"none\"/>"};
 const TASK_SECTION_ICONS={...AGENDA_SECTION_ICONS,
@@ -1280,7 +1286,7 @@ const TASK_SECTION_ICONS={...AGENDA_SECTION_ICONS,
  board:'<path d="M3 21h6v-6h6V9h6"/>',
  redes:'<path d="M2 8c3-5 10-3 11 4M10 12c1 7 8 9 12 4"/>'
 };
-function updateWorkspaceNavigation(){$('project-sections').hidden=currentPage!=='consulting';document.querySelectorAll('[data-page]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.page===currentPage||b.dataset.page==='board'&&['calendar','books','priority','impact','balance','redes'].includes(currentPage))));const tasks=['board','priority','impact','balance','redes'].includes(currentPage),sub=$('task-sections');sub.hidden=!tasks;$('agenda-bar').hidden=!tasks;sub.replaceChildren();if(tasks){const panel=el('div','tablero-panel');sub.append(panel);[['board','Kanban'],['priority','Prioridad'],['balance','Balance'],['impact','Matriz'],['redes','Redes']].forEach(([id,label])=>{const button=el('button','agenda-section-button');const icon=document.createElementNS('http://www.w3.org/2000/svg','svg');icon.setAttribute('class','agenda-section-icon');icon.setAttribute('viewBox','0 0 24 24');icon.setAttribute('aria-hidden','true');icon.innerHTML=TASK_SECTION_ICONS[id]||(id==='eisenhower'?'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M12 3v18M3 12h18"/>':'<path d="M4 20V4M4 20h16M8 16v-4M13 16V8M18 16V5"/>');button.append(icon,el('span','',label));button.setAttribute('aria-pressed',String(currentPage===id));button.onclick=()=>switchPage(id);panel.append(button)});const choices=boards.filter(b=>!b.data.balance&&!b.priorityOf);if(['board','priority','impact'].includes(currentPage)&&choices.length>1){const select=el('select');select.setAttribute('aria-label','Elegir tablero de tareas');choices.forEach(b=>{const option=el('option','',b.name);option.value=b.id;option.selected=b.id===(boards.find(board=>board.id===boardId)?.priorityOf||boardId);select.append(option)});select.onchange=()=>{boardId=select.value;data=boards.find(b=>b.id===boardId).data;save();render()};sub.append(select)}}document.querySelector('.board-tools').hidden=true;const isRedes=currentPage==='redes';['duplicateboard','deleteboard'].forEach((id,i)=>{const label=(i?'Eliminar ':'Duplicar ')+(isRedes?'Redes':'tablero');$(id).title=label;$(id).setAttribute('aria-label',label)});if(!isRedes){$('duplicateboard').disabled=false;$('deleteboard').disabled=false;updateHistoryButtons();}document.querySelector('.footer>span').hidden=!['board','priority'].includes(currentPage)}
+function updateWorkspaceNavigation(){$('project-sections').hidden=currentPage!=='consulting';document.querySelectorAll('[data-page]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.page===currentPage||b.dataset.page==='board'&&['calendar','books','priority','impact','balance','redes'].includes(currentPage))));const tasks=['board','priority','impact','balance','redes'].includes(currentPage),sub=$('task-sections');sub.hidden=!tasks;$('agenda-bar').hidden=!tasks;sub.replaceChildren();if(tasks){const panel=el('div','tablero-panel');sub.append(panel);[['board','Kanban'],['balance','Balance'],['impact','Matriz'],['redes','Redes']].forEach(([id,label])=>{const button=el('button','agenda-section-button');const icon=document.createElementNS('http://www.w3.org/2000/svg','svg');icon.setAttribute('class','agenda-section-icon');icon.setAttribute('viewBox','0 0 24 24');icon.setAttribute('aria-hidden','true');icon.innerHTML=TASK_SECTION_ICONS[id]||(id==='eisenhower'?'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M12 3v18M3 12h18"/>':'<path d="M4 20V4M4 20h16M8 16v-4M13 16V8M18 16V5"/>');button.append(icon,el('span','',label));button.setAttribute('aria-pressed',String(currentPage===id));button.onclick=()=>switchPage(id);panel.append(button)});const choices=boards.filter(b=>!b.data.balance&&!b.priorityOf);if(['board','priority','impact'].includes(currentPage)&&choices.length>1){const select=el('select');select.setAttribute('aria-label','Elegir tablero de tareas');choices.forEach(b=>{const option=el('option','',b.name);option.value=b.id;option.selected=b.id===(boards.find(board=>board.id===boardId)?.priorityOf||boardId);select.append(option)});select.onchange=()=>{boardId=select.value;data=boards.find(b=>b.id===boardId).data;save();render()};sub.append(select)}}document.querySelector('.board-tools').hidden=true;const isRedes=currentPage==='redes';['duplicateboard','deleteboard'].forEach((id,i)=>{const label=(i?'Eliminar ':'Duplicar ')+(isRedes?'Redes':'tablero');$(id).title=label;$(id).setAttribute('aria-label',label)});if(!isRedes){$('duplicateboard').disabled=false;$('deleteboard').disabled=false;updateHistoryButtons();}document.querySelector('.footer>span').hidden=!['board','priority'].includes(currentPage)}
 document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>switchPage(b.dataset.page));
 let boardSearch='',boardFilter='all',boardListView=false,pinnedOnly=false;
 function lineIcon(path){const span=el('span','browser-icon');span.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true">'+path+'</svg>';return span}
@@ -1714,7 +1720,26 @@ updateHistoryButtons();render();
 try{if(sessionStorage.getItem(KEY+'-resume-ui')==='1'){$('kairos-app').hidden=false;$('kairos-app').inert=true;}}catch{}
 </script><script>
 document.getElementById('auth-password-toggle').addEventListener('click',function(){const input=document.getElementById('auth-password'),visible=input.type==='password';input.type=visible?'text':'password';this.setAttribute('aria-pressed',String(visible));this.setAttribute('aria-label',visible?'Ocultar contraseña':'Mostrar contraseña')});
-</script><script src="assets/kairos-cloud.js?v=5" defer></script></body></html>
+</script><script src="assets/kairos-cloud.js?v=5" defer></script><script id="directional-bottom-navigation">
+(()=>{
+ const nav=document.querySelector('#kairos-app .nav');if(!nav)return;
+ let previous=Math.max(0,window.scrollY),direction=0,distance=0,frame=0;
+ function show(visible){nav.classList.toggle('nav-scroll-hidden',!visible);nav.inert=!visible;nav.setAttribute('aria-hidden',String(!visible))}
+ function update(){frame=0;const root=document.scrollingElement||document.documentElement;
+  const y=Math.max(0,Math.min(window.scrollY,Math.max(0,root.scrollHeight-window.innerHeight)));
+  const delta=y-previous;previous=y;if(!delta)return;
+  const next=delta>0?1:-1;if(next!==direction){direction=next;distance=0}distance+=Math.abs(delta);
+  if(distance>=8){show(direction>0);distance=0}
+ }
+ window.addEventListener('scroll',()=>{if(!frame)frame=requestAnimationFrame(update)},{passive:true});
+ window.addEventListener('resize',()=>{previous=Math.max(0,window.scrollY);distance=0;direction=0;show(true)});
+ document.addEventListener('keydown',event=>{if(event.key==='Tab')show(true)});
+ nav.addEventListener('focusin',()=>show(true));
+ nav.addEventListener('click',()=>{previous=Math.max(0,window.scrollY);distance=0;direction=0;show(true)});
+ show(true);
+})();
+</script></body></html>
+
 
 
 
