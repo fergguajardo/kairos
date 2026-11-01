@@ -1260,7 +1260,8 @@ function applyNarrativeArchitecture(main){
   const section=document.createElement('section');section.className='published-story';section.append(range.extractContents());parent.after(section);
  }
  const stories=[...main.querySelectorAll('.published-story')];
- const needsReorder=stories.map(story=>title(story.querySelector('h1'))).join('|')!==order.join('|');
+ const presentOrder=order.filter(name=>stories.some(story=>title(story.querySelector('h1'))===name));
+ const needsReorder=stories.filter(story=>presentOrder.includes(title(story.querySelector('h1')))).map(story=>title(story.querySelector('h1'))).join('|')!==presentOrder.join('|');
  for(const name of order){
   const story=stories.find(s=>title([...s.querySelectorAll('h1')].find(h=>order.includes(title(h))))===name);
   if(!story)continue;
@@ -1418,7 +1419,9 @@ function save(){
  if(documentCloud)documentCloud.changed();
 }
 refreshLayout();
-main.addEventListener('input',()=>{normalizeEmptyChapterLines();refreshLayout();selectionInEditor();save()});
+// Ordinary typing must not rebuild or move the contenteditable subtree.
+main.addEventListener('input',event=>{if(event.isComposing)return;selectionInEditor();save()});
+main.addEventListener('compositionend',()=>{selectionInEditor();save()});
 // Rich clipboard data retains list structure and source formatting.
 function clipboardSequence(event,cut){
  if(main.inert||!event.clipboardData)return;
@@ -2114,10 +2117,12 @@ function followHash(){
  const target=document.getElementById(id),entry=stories.find(entry=>entry.story===target||entry.story.contains(target));
  if(entry){select(entry.group);requestAnimationFrame(()=>target.scrollIntoView({block:'start'}))}
 }
-function organize(){
+function organize(event){
  const items=Array.from(main.querySelectorAll('#indice > .toc > li, #indice > .published-index > li'));
  stories=Array.from(main.querySelectorAll('.published-story'),(story,position)=>{const name=normalize(story.querySelector('h1')?.textContent||story.getAttribute('aria-label')||'');const group=groups.findIndex(([,names])=>names.some(title=>normalize(title)===name));const item=items.find(item=>{const href=item.querySelector('a')?.getAttribute('href');if(!href?.startsWith('#'))return false;const target=document.getElementById(href.slice(1));return target&&(target===story||story.contains(target))});return {story,item,name,group:group<0?3:group,position}});
  stories.sort((a,b)=>a.group-b.group||(a.group===3?a.position-b.position:groups[a.group][1].findIndex(name=>normalize(name)===a.name)-groups[b.group][1].findIndex(name=>normalize(name)===b.name)));
+ const currentOrder=Array.from(main.querySelectorAll('.published-story'));
+ const needsReorder=stories.some((entry,index)=>entry.story!==currentOrder[index]);
  for(const [index,entry] of stories.entries()){
   const heading=entry.story.querySelector('h1'),prefix=(index+1)+'. ';
   if(heading){
@@ -2127,9 +2132,9 @@ function organize(){
    entry.story.setAttribute('aria-label',heading.textContent.trim());
   }
   const number=entry.item?.querySelector('.toc-num');if(number)number.textContent=String(index+1);
-  entry.story.parentElement.append(entry.story);if(entry.item)entry.item.parentElement.append(entry.item)
+  if(needsReorder)entry.story.parentElement.append(entry.story);if(entry.item)entry.item.parentElement.append(entry.item)
  }
- buttons[3].hidden=!stories.some(entry=>entry.group===3);select(selected);followHash();
+ buttons[3].hidden=!stories.some(entry=>entry.group===3);select(selected);if(event?.type!=='kairos:document-refreshed')followHash();
 }
 document.addEventListener('disociados:published',organize);document.addEventListener('kairos:document-refreshed',organize);window.addEventListener('hashchange',followHash);organize();
 })();
