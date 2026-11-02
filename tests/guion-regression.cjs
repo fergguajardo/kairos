@@ -43,15 +43,15 @@ const genre=(page,name)=>page.getByRole('tab',{name,exact:true}).click();
 async function selectAllRoot(page){await page.evaluate(()=>{document.querySelector('main').focus();const r=document.createRange();r.selectNodeContents(document.querySelector('main'));getSelection().removeAllRanges();getSelection().addRange(r)})}
 async function typeAtEnd(page,text='X'){await page.locator('.published-story:not([hidden]) p').last().click();await page.keyboard.press('End');await page.keyboard.type(text);await settled(page)}
 
-test('delete unclassified only; toolbar and keyboard undo/redo preserve the other nine',async()=>{
- const t=await open();const {page}=t;const before=await stories(page);await genre(page,'Sin clasificar');await page.locator('.published-story:not([hidden]) p').first().click();await page.keyboard.press('Control+a');await page.keyboard.press('Backspace');
- assert.equal((await stories(page)).length,9);assert.deepEqual((await stories(page)).map(s=>s.text),before.slice(0,9).map(s=>s.text));
- for(let i=0;i<4;i++){await page.getByRole('button',{name:'Deshacer',exact:true}).click();assert.equal((await stories(page)).length,11);await page.getByRole('button',{name:'Rehacer',exact:true}).click();assert.equal((await stories(page)).length,9)}
- await page.keyboard.press('Control+z');assert.equal((await stories(page)).length,11);await page.keyboard.press('Control+Shift+z');assert.equal((await stories(page)).length,9);await t.close();
+test('delete one genre only; toolbar and keyboard undo/redo preserve other genres',async()=>{
+ const t=await open();const {page}=t;await genre(page,'Drama');const before=await stories(page);const protectedText=before.filter(s=>s.hidden).map(s=>s.text);await page.locator('.published-story:not([hidden]) p').first().click();await page.keyboard.press('Control+a');await page.keyboard.press('Backspace');
+ assert.equal((await stories(page)).length,7);assert.deepEqual((await stories(page)).map(s=>s.text),protectedText);
+ for(let i=0;i<4;i++){await page.getByRole('button',{name:'Deshacer',exact:true}).click();assert.equal((await stories(page)).length,11);await page.getByRole('button',{name:'Rehacer',exact:true}).click();assert.equal((await stories(page)).length,7)}
+ await page.keyboard.press('Control+z');assert.equal((await stories(page)).length,11);await page.keyboard.press('Control+Shift+z');assert.equal((await stories(page)).length,7);await t.close();
 });
 test('cross-genre selection deletion and cut never remove hidden stories',async()=>{
- const t=await open();const {page}=t;await genre(page,'Sin clasificar');const protectedText=(await stories(page)).filter(s=>s.hidden).map(s=>s.text);
- for(const cut of [false,true]){await selectAllRoot(page);await page.evaluate(cut=>document.querySelector('main').dispatchEvent(cut?new ClipboardEvent('cut',{bubbles:true,cancelable:true,clipboardData:new DataTransfer()}):new InputEvent('beforeinput',{bubbles:true,cancelable:true,inputType:'deleteContentForward'})),cut);assert.deepEqual((await stories(page)).map(s=>s.text),protectedText);await page.keyboard.press('Control+z');await genre(page,'Sin clasificar')}
+ const t=await open();const {page}=t;await genre(page,'Drama');const protectedText=(await stories(page)).filter(s=>s.hidden).map(s=>s.text);
+ for(const cut of [false,true]){await selectAllRoot(page);await page.evaluate(cut=>document.querySelector('main').dispatchEvent(cut?new ClipboardEvent('cut',{bubbles:true,cancelable:true,clipboardData:new DataTransfer()}):new InputEvent('beforeinput',{bubbles:true,cancelable:true,inputType:'deleteContentForward'})),cut);assert.deepEqual((await stories(page)).map(s=>s.text),protectedText);await page.keyboard.press('Control+z');await genre(page,'Drama')}
  await t.close();
 });
 test('replacement typing and pasted HTML across hidden genres are blocked',async()=>{
@@ -106,7 +106,7 @@ test('session loss disables editing and signing back in resumes pending changes'
 });
 
 test('a selection extending outside the editor still cannot delete hidden stories',async()=>{
- const t=await open();await genre(t.page,'Sin clasificar');const before=(await stories(t.page)).filter(s=>s.hidden).map(s=>s.text);
+ const t=await open();await genre(t.page,'Drama');const before=(await stories(t.page)).filter(s=>s.hidden).map(s=>s.text);
  await t.page.evaluate(()=>{const main=document.querySelector('main'),r=document.createRange();r.setStartBefore(main.previousElementSibling);r.setEndAfter(main);main.focus();getSelection().removeAllRanges();getSelection().addRange(r);main.dispatchEvent(new InputEvent('beforeinput',{bubbles:true,cancelable:true,inputType:'deleteContentBackward'}))});
  assert.deepEqual((await stories(t.page)).map(s=>s.text),before);await t.close();
 });
@@ -163,3 +163,11 @@ test('create index entries in each genre; keep genre after reload and undo/redo'
  await t.close();
 });
 test('cancel new entry leaves the manuscript unchanged',async()=>{const t=await open();const before=await stories(t.page);await t.page.getByRole('button',{name:'Agregar entrada al índice',exact:true}).click();await t.page.getByLabel('Título de la entrada',{exact:true}).fill('Descartada');await t.page.getByRole('button',{name:'Cancelar',exact:true}).click();assert.deepEqual(await stories(t.page),before);await t.close()});
+
+test('three genre tabs only and icon-only entry control above the index',async()=>{const t=await open();assert.equal(await t.page.getByRole('tab').count(),3);assert.equal(await t.page.getByRole('tab',{name:'Sin clasificar',exact:true}).count(),0);const b=t.page.getByRole('button',{name:'Agregar entrada al índice',exact:true});assert.equal(await b.textContent(),'');assert.equal(await b.getAttribute('title'),null);assert(await b.evaluate(n=>n.parentElement.nextElementSibling.id==='indice'));await t.close()});
+test('new Drama Mandala is number 5 after four Thriller stories and before one comedy',async()=>{
+ const initial=fixture();const section=initial.html.match(/<section class="published-story"[\s\S]*?<\/section>/g);initial.html='<section id="indice"></section>'+section.filter(s=>['BELA','PRINCIPITA','MANDALA','SÁNDALO','ROBERTO'].some(name=>s.includes('. '+name+'</h1>'))).join('');
+ const t=await open(server(initial));await genre(t.page,'Comedia');await t.page.getByRole('button',{name:'Agregar entrada al índice',exact:true}).click();await t.page.getByLabel('Título de la entrada',{exact:true}).fill('Mandala');await t.page.getByLabel('Género de la entrada',{exact:true}).selectOption('Drama');await t.page.getByRole('button',{name:'Agregar',exact:true}).click();assert.equal(await t.page.locator('.published-story:not([hidden]) h1').innerText(),'5. Mandala');assert.equal(await t.page.locator('#indice > .toc > li:not([hidden]) .toc-num').innerText(),'5');await settled(t.page);await t.page.reload();await t.page.waitForFunction(()=>!document.querySelector('main').inert);await genre(t.page,'Drama');assert.equal(await t.page.locator('.published-story:not([hidden]) h1').innerText(),'5. Mandala');await genre(t.page,'Comedia');assert.match(await t.page.locator('.published-story:not([hidden]) h1').innerText(),/^6\. ROBERTO/);await t.close();
+});
+
+test('older entries with duplicate anchors are repaired without losing their text',async()=>{const data=fixture();data.html+='<section class="published-story" id="cuento-1" data-kairos-genre="Drama"><article class="sheet story-start"><div class="page-content" data-layout-version="3"><h1 class="doc-heading" id="cuento-1-encabezado-0">Nueva conservada</h1><p>CONTENIDO_PRESERVADO</p></div></article></section>';const t=await open(server(data));await genre(t.page,'Drama');assert(await t.page.getByText('CONTENIDO_PRESERVADO',{exact:true}).isVisible());const ids=await t.page.locator('.published-story').evaluateAll(nodes=>nodes.map(n=>n.id));assert.equal(new Set(ids).size,ids.length);assert.equal(await t.page.locator('#cuento-1 h1').innerText(),'1. BELA');await t.close()});
