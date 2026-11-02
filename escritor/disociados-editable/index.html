@@ -2041,7 +2041,7 @@ function createDocumentCloud(){
  const login=document.createElement('a');login.href='../../';login.target='_blank';login.rel='noopener noreferrer';login.textContent='Ingresar en KAIROS';login.hidden=true;
  const keep=document.createElement('button');keep.type='button';keep.textContent='Conservar mi edición';keep.hidden=true;
  const remoteButton=document.createElement('button');remoteButton.type='button';remoteButton.textContent='Cargar copia de Supabase';remoteButton.hidden=true;
- const versions=document.createElement('button');versions.type='button';versions.textContent='Versiones guardadas';versions.disabled=true;versions.onclick=showVersions;
+ const versions=document.createElement('button');versions.type='button';versions.title='Versiones guardadas';versions.setAttribute('aria-label','Versiones guardadas');versions.style.cssText='display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;padding:8px;background:transparent;border:1px solid var(--line);border-radius:8px;color:var(--gold)';versions.innerHTML='<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10a9 9 0 1 1 2 8M3 4v6h6M12 7v5l3 2"/></svg>';versions.disabled=true;versions.onclick=showVersions;
  controls.append(login,keep,remoteButton,versions);status.after(controls);
  setEditorInert(true);
  const report=text=>{status.textContent=text};
