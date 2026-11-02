@@ -15,18 +15,11 @@ let browser;
 before(async()=>{browser=await chromium.launch({executablePath:process.env.CHROMIUM_EXECUTABLE||undefined,headless:true,args:['--no-sandbox','--disable-dev-shm-usage','--disable-gpu']})});
 after(async()=>{await browser?.close()});
 function server(initial=fixture()){
- const state={data:structuredClone(initial),stamp:'2026-11-02T12:00:00.000Z',writes:0,offline:false,failHistory:false,revisions:[{id:'revision-0',data:structuredClone(initial),source_updated_at:'2026-11-02T11:59:59.000Z',html_length:initial.html.length}]};
+ const state={data:structuredClone(initial),stamp:'2026-11-02T12:00:00.000Z',writes:0,offline:false};
  state.api=async request=>{
   if(state.offline)return {data:null,error:{message:'Offline'}};
-  if(request.table==='kairos_document_revisions'){
-   if(state.failHistory)return {data:null,error:{message:'History unavailable'}};
-   let rows=state.revisions.filter(row=>!request.eq.id||row.id===request.eq.id);
-   rows=rows.slice().reverse().slice(0,50);
-   return {data:request.single?rows[0]||null:rows.map(row=>request.fields.includes('data')?row:{id:row.id,source_updated_at:row.source_updated_at,html_length:row.html_length})};
-  }
   if(request.mode==='update'||request.mode==='insert'){
    if(request.eq.updated_at&&request.eq.updated_at!==state.stamp)return {data:null};
-   state.revisions.push({id:'revision-'+(state.revisions.length),data:structuredClone(state.data),source_updated_at:state.stamp,html_length:state.data.html.length});
    state.data=structuredClone(request.value.data);state.stamp=request.value.updated_at;state.writes++;return {data:{updated_at:state.stamp}};
   }
   return {data:{data:structuredClone(state.data),updated_at:state.stamp}};
@@ -96,13 +89,8 @@ test('two tabs detect concurrent changes rather than silently overwrite',async()
  const state=server(),a=await open(state),b=await open(state);await a.page.reload();await a.page.waitForFunction(()=>!document.querySelector('main').inert);await settled(a.page);await typeAtEnd(a.page,'FROM_A');await typeAtEnd(b.page,'FROM_B');assert(state.data.html.includes('FROM_A'));assert(!state.data.html.includes('FROM_B'));assert(await b.page.getByRole('button',{name:'Conservar mi edición',exact:true}).isVisible());
  b.page.once('dialog',dialog=>dialog.accept());await b.page.getByRole('button',{name:'Cargar copia de Supabase',exact:true}).click();await settled(b.page);assert((await stories(b.page)).some(s=>s.text.includes('FROM_A')));await a.close();await b.close();
 });
-test('saved versions can be previewed and restored, and restore itself is undoable',async()=>{
- const t=await open();const {page,state}=t;await typeAtEnd(page,'LATEST_EDIT');const latest=structuredClone(state.data);await page.getByRole('button',{name:'Versiones guardadas',exact:true}).click();await page.getByRole('button',{name:'Restaurar esta versión',exact:true}).waitFor({state:'visible'});await page.waitForFunction(()=>!document.querySelector('.document-versions button').disabled);
- page.once('dialog',dialog=>dialog.accept());await page.getByRole('button',{name:'Restaurar esta versión',exact:true}).click();await page.locator('.document-versions').waitFor({state:'detached'});assert(!state.data.html.includes('LATEST_EDIT'));assert(state.revisions.some(r=>r.data.html===latest.html));await page.getByRole('button',{name:'Deshacer',exact:true}).click();await settled(page);assert(state.data.html.includes('LATEST_EDIT'));await t.close();
-});
-test('failed history request leaves current text unchanged',async()=>{
- const t=await open();const before=await stories(t.page);t.state.failHistory=true;await t.page.getByRole('button',{name:'Versiones guardadas',exact:true}).click();assert(await t.page.getByText('No se pudieron cargar las versiones guardadas.',{exact:false}).isVisible());assert.deepEqual(await stories(t.page),before);await t.close();
-});
+
+
 test('reload loads confirmed text, never a stale empty undo baseline',async()=>{
  const t=await open();await typeAtEnd(t.page,'RELOAD_TEXT');await t.page.reload();await t.page.waitForFunction(()=>!document.querySelector('main').inert);assert((await stories(t.page)).some(s=>s.text.includes('RELOAD_TEXT')));assert(await t.page.getByRole('button',{name:'Deshacer',exact:true}).isDisabled());await t.close();
 });
@@ -110,10 +98,10 @@ test('reload loads confirmed text, never a stale empty undo baseline',async()=>{
 test('edits entered during an in-flight save are saved afterwards',async()=>{
  const state=server(),baseApi=state.api;state.api=async request=>{if(request.mode==='update')await new Promise(r=>setTimeout(r,90));return baseApi(request)};
  const t=await open(state);await t.page.locator('.published-story:not([hidden]) p').last().click();await t.page.keyboard.press('End');await t.page.keyboard.type('FIRST');await t.page.waitForFunction(()=>document.querySelector('#status').textContent.startsWith('Guardando'));
- await t.page.keyboard.type('SECOND');await settled(t.page);await t.page.waitForTimeout(350);assert(state.data.html.includes('FIRSTSECOND'));assert(state.revisions.length>1);await t.close();
+ await t.page.keyboard.type('SECOND');await settled(t.page);await t.page.waitForTimeout(350);assert(state.data.html.includes('FIRSTSECOND'));await t.close();
 });
 test('session loss disables editing and signing back in resumes pending changes',async()=>{
- const t=await open();await t.page.locator('.published-story:not([hidden]) p').last().click();await t.page.keyboard.press('End');await t.page.keyboard.type('SESSION_PENDING');await t.page.evaluate(()=>window.__authCallback('SIGNED_OUT'));assert(await t.page.locator('main').evaluate(m=>m.inert));assert(await t.page.getByRole('button',{name:'Versiones guardadas',exact:true}).isDisabled());
+ const t=await open();await t.page.locator('.published-story:not([hidden]) p').last().click();await t.page.keyboard.press('End');await t.page.keyboard.type('SESSION_PENDING');await t.page.evaluate(()=>window.__authCallback('SIGNED_OUT'));assert(await t.page.locator('main').evaluate(m=>m.inert));
  await t.page.evaluate(()=>window.__authCallback('SIGNED_IN'));await t.page.waitForFunction(()=>!document.querySelector('main').inert);await settled(t.page);assert(t.state.data.html.includes('SESSION_PENDING'));await t.close();
 });
 
@@ -121,4 +109,8 @@ test('a selection extending outside the editor still cannot delete hidden storie
  const t=await open();await genre(t.page,'Sin clasificar');const before=(await stories(t.page)).filter(s=>s.hidden).map(s=>s.text);
  await t.page.evaluate(()=>{const main=document.querySelector('main'),r=document.createRange();r.setStartBefore(main.previousElementSibling);r.setEndAfter(main);main.focus();getSelection().removeAllRanges();getSelection().addRange(r);main.dispatchEvent(new InputEvent('beforeinput',{bubbles:true,cancelable:true,inputType:'deleteContentBackward'}))});
  assert.deepEqual((await stories(t.page)).map(s=>s.text),before);await t.close();
+});
+
+test('no recovery controls or recovery-table requests remain',async()=>{
+ const state=server(),original=state.api;state.api=request=>{assert.equal(request.table,'kairos_documents');return original(request)};const t=await open(state);assert.equal(await t.page.getByRole('button',{name:'Versiones guardadas',exact:true}).count(),0);await typeAtEnd(t.page,'AUTOSAVE_ONLY');assert(state.data.html.includes('AUTOSAVE_ONLY'));await t.close();
 });
