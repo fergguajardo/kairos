@@ -149,3 +149,17 @@ test('small plus adds golden regular 13pt acts without a tooltip; undo and redo 
  const heading=page.getByRole('heading',{name:'Acto 2',exact:true});assert.deepEqual(await heading.evaluate(n=>{const s=getComputedStyle(n);return [s.fontSize,s.fontWeight,s.fontStyle,s.color]}),['17.3333px','300','normal','rgb(229, 185, 92)']);
  await page.getByRole('button',{name:'Deshacer',exact:true}).click();assert.equal(await heading.count(),0);await page.getByRole('button',{name:'Rehacer',exact:true}).click();assert.equal(await heading.count(),1);await settled(page);await page.reload();await page.waitForFunction(()=>!document.querySelector('main').inert);assert.equal(await heading.count(),1);assert.equal(await heading.evaluate(n=>getComputedStyle(n).fontWeight),'300');await t.close();
 });
+
+test('plus ornament has short symmetric lines and no circle',async()=>{const t=await open();const b=t.page.getByRole('button',{name:'Agregar acto 2 a BELA',exact:true});assert.deepEqual(await b.evaluate(n=>[getComputedStyle(n).borderTopWidth,getComputedStyle(n,'::before').width,getComputedStyle(n,'::after').width]),['0px','22px','22px']);await t.close()});
+test('create index entries in each genre; keep genre after reload and undo/redo',async()=>{
+ const t=await open();const {page,state}=t;
+ for(const name of ['Thriller','Drama','Comedia']){
+  await page.getByRole('button',{name:'Agregar entrada al índice',exact:true}).click();await page.getByLabel('Título de la entrada',{exact:true}).fill('Nueva '+name);await page.getByLabel('Género de la entrada',{exact:true}).selectOption(name);await page.getByRole('button',{name:'Agregar',exact:true}).click();
+  assert(await page.locator('#indice .toc-title').filter({hasText:'Nueva '+name}).isVisible());assert.equal(await page.locator('.published-story:not([hidden])').filter({hasText:'Nueva '+name}).getAttribute('data-kairos-genre'),name);
+  await page.getByRole('button',{name:'Deshacer',exact:true}).click();assert.equal(await page.locator('#indice .toc-title').filter({hasText:'Nueva '+name}).count(),0);await page.getByRole('button',{name:'Rehacer',exact:true}).click();await settled(page);assert(state.data.html.includes('data-kairos-genre="'+name+'"'));
+ }
+ await page.reload();await page.waitForFunction(()=>!document.querySelector('main').inert);
+ for(const name of ['Thriller','Drama','Comedia']){await genre(page,name);assert(await page.locator('#indice .toc-title').filter({hasText:'Nueva '+name}).isVisible());}
+ await t.close();
+});
+test('cancel new entry leaves the manuscript unchanged',async()=>{const t=await open();const before=await stories(t.page);await t.page.getByRole('button',{name:'Agregar entrada al índice',exact:true}).click();await t.page.getByLabel('Título de la entrada',{exact:true}).fill('Descartada');await t.page.getByRole('button',{name:'Cancelar',exact:true}).click();assert.deepEqual(await stories(t.page),before);await t.close()});
