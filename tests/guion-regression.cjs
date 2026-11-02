@@ -131,3 +131,15 @@ test('external rich paste strips active content and unsafe link schemes',async()
  const t=await open();await t.page.locator('.published-story:not([hidden]) p').last().click();await t.page.keyboard.press('End');await t.page.evaluate(()=>{const d=new DataTransfer();d.setData('text/html','<script>window.__unsafe=true</script><p onclick="window.__unsafe=true"><b>SAFE_BOLD</b><a href="javascript:alert(1)">SAFE_LINK</a></p>');document.querySelector('main').dispatchEvent(new ClipboardEvent('paste',{bubbles:true,cancelable:true,clipboardData:d}))});assert.equal(await t.page.evaluate(()=>!!window.__unsafe),false);assert.equal(await t.page.locator('main [onclick],main a[href^="javascript:"]').count(),0);assert.equal(await t.page.getByText('SAFE_BOLD',{exact:true}).evaluate(n=>getComputedStyle(n).fontWeight),'700');await t.close();
 });
 test('plain-text paste still accepts multiline text',async()=>{const t=await open();await t.page.locator('.published-story:not([hidden]) p').last().click();await t.page.keyboard.press('End');await t.page.evaluate(()=>{const d=new DataTransfer();d.setData('text/plain','PLAIN_ONE\nPLAIN_TWO');document.querySelector('main').dispatchEvent(new ClipboardEvent('paste',{bubbles:true,cancelable:true,clipboardData:d}))});assert(await t.page.getByText('PLAIN_ONE',{exact:true}).isVisible());assert(await t.page.getByText('PLAIN_TWO',{exact:true}).isVisible());await t.close()});
+
+test('undo/redo traverses rich paste and subsequent typing in order without losing formatting',async()=>{
+ const t=await open();const {page}=t;await page.locator('.published-story:not([hidden]) p').last().click();await page.keyboard.press('End');
+ await page.evaluate(()=>{const d=new DataTransfer();d.setData('text/html','<span style="font-size:22px;font-weight:600;color:rgb(170, 90, 30)">PASTE_HISTORY</span>');document.querySelector('main').dispatchEvent(new ClipboardEvent('paste',{bubbles:true,cancelable:true,clipboardData:d}))});
+ const pasted=await stories(page);await page.keyboard.type('Z');const edited=await stories(page);assert.notDeepEqual(edited,pasted);
+ await page.getByRole('button',{name:'Deshacer',exact:true}).click();assert.deepEqual(await stories(page),pasted);
+ await page.keyboard.press('Control+z');assert.equal(await page.getByText('PASTE_HISTORY',{exact:true}).count(),0);
+ await page.getByRole('button',{name:'Rehacer',exact:true}).click();assert.deepEqual(await stories(page),pasted);
+ assert.deepEqual(await page.getByText('PASTE_HISTORY',{exact:true}).evaluate(n=>{const s=getComputedStyle(n);return [s.fontSize,s.fontWeight,s.color]}),['22px','600','rgb(170, 90, 30)']);
+ await page.keyboard.press('Control+Shift+z');assert.deepEqual(await stories(page),edited);
+ await page.keyboard.press('Control+z');await typeAtEnd(page,'Q');assert(await page.getByRole('button',{name:'Rehacer',exact:true}).isDisabled());await t.close();
+});
