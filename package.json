@@ -1,0 +1,6 @@
+{
+  "name": "kairos-regression-checks",
+  "private": true,
+  "scripts": {"test": "node --test tests/guion-regression.cjs"},
+  "devDependencies": {"playwright": "1.62.1"}
+}
