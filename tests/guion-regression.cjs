@@ -143,3 +143,9 @@ test('undo/redo traverses rich paste and subsequent typing in order without losi
  await page.keyboard.press('Control+Shift+z');assert.deepEqual(await stories(page),edited);
  await page.keyboard.press('Control+z');await typeAtEnd(page,'Q');assert(await page.getByRole('button',{name:'Rehacer',exact:true}).isDisabled());await t.close();
 });
+
+test('small plus adds golden regular 13pt acts without a tooltip; undo and redo work',async()=>{
+ const t=await open();const {page}=t;const button=page.getByRole('button',{name:'Agregar acto 2 a BELA',exact:true});assert.equal(await button.getAttribute('title'),null);assert.equal(await button.evaluate(n=>getComputedStyle(n).width),'30px');await button.click();
+ const heading=page.getByRole('heading',{name:'Acto 2',exact:true});assert.deepEqual(await heading.evaluate(n=>{const s=getComputedStyle(n);return [s.fontSize,s.fontWeight,s.fontStyle,s.color]}),['17.3333px','300','normal','rgb(229, 185, 92)']);
+ await page.getByRole('button',{name:'Deshacer',exact:true}).click();assert.equal(await heading.count(),0);await page.getByRole('button',{name:'Rehacer',exact:true}).click();assert.equal(await heading.count(),1);await settled(page);await page.reload();await page.waitForFunction(()=>!document.querySelector('main').inert);assert.equal(await heading.count(),1);assert.equal(await heading.evaluate(n=>getComputedStyle(n).fontWeight),'300');await t.close();
+});
