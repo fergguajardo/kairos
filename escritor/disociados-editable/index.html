@@ -1371,7 +1371,7 @@ function current(){
  if(publicationMode==='creation'&&publicationSnapshot)return {...draft,...publicationSnapshot,publicationMode,creationDraft:draft};
  return {...draft,publicationMode,creationDraft:null};
 }
-function sanitize(value){const template=document.createElement('template');template.innerHTML=value;const allowed=new Set(['SECTION','HR','BLOCKQUOTE','ARTICLE','DIV','SPAN','P','BR','STRONG','B','EM','I','U','A','UL','OL','LI','H1','H2','H3','H4','H5','H6','IMG']);for(const node of Array.from(template.content.querySelectorAll('*'))){if(!allowed.has(node.tagName)){if(['SCRIPT','STYLE','IFRAME','OBJECT','EMBED','IMG','LINK','META'].includes(node.tagName))node.remove();else node.replaceWith(...node.childNodes);continue}for(const attribute of Array.from(node.attributes)){if(attribute.name==='src'&&node.tagName==='IMG'){if(!/^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(attribute.value))node.removeAttribute('src')}else if(attribute.name==='alt'&&node.tagName==='IMG'){}else if(attribute.name==='href'&&node.tagName==='A'){if(!/^(?:https?:\/\/|#[A-Za-z][\w-]*)/i.test(attribute.value))node.removeAttribute('href')}else if(attribute.name==='style'){const safe=Array.from(node.style).filter(k=>['font-family','font-size','font-weight','font-style','color','margin-top','margin-left','margin-right','padding-left','line-height','list-style-type','text-decoration','width','padding-right','padding-top','padding-bottom','margin-bottom','text-align','text-indent','max-width','height','display','border','border-top','border-left','border-right','border-left-width','border-left-style','border-left-color','border-right-width','border-right-style','border-right-color'].includes(k)).map(k=>k+':'+node.style.getPropertyValue(k)).join(';');node.setAttribute('style',safe)}else if(attribute.name==='data-bela-chapter'&&/^[1-9]\d*$/.test(attribute.value)){}else if(attribute.name==='aria-label'){}else if(attribute.name==='class'&&/^(?:principita-gold-aside|sedante-gold-aside|sheet story-start bela-added-chapter|sheet bela-added-chapter|published-story|toc|toc-num|toc-title|toc-chapters|indice-title|back-to-index|tda-flashback-separator)$/.test(attribute.value)){}else if(attribute.name==='class'&&/^((?:voz|capitulo|flashback-muted|flashback-boundary-start|flashback-boundary-end|passage-start|passage-end|passage-top-gap|aside-start|aside-end)(?: (?:voz|capitulo|flashback-muted|flashback-boundary-start|flashback-boundary-end|passage-start|passage-end|passage-top-gap|aside-start|aside-end))*|doc-image|doc-block|doc-line|doc-heading|doc-marker|marker-gap|clipboard-block|page-break|page-content|sheet(?: (?:empty-section|story-start|chapter-start))*)$/.test(attribute.value)){}else if(node.tagName==='OL'&&attribute.name==='start'&&/^\d+$/.test(attribute.value)){}else if(node.tagName==='LI'&&attribute.name==='value'&&/^\d+$/.test(attribute.value)){}else if(attribute.name==='data-kairos-clipboard'&&['blocks','inline'].includes(attribute.value)){}else if(attribute.name==='data-marker-removed'&&attribute.value==='true'){}else if(attribute.name==='data-layout-version'&&attribute.value==='3'){}else if(attribute.name==='id'&&(pageIds.includes(attribute.value)||/^(?:indice|cuento-\d+(?:-encabezado-\d+)?|doc-heading-\d+)$/.test(attribute.value))){}else node.removeAttribute(attribute.name)}if(node.tagName==='A'){node.target='_blank';node.rel='noopener noreferrer'}}return template.innerHTML}
+function sanitize(value){const template=document.createElement('template');template.innerHTML=value;const allowed=new Set(['SECTION','HR','BLOCKQUOTE','ARTICLE','DIV','SPAN','P','BR','STRONG','B','EM','I','U','A','UL','OL','LI','H1','H2','H3','H4','H5','H6','IMG']);for(const node of Array.from(template.content.querySelectorAll('*'))){if(!allowed.has(node.tagName)){if(['SCRIPT','STYLE','IFRAME','OBJECT','EMBED','IMG','LINK','META'].includes(node.tagName))node.remove();else node.replaceWith(...node.childNodes);continue}for(const attribute of Array.from(node.attributes)){if(attribute.name==='src'&&node.tagName==='IMG'){if(!/^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(attribute.value))node.removeAttribute('src')}else if(attribute.name==='alt'&&node.tagName==='IMG'){}else if(attribute.name==='href'&&node.tagName==='A'){if(!/^(?:https?:\/\/|#[A-Za-z][\w-]*)/i.test(attribute.value))node.removeAttribute('href')}else if(attribute.name==='style'){const safe=Array.from(node.style).filter(k=>['font-family','font-size','font-weight','font-style','color','margin-top','margin-left','margin-right','padding-left','line-height','list-style-type','text-decoration','width','padding-right','padding-top','padding-bottom','margin-bottom','text-align','text-indent','max-width','height','display','border','border-top','border-left','border-right','border-left-width','border-left-style','border-left-color','border-right-width','border-right-style','border-right-color'].includes(k)).map(k=>k+':'+node.style.getPropertyValue(k)+(node.style.getPropertyPriority(k)?' !important':'')).join(';');node.setAttribute('style',safe)}else if(attribute.name==='data-bela-chapter'&&/^[1-9]\d*$/.test(attribute.value)){}else if(attribute.name==='aria-label'){}else if(attribute.name==='class'&&/^(?:principita-gold-aside|sedante-gold-aside|sheet story-start bela-added-chapter|sheet bela-added-chapter|published-story|toc|toc-num|toc-title|toc-chapters|indice-title|back-to-index|tda-flashback-separator)$/.test(attribute.value)){}else if(attribute.name==='class'&&/^((?:voz|capitulo|flashback-muted|flashback-boundary-start|flashback-boundary-end|passage-start|passage-end|passage-top-gap|aside-start|aside-end)(?: (?:voz|capitulo|flashback-muted|flashback-boundary-start|flashback-boundary-end|passage-start|passage-end|passage-top-gap|aside-start|aside-end))*|doc-image|doc-block|doc-line|doc-heading|doc-marker|marker-gap|clipboard-block|page-break|page-content|sheet(?: (?:empty-section|story-start|chapter-start))*)$/.test(attribute.value)){}else if(node.tagName==='OL'&&attribute.name==='start'&&/^\d+$/.test(attribute.value)){}else if(node.tagName==='LI'&&attribute.name==='value'&&/^\d+$/.test(attribute.value)){}else if(attribute.name==='data-kairos-clipboard'&&['blocks','inline'].includes(attribute.value)){}else if(attribute.name==='data-marker-removed'&&attribute.value==='true'){}else if(attribute.name==='data-layout-version'&&attribute.value==='3'){}else if(attribute.name==='id'&&(pageIds.includes(attribute.value)||/^(?:indice|cuento-\d+(?:-encabezado-\d+)?|doc-heading-\d+)$/.test(attribute.value))){}else node.removeAttribute(attribute.name)}if(node.tagName==='A'){node.target='_blank';node.rel='noopener noreferrer'}}return template.innerHTML}
 function validate(data){
  if(data?.format!==FORMAT)throw Error('El archivo no es un respaldo de este documento.');
  if(data.version===2&&typeof data.html==='string'&&data.html.length<=10000000)return sanitize(data.html);
@@ -1425,6 +1425,15 @@ refreshLayout();
 main.addEventListener('input',event=>{if(event.isComposing)return;selectionInEditor();save()});
 main.addEventListener('compositionend',()=>{selectionInEditor();save()});
 // Rich clipboard data retains list structure and source formatting.
+function styledClipboardFragment(range){
+ const fragment=range.cloneContents(),root=range.commonAncestorContainer;
+ const originals=[];
+ const collect=node=>{if(!range.intersectsNode(node))return;const start=node===range.startContainer?range.startOffset:0,end=node===range.endContainer?range.endOffset:node.length;if(end>start)originals.push({node,text:node.data.slice(start,end)})};
+ if(root.nodeType===Node.TEXT_NODE)collect(root);else{const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);while(walker.nextNode())collect(walker.currentNode)}
+ const copies=[],walker=document.createTreeWalker(fragment,NodeFilter.SHOW_TEXT);while(walker.nextNode())if(walker.currentNode.length)copies.push(walker.currentNode);
+ if(copies.length===originals.length&&copies.every((node,i)=>node.data===originals[i].text))copies.forEach((node,i)=>{const span=document.createElement('span'),style=getComputedStyle(originals[i].node.parentElement);for(const name of ['font-family','font-size','font-weight','font-style','color','text-decoration'])span.style.setProperty(name,style.getPropertyValue(name),'important');node.replaceWith(span);span.append(node)});
+ return fragment;
+}
 function clipboardSequence(event,cut){
  if(main.inert||!event.clipboardData)return;
  const selection=window.getSelection(),container=document.createElement('div');
@@ -1450,7 +1459,7 @@ function clipboardSequence(event,cut){
    const fragment=prefix.cloneContents();fragment.querySelectorAll('.doc-marker,.marker-gap').forEach(node=>node.remove());
    if(!fragment.textContent.replace(/[\s\u200b]/g,''))range.setStartBefore(marker);
   }
-  const fragment=range.cloneContents();
+  const fragment=styledClipboardFragment(range);
   const list=element.closest('ol,ul');
   if(cut&&crossesItems&&list&&item?.tagName==='LI'){
    const endElement=range.endContainer.nodeType===1?range.endContainer:range.endContainer.parentElement;
@@ -1497,9 +1506,27 @@ function clipboardSequence(event,cut){
 }
 document.addEventListener('copy',event=>clipboardSequence(event,false));
 document.addEventListener('cut',event=>clipboardSequence(event,true));
-// Pasted text always uses the document's body model, never the source app's CSS.
+// Prefer sanitized rich text; plain clipboard data uses the document body style.
 const bodyTextStyle='font-family:Outfit,sans-serif;font-size:16.5px;font-weight:300;font-style:normal;color:#F3F0EA;line-height:1.5';
 const bodyParagraphStyle=bodyTextStyle+';margin-top:0;margin-bottom:0;margin-left:0;margin-right:0;padding-top:0;padding-bottom:0;padding-left:0;padding-right:0;text-indent:0;text-align:start';
+function insertRichClipboard(html,selection){
+ recordDocumentHistory();
+ const range=selection.getRangeAt(0),element=range.startContainer.nodeType===1?range.startContainer:range.startContainer.parentElement;
+ const block=element.closest('p,h1,h2,h3,h4,h5,h6');
+ const sameBlock=block&&block.contains(range.endContainer);
+ const template=document.createElement('template');template.innerHTML=html;const fragment=template.content;
+ const hasBlocks=!!fragment.querySelector('p,div,ul,ol,blockquote,h1,h2,h3,h4,h5,h6');
+ range.deleteContents();range.collapse(true);
+ let last=fragment.lastChild;
+ if(hasBlocks&&sameBlock){
+  const tailRange=document.createRange();tailRange.selectNodeContents(block);tailRange.setStart(range.startContainer,range.startOffset);
+  const tail=block.cloneNode(false);tail.removeAttribute('id');tail.append(tailRange.extractContents());
+  block.after(fragment);if(tail.textContent||tail.querySelector('img,br'))last.after(tail);
+  if(!block.textContent&&!block.querySelector('img')&&block.tagName==='P')block.remove();
+ }else range.insertNode(fragment);
+ if(last){range.setStartAfter(last);range.collapse(true);selection.removeAllRanges();selection.addRange(range)}
+ refreshLayout();selectionInEditor();save();
+}
 function clipboardPlainText(data){
  const plain=data.getData('text/plain');if(plain)return plain;
  const template=document.createElement('template');template.innerHTML=data.getData('text/html');
@@ -1512,6 +1539,16 @@ main.addEventListener('paste',event=>{
  if(main.inert||!event.clipboardData)return;
  const selection=window.getSelection();if(!selection.rangeCount||!main.contains(selection.anchorNode)||!main.contains(selection.focusNode))return;
  event.preventDefault();selectBullets(false);
+ const rich=event.clipboardData.getData('text/html');
+ if(rich){
+  const template=document.createElement('template');template.innerHTML=sanitize(rich);
+  template.content.querySelectorAll('[id]').forEach(node=>node.removeAttribute('id'));
+  template.content.querySelectorAll('.published-story').forEach(node=>node.classList.remove('published-story'));
+  template.content.querySelectorAll('[data-editor-only],.chapter-add-control').forEach(node=>node.remove());
+  for(const node of template.content.querySelectorAll('b,strong,i,em,u')){if(node.matches('b,strong')&&!node.style.fontWeight)node.style.setProperty('font-weight','700','important');if(node.matches('i,em')&&!node.style.fontStyle)node.style.setProperty('font-style','italic','important');if(node.matches('u'))node.style.setProperty('text-decoration','underline','important')}
+  for(const node of template.content.querySelectorAll('[style]'))for(const name of ['font-family','font-size','font-weight','font-style','color','text-decoration']){const value=node.style.getPropertyValue(name);if(value)node.style.setProperty(name,value,'important')}
+  if(template.content.textContent.trim()||template.content.querySelector('img')){insertRichClipboard(template.innerHTML,selection);return}
+ }
  const text=clipboardPlainText(event.clipboardData).replace(/\r\n?/g,'\n');if(!text)return;
  const escape=text=>{const node=document.createElement('span');node.textContent=text;return node.innerHTML};
  const element=selection.anchorNode.nodeType===1?selection.anchorNode:selection.anchorNode.parentElement;
