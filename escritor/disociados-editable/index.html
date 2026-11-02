@@ -945,7 +945,7 @@ function updatePublicationMode(){
  main.querySelectorAll('[data-editor-only] button').forEach(button=>button.disabled=main.inert||publicationChecking);
 }
 const modeStyle=document.createElement('style');modeStyle.textContent=`
-.chapter-add-control{display:flex;justify-content:center;margin:20px 0;user-select:none}.chapter-add-control button{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;padding:8px;border:1px solid #E5B95C;border-radius:50%;background:transparent;color:#E5B95C;cursor:pointer}.chapter-add-control button:hover{background:#e5b95c20}.chapter-add-control button:focus-visible{outline:2px solid #E5B95C;outline-offset:4px}.chapter-add-control button:disabled{opacity:.45;cursor:default}.chapter-add-control svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}@media print{.chapter-add-control{display:none}}
+.chapter-add-control{display:flex;justify-content:center;margin:20px 0;user-select:none}.chapter-add-control button{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;padding:6px;border:1px solid #E5B95C;border-radius:50%;background:transparent;color:#E5B95C;cursor:pointer}.chapter-add-control button:hover{background:#e5b95c20}.chapter-add-control button:focus-visible{outline:2px solid #E5B95C;outline-offset:4px}.chapter-add-control button:disabled{opacity:.45;cursor:default}.chapter-add-control svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}@media print{.chapter-add-control{display:none}}
 #publish-disociados{display:inline-flex;align-items:center;justify-content:center;color:var(--gold);border-color:var(--gold);width:40px;height:40px;padding:8px}#publish-disociados svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}#publish-disociados:hover{background:#e5b95c20}#publish-disociados:disabled{opacity:.45}
 `;
 document.head.append(modeStyle);updatePublicationMode();
@@ -1043,7 +1043,7 @@ function rebuildNarrativeIndex(){
   const text=heading.textContent.trim(),match=text.match(/^(\d+)\.\s*(.*)$/);
   number.className='toc-num';number.textContent=match?match[1]:'';title.className='toc-title';title.textContent=match?match[2]:text;
   link.href='#'+heading.id;link.append(number,title);item.append(link);
-  const chapters=Array.from(story.querySelectorAll('h2')).filter(node=>/^(?:Cap[ií]tulo|Escena)\s+\d+/i.test(node.textContent.trim()));
+  const chapters=Array.from(story.querySelectorAll('h2')).filter(node=>/^(?:Cap[ií]tulo|Escena|Acto)\s+\d+/i.test(node.textContent.trim()));
   if(chapters.length){const sub=document.createElement('ul');sub.className='toc-chapters';chapters.forEach(chapter=>{const li=document.createElement('li'),a=document.createElement('a');a.href='#'+chapter.id;a.textContent=chapter.textContent.trim();li.append(a);sub.append(li)});item.append(sub)}
   list.append(item);
  });
@@ -1061,7 +1061,7 @@ function normalizeLegacyHeadings(){
   story.querySelectorAll('p,.doc-line,.capitulo,h3,h4,h5,h6,div').forEach(block=>{
    if(block.closest('h1,h2,.back-to-index')||block.querySelector('p,.doc-line,.capitulo,h1,h2,h3,h4,h5,h6,div'))return;
    const text=block.textContent.replace(/[\u200b\uFEFF]/g,'').trim();
-   if(!/^(?:Cap[ií]tulo|Escena)\s+\d+\s*[.:]?$/i.test(text))return;
+   if(!/^(?:Cap[ií]tulo|Escena|Acto)\s+\d+\s*[.:]?$/i.test(text))return;
    const heading=document.createElement('h2');heading.className='doc-heading';
    if(block.hasAttribute('style'))heading.setAttribute('style',block.getAttribute('style'));
    heading.append(...block.childNodes);block.replaceWith(heading);changed=true;
@@ -1284,7 +1284,7 @@ function applyNarrativeArchitecture(main){
    const heading=story.querySelector('h1');if(!heading?.textContent.trim())continue;
    const item=document.createElement('li'),link=document.createElement('a'),num=document.createElement('span'),label=document.createElement('span');
    num.className='toc-num';label.className='toc-title';const match=heading.textContent.match(/^(\d+)\.\s*(.*)$/);num.textContent=match?.[1]||'';label.textContent=match?.[2]||heading.textContent;link.href='#'+heading.id;link.append(num,label);item.append(link);
-   const chapters=[...story.querySelectorAll('h2')].filter(h=>/^(Cap[ií]tulo|Escena)\s+\d+/i.test(h.textContent.trim()));
+   const chapters=[...story.querySelectorAll('h2')].filter(h=>/^(Cap[ií]tulo|Escena|Acto)\s+\d+/i.test(h.textContent.trim()));
    if(chapters.length){const sub=document.createElement('ul');sub.className='toc-chapters';for(const chapter of chapters){const li=document.createElement('li'),a=document.createElement('a');a.href='#'+chapter.id;a.textContent=chapter.textContent;li.append(a);sub.append(li)}item.append(sub)}list.append(item);
   }
   const label=document.createElement('p');label.className='indice-title';label.textContent='Índice';index.replaceChildren(label,list);
@@ -1301,7 +1301,7 @@ function manuscriptHTML(){
 }
 function nextChapterNumber(story){
  const numbers=Array.from(story.querySelectorAll('h2'),heading=>{
-  const match=heading.textContent.trim().match(/^(?:Cap[ií]tulo|Escena)\s+(\d+)/i);
+  const match=heading.textContent.trim().match(/^(?:Cap[ií]tulo|Escena|Acto)\s+(\d+)/i);
   return match?Number(match[1]):0;
  });
  return Math.max(0,...numbers)+1;
@@ -1313,15 +1313,14 @@ function renderChapterControls(){
   const control=document.createElement('div'),button=document.createElement('button');
   control.className='chapter-add-control';control.dataset.editorOnly='true';control.contentEditable='false';
   button.type='button';button.disabled=main.inert||publicationChecking;
-  button.title='Agregar capítulo '+nextChapterNumber(story)+' a '+name;
-  button.setAttribute('aria-label',button.title);
+  button.setAttribute('aria-label','Agregar acto '+nextChapterNumber(story)+' a '+name);
   button.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v16M4 12h16"/></svg>';
   button.addEventListener('mousedown',event=>event.preventDefault());
   button.addEventListener('click',()=>{
    if(main.inert||publicationChecking)return;
    recordDocumentHistory();
    const number=nextChapterNumber(story),heading=document.createElement('h2'),paragraph=document.createElement('p');
-   heading.className='doc-heading';heading.textContent='Capítulo '+number;
+   heading.className='doc-heading';heading.textContent='Acto '+number;heading.style.cssText='font-size:13pt!important;font-weight:300!important;font-style:normal!important;color:#E5B95C!important';
    paragraph.style.cssText=bodyParagraphStyle;paragraph.append(document.createElement('br'));
    // Keep the new chapter after all existing text, before the return link.
    control.remove();
