@@ -905,7 +905,7 @@ main .bela-added-chapter[data-bela-chapter="4"]{padding-top:16.5pt!important}
 .chapter-add-control button::before,.chapter-add-control button::after{content:"";position:absolute;top:50%;width:22px;height:1px;background:#E5B95C;pointer-events:none}
 .chapter-add-control button::before{right:calc(100% + 10px)}.chapter-add-control button::after{left:calc(100% + 10px)}
 .index-entry-control{display:flex;justify-content:flex-end;margin:12px 0 20px}
-.index-entry-control button{background:transparent;color:#E5B95C;border:1px solid var(--line);border-radius:7px;padding:7px 10px;font:inherit}
+.index-entry-control button{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;background:transparent;color:#E5B95C;border:0;padding:4px}
 .entry-dialog{width:420px;max-width:calc(100vw - 32px);padding:24px;background:var(--bg);color:var(--ink);border:1px solid var(--gold);border-radius:12px}
 .entry-dialog::backdrop{background:#000b}.entry-dialog label{display:block;margin:14px 0}.entry-dialog input,.entry-dialog select{display:block;box-sizing:border-box;width:100%;margin-top:6px;padding:9px;background:var(--panel);color:var(--ink);border:1px solid var(--line);font:inherit}.entry-dialog button{margin:8px 8px 0 0;padding:8px 12px}
 </style></head><body><header class="toolbar"><h1>Guión</h1><div id="format-tools" role="group" aria-label="Formato del texto"><button type="button" data-format="undo" title="Deshacer" aria-label="Deshacer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5-6 6 6 6M3 11h11a6 6 0 0 1 6 6"/></svg></button><button type="button" data-format="redo" title="Rehacer" aria-label="Rehacer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5 6 6-6 6M21 11H10a6 6 0 0 0-6 6"/></svg></button><span class="format-divider" aria-hidden="true"></span><select id="text-size" title="Tamaño del texto en puntos" aria-label="Tamaño del texto en puntos"><option value="11" selected>11</option><option value="12">12</option><option value="13">13</option><option value="15">15</option></select><select id="text-style" aria-label="Estilo del texto"><option value="regular">R</option><option value="italic">C</option><option value="medium">M</option><option value="bold">B</option></select><span class="format-divider" aria-hidden="true"></span><button type="button" data-format="insertOrderedList" title="Numeración" aria-label="Numeración"><svg viewBox="0 0 24 24" aria-hidden="true" style="width:22px;height:22px"><path d="M3 3h2v6M3 9h4M3 15c0-3 5-3 5 0 0 2-5 3-5 6h5M12 6h9M12 18h9" style="stroke-width:2"/></svg></button><button type="button" data-format="insertUnorderedList" title="Viñetas" aria-label="Viñetas"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="4" cy="5" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="19" r="1"/><path d="M9 5h12M9 12h12M9 19h12"/></svg></button><span class="format-divider" aria-hidden="true"></span><select id="text-color" hidden aria-hidden="true" tabindex="-1"><option value="#E5B95C">Dorado</option><option value="#F3F0EA">Marfil</option></select><details class="color-picker" id="color-picker"><summary title="Color del texto" aria-label="Color del texto"><span id="selected-color" class="color-dot" style="background:#E5B95C"></span></summary><div class="color-options" role="group" aria-label="Colores"><button type="button" data-color="#E5B95C" title="Dorado" aria-label="Dorado"><span class="color-dot" style="background:#E5B95C"></span></button><button type="button" data-color="#F3F0EA" title="Marfil" aria-label="Marfil"><span class="color-dot" style="background:#F3F0EA"></span></button></div></details></div></header><div id="status" role="status"></div><div class="cover">
@@ -1318,7 +1318,7 @@ function renderEntryControl(){
  const index=main.querySelector('#indice');if(!index)return;
  const control=document.createElement('div'),button=document.createElement('button');
  control.className='index-entry-control';control.dataset.editorOnly='true';control.contentEditable='false';
- button.type='button';button.textContent='Agregar entrada';button.setAttribute('aria-label','Agregar entrada al índice');button.disabled=main.inert;
+ button.type='button';button.innerHTML='<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 5h11M3 11h7M3 17h7M18 10v10M13 15h10"/></svg>';button.setAttribute('aria-label','Agregar entrada al índice');button.disabled=main.inert;
  button.onclick=()=>{
   if(main.inert)return;
   const dialog=document.createElement('dialog'),form=document.createElement('form'),heading=document.createElement('h2'),titleLabel=document.createElement('label'),title=document.createElement('input'),genreLabel=document.createElement('label'),genre=document.createElement('select'),submit=document.createElement('button'),cancel=document.createElement('button');
@@ -1331,7 +1331,7 @@ function renderEntryControl(){
   form.onsubmit=event=>{
    event.preventDefault();const name=title.value.trim();if(!name){title.setCustomValidity('Escribí un título');title.reportValidity();return}if(main.inert)return;
    recordDocumentHistory();
-   const ids=Array.from(main.querySelectorAll('[id]'),node=>Number(node.id.match(/^cuento-(\\d+)$/)?.[1])||0),id=Math.max(0,...ids)+1;
+   const ids=Array.from(main.querySelectorAll('[id]'),node=>Number(node.id.match(/^cuento-(\d+)$/)?.[1])||0),id=Math.max(0,...ids)+1;
    const story=document.createElement('section'),article=document.createElement('article'),body=document.createElement('div'),h=document.createElement('h1'),paragraph=document.createElement('p');
    story.className='published-story';story.id='cuento-'+id;story.dataset.kairosGenre=genre.value;article.className='sheet story-start';body.className='page-content';body.dataset.layoutVersion='3';
    h.className='doc-heading';h.id=story.id+'-encabezado-0';h.textContent=name;paragraph.style.cssText=bodyParagraphStyle;paragraph.append(document.createElement('br'));
@@ -1340,7 +1340,7 @@ function renderEntryControl(){
   };
   title.oninput=()=>title.setCustomValidity('');dialog.append(form);dialog.onclose=()=>dialog.remove();document.body.append(dialog);dialog.showModal();title.focus();
  };
- control.append(button);index.append(control);
+ control.append(button);index.before(control);
 }
 function renderChapterControls(){
  main.querySelectorAll('.published-story').forEach(story=>{
@@ -1374,6 +1374,17 @@ function renderChapterControls(){
  });
 }
 
+function ensureStoryAnchors(){
+ const stories=Array.from(main.querySelectorAll('.published-story')),used=new Set();
+ let next=Math.max(0,...stories.map(node=>Number(node.id.match(/^cuento-(\d+)$/)?.[1])||0))+1,changed=false;
+ for(const story of stories.slice().sort((a,b)=>Number(a.hasAttribute('data-kairos-genre'))-Number(b.hasAttribute('data-kairos-genre')))){
+  if(!/^cuento-\d+$/.test(story.id)||used.has(story.id)){story.id='cuento-'+next++;changed=true}
+  used.add(story.id);
+  const heading=story.querySelector('h1');if(heading&&heading.id!==story.id+'-encabezado-0'){heading.id=story.id+'-encabezado-0';changed=true}
+  story.querySelectorAll('h2').forEach((heading,index)=>{const id=story.id+'-encabezado-'+(index+1);if(heading.id!==id){heading.id=id;changed=true}});
+ }
+ return changed;
+}
 function refreshLayout(){
  const editingSelection=window.getSelection(),editingRange=editingSelection?.rangeCount?editingSelection.getRangeAt(0):null;
  const caretState=editingRange&&main.contains(editingRange.startContainer)&&main.contains(editingRange.endContainer)?{start:editingRange.startContainer,startOffset:editingRange.startOffset,end:editingRange.endContainer,endOffset:editingRange.endOffset}:null;
@@ -1381,6 +1392,7 @@ function refreshLayout(){
  if(normalizeLegacyHeadings())documentNeedsSync=true;
  if(normalizeEleventhStory())documentNeedsSync=true;
  if(applyNarrativeArchitecture(main))documentNeedsSync=true;
+ if(ensureStoryAnchors())documentNeedsSync=true;
  if(normalizeStoryNumbers())documentNeedsSync=true;
  if(decorateSedanteAside())documentNeedsSync=true;
  if(decoratePrincipitaAside())documentNeedsSync=true;
@@ -2273,11 +2285,10 @@ window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.return
 'use strict';
 const nav=document.querySelector('.anthology-genres'),main=document.querySelector('main');
 if(!nav||!main)return;
-const groups=[['Thriller',['Bela','Principita','Mandala','Sándalo']],['Drama',['Latte','Adorni']],['Comedia',['Baba Yaga','Roberto','Barniz']],['Sin clasificar',[]]];
+const groups=[['Thriller',['Bela','Principita','Mandala','Sándalo']],['Drama',['Latte','Adorni']],['Comedia',['Baba Yaga','Roberto','Barniz']]];
 const normalize=text=>text.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/^\s*(?:✦\s*)?\d+[.)]?\s*/,'').trim().toLowerCase();
 let selected=0,stories=[];
 const icons=["<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2\"/></svg>", "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M6 16c5 0 7-8 12-8a4 4 0 0 1 0 8c-5 0-7-8-12-8a4 4 0 1 0 0 8\"/></svg>", "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M18 14l4 4-4 4M18 2l4 4-4 4M2 18h1.973a4 4 0 0 0 3.3-1.7l5.454-8.6a4 4 0 0 1 3.3-1.7H22M2 6h1.972a4 4 0 0 1 3.6 2.2M22 18h-6.041a4 4 0 0 1-3.3-1.8l-.359-.45\"/></svg>"];
-icons.push('<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="7" cy="7" r="2"/><circle cx="17" cy="7" r="2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>');
 nav.replaceChildren();nav.setAttribute('role','tablist');nav.setAttribute('aria-label','Géneros de la antología');main.id='anthology-stories';main.setAttribute('role','tabpanel');
 const buttons=groups.map(([name],index)=>{const button=document.createElement('button');button.type='button';button.id='genre-tab-'+index;button.setAttribute('role','tab');button.setAttribute('aria-controls',main.id);button.innerHTML=icons[index];button.append(document.createTextNode(name));button.onclick=()=>select(index);button.onkeydown=event=>{const available=buttons.map((button,i)=>button.hidden?null:i).filter(i=>i!==null),position=available.indexOf(index);let next;if(event.key==='ArrowRight')next=available[(position+1)%available.length];else if(event.key==='ArrowLeft')next=available[(position+available.length-1)%available.length];else if(event.key==='Home')next=available[0];else if(event.key==='End')next=available[available.length-1];else return;event.preventDefault();select(next);buttons[next].focus()};nav.append(button);return button});
 function select(index){
@@ -2292,7 +2303,7 @@ function followHash(){
 }
 function organize(event){
  const items=Array.from(main.querySelectorAll('#indice > .toc > li, #indice > .published-index > li'));
- stories=Array.from(main.querySelectorAll('.published-story'),(story,position)=>{const name=normalize(story.querySelector('h1')?.textContent||story.getAttribute('aria-label')||'');const explicit=groups.findIndex(([label])=>label===story.dataset.kairosGenre);const group=explicit>=0&&explicit<3?explicit:groups.findIndex(([,names])=>names.some(title=>normalize(title)===name));const item=items.find(item=>{const href=item.querySelector('a')?.getAttribute('href');if(!href?.startsWith('#'))return false;const target=document.getElementById(href.slice(1));return target&&(target===story||story.contains(target))});return {story,item,name,group:group<0?3:group,position}});
+ stories=Array.from(main.querySelectorAll('.published-story'),(story,position)=>{const name=normalize(story.querySelector('h1')?.textContent||story.getAttribute('aria-label')||'');const explicit=groups.findIndex(([label])=>label===story.dataset.kairosGenre);const group=explicit>=0&&explicit<3?explicit:groups.findIndex(([,names])=>names.some(title=>normalize(title)===name));const item=items.find(item=>{const href=item.querySelector('a')?.getAttribute('href');if(!href?.startsWith('#'))return false;const target=document.getElementById(href.slice(1));return target&&(target===story||story.contains(target))});return {story,item,name,group:group<0?1:group,position}});
  stories.sort((a,b)=>a.group-b.group||(a.group===3?a.position-b.position:(groups[a.group][1].findIndex(name=>normalize(name)===a.name)<0?100000+a.position:groups[a.group][1].findIndex(name=>normalize(name)===a.name))-(groups[b.group][1].findIndex(name=>normalize(name)===b.name)<0?100000+b.position:groups[b.group][1].findIndex(name=>normalize(name)===b.name))));
  const currentOrder=Array.from(main.querySelectorAll('.published-story'));
  const needsReorder=stories.some((entry,index)=>entry.story!==currentOrder[index]);
@@ -2307,7 +2318,7 @@ function organize(event){
   const number=entry.item?.querySelector('.toc-num');if(number)number.textContent=String(index+1);
   if(needsReorder)entry.story.parentElement.append(entry.story);if(entry.item)entry.item.parentElement.append(entry.item)
  }
- buttons[3].hidden=!stories.some(entry=>entry.group===3);if(!stories.some(entry=>entry.group===selected)&&stories.length)selected=stories[0].group;select(selected);if(event?.type!=='kairos:document-refreshed')followHash();
+ if(!stories.some(entry=>entry.group===selected)&&stories.length)selected=stories[0].group;select(selected);if(event?.type!=='kairos:document-refreshed')followHash();
 }
 document.addEventListener('kairos:select-genre',event=>{const index=groups.findIndex(([name])=>name===event.detail);if(index>=0)select(index)});document.addEventListener('disociados:published',organize);document.addEventListener('kairos:document-refreshed',organize);window.addEventListener('hashchange',followHash);organize();
 })();
