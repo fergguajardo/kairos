@@ -1344,13 +1344,13 @@ function renderEntryControl(){
   const ids=Array.from(main.querySelectorAll('[id]'),node=>Number(node.id.match(/^cuento-(\d+)$/)?.[1])||0),id=Math.max(0,...ids)+1;
   const story=document.createElement('section'),article=document.createElement('article'),body=document.createElement('div'),h=document.createElement('h1'),paragraph=document.createElement('p');
   story.className='published-story';story.id='cuento-'+id;story.dataset.kairosGenre=genre;article.className='sheet story-start';body.className='page-content';body.dataset.layoutVersion='3';
-  h.className='doc-heading';h.id=story.id+'-encabezado-0';h.textContent='Sin título';paragraph.style.cssText=bodyParagraphStyle;paragraph.append(document.createElement('br'));
+  h.className='doc-heading';h.id=story.id+'-encabezado-0';h.textContent='Sin título';paragraph.style.cssText=bodyParagraphStyle;direction.style.cssText=bodyParagraphStyle;
   body.append(h,paragraph);article.append(body);story.append(article);main.append(story);refreshLayout();document.dispatchEvent(new CustomEvent('kairos:select-genre',{detail:genre}));save();
   const input=document.createElement('input');input.className='index-entry-title';input.dataset.editorOnly='true';input.setAttribute('aria-label','Título de la entrada');input.maxLength=160;input.value='Sin título';
   const currentControl=main.querySelector('.index-entry-control');currentControl.append(input);
   input.oninput=()=>{const prefix=h.textContent.match(/^\d+\.\s*/)?.[0]||'';h.textContent=prefix+(input.value.trim()||'Sin título');rebuildNarrativeIndex();renderEntryActions();document.dispatchEvent(new Event('kairos:document-refreshed'));save()};
   input.onblur=()=>input.remove();
-  input.onkeydown=event=>{if(event.key==='Enter'){event.preventDefault();input.blur();main.focus();const range=document.createRange();range.selectNodeContents(paragraph);range.collapse(true);const selection=window.getSelection();selection.removeAllRanges();selection.addRange(range);selectionInEditor()}};
+  input.onkeydown=event=>{if(event.key==='Enter'){event.preventDefault();input.blur();main.focus();const range=document.createRange();range.selectNodeContents(paragraph);range.collapse(false);const selection=window.getSelection();selection.removeAllRanges();selection.addRange(range);selectionInEditor()}};
   input.focus();input.select();
  };
  control.append(button);index.before(control);
@@ -1368,10 +1368,11 @@ function removeStoryFromEditor(story){
 }
 function createStoryAct(story){
  if(main.inert||publicationChecking)return;
- recordDocumentHistory();const number=nextChapterNumber(story),heading=document.createElement('h2'),paragraph=document.createElement('p');
+ recordDocumentHistory();const number=nextChapterNumber(story),heading=document.createElement('h2');
+ const [paragraph,direction]=createTheatreReference();
  heading.className='doc-heading';heading.textContent='Acto '+number;heading.style.cssText='font-size:13pt!important;font-weight:300!important;font-style:normal!important;color:#E5B95C!important';
  paragraph.style.cssText=bodyParagraphStyle;paragraph.append(document.createElement('br'));
- const back=story.querySelector('.back-to-index');if(back)back.before(heading,paragraph);else story.append(heading,paragraph);
+ const back=story.querySelector('.back-to-index');if(back)back.before(heading,paragraph,direction);else story.append(heading,paragraph,direction);
  refreshLayout();main.focus();const range=document.createRange();range.selectNodeContents(paragraph);range.collapse(true);const selection=window.getSelection();selection.removeAllRanges();selection.addRange(range);selectionInEditor();updateFormatButtons();save();paragraph.scrollIntoView({behavior:'smooth',block:'center'});
 }
 function editStoryHeading(heading,toolbar){
@@ -1442,6 +1443,15 @@ function renderChapterControls(){
   }
  }
 }
+function createTheatreReference(){
+   const dialogue=document.createElement('p'),person=document.createElement('span'),dash=document.createElement('span'),direction=document.createElement('p'),stage=document.createElement('span');
+  const regular='font-family:Outfit,sans-serif;font-size:12pt;font-weight:300;font-style:normal';
+  person.style.cssText=regular+';color:#E5B95C';person.textContent='PERSONAJE.';
+  dash.style.cssText=regular+';color:#F3F0EA';dash.textContent=' —';
+  stage.style.cssText=regular+';color:#F3F0EA';stage.textContent='(Acotación).';
+  dialogue.append(person,dash);direction.append(stage);
+ return [dialogue,direction];
+}
 function ensureTheatreReferences(){
  let changed=false;
  for(const story of main.querySelectorAll('.published-story')){
@@ -1451,12 +1461,7 @@ function ensureTheatreReferences(){
    if(dash?.textContent.trim()==='—'&&dash.style.fontStyle==='italic'){dash.style.fontStyle='normal';changed=true}
   }
   const heading=story.querySelector('h1');if(!heading||story.dataset.theatreReady==='true'||story.id==='cuento-17')continue;
-  const dialogue=document.createElement('p'),person=document.createElement('span'),dash=document.createElement('span'),direction=document.createElement('p'),stage=document.createElement('span');
-  const regular='font-family:Outfit,sans-serif;font-size:12pt;font-weight:300;font-style:normal';
-  person.style.cssText=regular+';color:#E5B95C';person.textContent='PERSONAJE.';
-  dash.style.cssText=regular+';color:#F3F0EA';dash.textContent=' —';
-  stage.style.cssText=regular+';color:#F3F0EA';stage.textContent='(Acotación).';
-  dialogue.append(person,dash);direction.append(stage);heading.after(dialogue,direction);story.dataset.theatreReady='true';changed=true;
+  heading.after(...createTheatreReference());story.dataset.theatreReady='true';changed=true;
  }
  return changed;
 }
