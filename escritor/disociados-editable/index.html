@@ -1399,19 +1399,29 @@ function chooseStoryGenre(story,toolbar){
  picker.onblur=()=>picker.remove();picker.onkeydown=event=>{if(event.key==='Escape')picker.remove()};
  toolbar.append(picker);picker.focus();
 }
-async function copyLastDialogue(story){
- const blocks=Array.from(story.querySelectorAll('p,div,li,blockquote')).filter(block=>!block.closest('[data-editor-only]')&&!block.querySelector('p,div,li,blockquote'));
- const lines=blocks.flatMap(block=>block.innerText.split('\n')).map(line=>line.trim());
- const dialogue=lines.reverse().find(line=>/^(?:[—–]|[\p{L}][\p{L}\p{M} .'-]*\.\s*[—–])/u.test(line));
- if(!dialogue){status.textContent='Todavía no hay una línea de diálogo para copiar.';return}
- const selection=window.getSelection(),ranges=Array.from({length:selection.rangeCount},(_,i)=>selection.getRangeAt(i).cloneRange());
- const focused=document.activeElement,field=document.createElement('textarea');
- field.value=dialogue;field.readOnly=true;field.style.cssText='position:fixed;top:0;left:0;opacity:0';document.body.append(field);field.select();
- let copied=false;
- try{copied=document.execCommand('copy')}catch{}
- finally{field.remove();focused?.focus({preventScroll:true});selection.removeAllRanges();ranges.forEach(range=>selection.addRange(range))}
- if(copied)return;
- try{await navigator.clipboard.writeText(dialogue)}catch{status.textContent='El navegador no permitió copiar la línea.'}
+function duplicateLastDialogue(story){
+ if(main.inert||publicationChecking)return;
+ const selector='p,div,li,blockquote';
+ const blocks=[...story.querySelectorAll(selector)].filter(block=>!block.closest('[data-editor-only]')&&!block.querySelector(selector));
+ for(const block of blocks.reverse()){
+  const breaks=[...block.querySelectorAll('br')];
+  for(let index=breaks.length;index>=0;index--){
+   const line=document.createRange();
+   if(index)line.setStartAfter(breaks[index-1]);else line.setStart(block,0);
+   if(index<breaks.length)line.setEndBefore(breaks[index]);else line.setEnd(block,block.childNodes.length);
+   if(!/^(?:[—–]|[\p{L}][\p{L}\p{M} .'-]*\.\s*[—–])/u.test(line.toString().trim()))continue;
+   const replica=line.cloneContents();
+   replica.querySelectorAll('[id]').forEach(node=>node.removeAttribute('id'));
+   replica.prepend(document.createElement('br'));
+   recordDocumentHistory();
+   line.collapse(false);
+   line.insertNode(replica);
+   refreshLayout();
+   save();
+   return;
+  }
+ }
+ status.textContent='Todavía no hay una línea de diálogo para duplicar.';
 }
 function renderChapterControls(){
  for(const story of main.querySelectorAll('.published-story')){
@@ -1425,7 +1435,7 @@ function renderChapterControls(){
     ['edit','Editar '+label,()=>editStoryHeading(heading,toolbar)],
     ['genre','Cambiar categoría de '+name,()=>chooseStoryGenre(story,toolbar)],
     ['remove','Eliminar '+label,()=>storyLevel?removeStoryFromEditor(story):removeStoryAct(story,heading)],
-    ['copyDialogue','Copiar última línea de diálogo de '+name,()=>copyLastDialogue(story)]
+    ['copyDialogue','Duplicar última línea de diálogo de '+name,()=>duplicateLastDialogue(story)]
    ];
    for(const [kind,aria,action] of actions){const button=document.createElement('button');button.type='button';button.dataset.action=kind;button.disabled=main.inert||publicationChecking;button.setAttribute('aria-label',aria);button.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">'+storyToolIcons[kind]+'</svg>';button.addEventListener('mousedown',event=>event.preventDefault());button.onclick=()=>{if(!main.inert&&!publicationChecking)action()};toolbar.append(button)}
    heading.after(toolbar);
