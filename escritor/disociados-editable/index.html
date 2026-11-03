@@ -1344,7 +1344,7 @@ function renderEntryControl(){
   const ids=Array.from(main.querySelectorAll('[id]'),node=>Number(node.id.match(/^cuento-(\d+)$/)?.[1])||0),id=Math.max(0,...ids)+1;
   const story=document.createElement('section'),article=document.createElement('article'),body=document.createElement('div'),h=document.createElement('h1'),paragraph=document.createElement('p');
   story.className='published-story';story.id='cuento-'+id;story.dataset.kairosGenre=genre;article.className='sheet story-start';body.className='page-content';body.dataset.layoutVersion='3';
-  h.className='doc-heading';h.id=story.id+'-encabezado-0';h.textContent='Sin título';paragraph.style.cssText=bodyParagraphStyle;direction.style.cssText=bodyParagraphStyle;
+  h.className='doc-heading';h.id=story.id+'-encabezado-0';h.textContent='Sin título';paragraph.style.cssText=bodyParagraphStyle;
   body.append(h,paragraph);article.append(body);story.append(article);main.append(story);refreshLayout();document.dispatchEvent(new CustomEvent('kairos:select-genre',{detail:genre}));save();
   const input=document.createElement('input');input.className='index-entry-title';input.dataset.editorOnly='true';input.setAttribute('aria-label','Título de la entrada');input.maxLength=160;input.value='Sin título';
   const currentControl=main.querySelector('.index-entry-control');currentControl.append(input);
