@@ -1402,11 +1402,16 @@ function chooseStoryGenre(story,toolbar){
 async function copyLastDialogue(story){
  const blocks=Array.from(story.querySelectorAll('p,div,li,blockquote')).filter(block=>!block.closest('[data-editor-only]')&&!block.querySelector('p,div,li,blockquote'));
  const lines=blocks.flatMap(block=>block.innerText.split('\n')).map(line=>line.trim());
- const dialogue=lines.reverse().find(line=>/^(?:[—–]\s*\S|[\p{L}][\p{L}\p{M} .'-]*\.\s*[—–]\s*\S)/u.test(line));
- if(!dialogue)return;
- try{await navigator.clipboard.writeText(dialogue)}catch{
-  const field=document.createElement('textarea');field.value=dialogue;field.style.cssText='position:fixed;opacity:0';document.body.append(field);field.select();document.execCommand('copy');field.remove();
- }
+ const dialogue=lines.reverse().find(line=>/^(?:[—–]|[\p{L}][\p{L}\p{M} .'-]*\.\s*[—–])/u.test(line));
+ if(!dialogue){status.textContent='Todavía no hay una línea de diálogo para copiar.';return}
+ const selection=window.getSelection(),ranges=Array.from({length:selection.rangeCount},(_,i)=>selection.getRangeAt(i).cloneRange());
+ const focused=document.activeElement,field=document.createElement('textarea');
+ field.value=dialogue;field.readOnly=true;field.style.cssText='position:fixed;top:0;left:0;opacity:0';document.body.append(field);field.select();
+ let copied=false;
+ try{copied=document.execCommand('copy')}catch{}
+ finally{field.remove();focused?.focus({preventScroll:true});selection.removeAllRanges();ranges.forEach(range=>selection.addRange(range))}
+ if(copied)return;
+ try{await navigator.clipboard.writeText(dialogue)}catch{status.textContent='El navegador no permitió copiar la línea.'}
 }
 function renderChapterControls(){
  for(const story of main.querySelectorAll('.published-story')){
