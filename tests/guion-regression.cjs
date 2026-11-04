@@ -172,7 +172,7 @@ test('theatrical templates match Roberto typography, remain editable, and do not
 
 test('move a story to labeled Romance and retain the genre after reload',async()=>{
  const t=await open(),{page}=t;const tab=page.getByRole('tab',{name:'Romance',exact:true});
- assert.equal(await tab.textContent(),'Romance');assert.equal(await tab.evaluate(n=>n.previousElementSibling.dataset.genre),'Comedia');
+ assert.equal(await tab.textContent(),'Romance');assert.equal(await tab.evaluate(n=>n.nextElementSibling.dataset.genre),'Thriller');
  await page.getByRole('toolbar',{name:'Herramientas de BELA',exact:true}).getByRole('button',{name:'Cambiar categoría de BELA',exact:true}).click();
  await page.getByLabel('Categoría de la historia',{exact:true}).selectOption('Prosa');
  assert.equal(await tab.getAttribute('aria-selected'),'true');
