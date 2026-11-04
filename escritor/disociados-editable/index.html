@@ -972,7 +972,7 @@ document.head.append(modeStyle);updatePublicationMode();
 function setEditorInert(value){main.inert=value;main.querySelectorAll('.index-entry-control button,.index-delete-entry,.story-tool-panel button').forEach(button=>button.disabled=value);coverTitle.inert=value;coverSynopsis.inert=value;updatePublicationMode()}
 for(const field of [coverTitle,coverSynopsis]){
  field.contentEditable='plaintext-only';field.spellcheck=true;
- field.addEventListener('input',()=>save());
+ field.addEventListener('input',()=>save(true));
  field.addEventListener('beforeinput',event=>{if(['historyUndo','historyRedo'].includes(event.inputType)){event.preventDefault();navigateDocumentHistory(event.inputType==='historyUndo'?'undo':'redo')}});
 }
 coverTitle.setAttribute('aria-label','Título de la obra');
@@ -1313,11 +1313,16 @@ function applyNarrativeArchitecture(main){
 
 // Editor controls never belong to the saved or published manuscript.
 function manuscriptHTML(){
- if(manuscriptCache!==null)return manuscriptCache;
+ if(manuscriptCache!==null)return manuscriptCache.html;
  const copy=main.cloneNode(true);
  copy.querySelectorAll('[data-editor-only]').forEach(node=>node.remove());
  copy.querySelectorAll('[hidden]').forEach(node=>node.removeAttribute('hidden'));
- return manuscriptCache=copy.innerHTML;
+ const html=copy.innerHTML;
+ // Reuse the detached capture for the empty-write guard; do not parse and
+ // sanitize the entire outgoing manuscript again just to check its text.
+ copy.querySelectorAll('#indice,.back-to-index,script,style,iframe,object,embed,link,meta').forEach(node=>node.remove());
+ manuscriptCache={html,nonempty:!!copy.textContent.replace(/[\s\u200b\uFEFF]/g,'')||!!copy.querySelector('img')};
+ return html;
 }
 function nextChapterNumber(story){
  const numbers=Array.from(story.querySelectorAll('h2'),heading=>{
@@ -1548,7 +1553,9 @@ function historyPatch(before,after){
  let start=0,end=0,limit=Math.min(before.length,after.length);
  while(start<limit&&before.charCodeAt(start)===after.charCodeAt(start))start++;
  while(end<limit-start&&before.charCodeAt(before.length-1-end)===after.charCodeAt(after.length-1-end))end++;
- return {start,removed:before.slice(start,before.length-end),inserted:after.slice(start,after.length-end)};
+ // Detach slices so a tiny delta cannot retain the full source string in V8.
+ const compact=text=>JSON.parse(JSON.stringify(text));
+ return {start,removed:compact(before.slice(start,before.length-end)),inserted:compact(after.slice(start,after.length-end))};
 }
 function applyHistoryPatch(value,patch,backward=false){
  const removed=backward?patch.inserted:patch.removed,inserted=backward?patch.removed:patch.inserted;
@@ -1922,7 +1929,6 @@ main.addEventListener('beforeinput',event=>{
  }
  const edge=document.createRange();edge.selectNodeContents(story);
  if(backward)edge.setEnd(range.startContainer,range.startOffset);else edge.setStart(range.startContainer,range.startOffset);
- if(edge.toString().replace(/[\s\u200b\uFEFF]/g,''))return;
  const fragment=edge.cloneContents();fragment.querySelectorAll('[data-editor-only],.back-to-index,[contenteditable="false"]').forEach(node=>node.remove());
  if(!fragment.textContent.replace(/[\s\u200b\uFEFF]/g,'')&&!fragment.querySelector('img')){event.preventDefault();event.stopImmediatePropagation()}
 },true);
@@ -2297,6 +2303,15 @@ function createDocumentCloud(){
  const signatures=new WeakMap();
  const signature=value=>{if(!value||typeof value!=='object')return JSON.stringify(value);if(!signatures.has(value))signatures.set(value,JSON.stringify(canonical(value)));return signatures.get(value)};
  const same=(a,b)=>signature(a)===signature(b);
+ const nonemptyDocuments=new WeakMap();
+ function hasManuscript(value){
+  if(!nonemptyDocuments.has(value)){
+   const node=document.createElement('div');node.innerHTML=validate(value?.publicationMode==='creation'&&value.creationDraft?value.creationDraft:value);
+   node.querySelectorAll('#indice,[data-editor-only],.back-to-index').forEach(item=>item.remove());
+   nonemptyDocuments.set(value,!!node.textContent.replace(/[\s\u200b\uFEFF]/g,'')||!!node.querySelector('img'));
+  }
+  return nonemptyDocuments.get(value);
+ }
  function reportError(){
   setEditorInert(!ready);
   report(ready?'No se confirmó el guardado en Supabase. Hay cambios pendientes en esta pestaña; mantenela abierta y reintentá.':'No se pudo cargar Supabase. Reintentá para habilitar la edición.');
@@ -2314,9 +2329,9 @@ function createDocumentCloud(){
  async function flush(){
   clearTimeout(timer);if(!ready||!pending||saving||conflict||composing)return;
   const pendingChange=pending,snapshot=current();
+  nonemptyDocuments.set(snapshot,manuscriptCache.nonempty);
   if(confirmed&&same(snapshot,confirmed)){pending=null;dirty=false;report('Documento cargado desde Supabase. Sin cambios pendientes.');return}
-  const manuscript=value=>{const node=document.createElement('div');node.innerHTML=validate(value?.publicationMode==='creation'&&value.creationDraft?value.creationDraft:value);node.querySelectorAll('#indice,[data-editor-only],.back-to-index').forEach(item=>item.remove());return node.textContent.replace(/[\s\u200b\uFEFF]/g,'')||node.querySelector('img')};
-  if(confirmed&&manuscript(confirmed)&&!manuscript(snapshot)&&!same(snapshot,approvedEmptySnapshot)){report('El documento quedó vacío. El guardado se pausó para proteger la copia anterior. Usá Deshacer.');return}
+  if(confirmed&&hasManuscript(confirmed)&&!hasManuscript(snapshot)&&!same(snapshot,approvedEmptySnapshot)){report('El documento quedó vacío. El guardado se pausó para proteger la copia anterior. Usá Deshacer.');return}
   saving=true;publicationBusy=true;updatePublicationMode();report('Guardando en Supabase…');
   let succeeded=false;
   try{
@@ -2327,7 +2342,7 @@ function createDocumentCloud(){
    if(r.error&&r.error.code!=='23505')throw r.error;
    const remote=await read();
    if(!remote||!same(remote.data,snapshot)){showConflict(remote);return}
-   stamp=remote.updated_at;confirmed=remote.data;if(same(snapshot,approvedEmptySnapshot))approvedEmptySnapshot=null;
+   stamp=remote.updated_at;confirmed=remote.data;nonemptyDocuments.set(confirmed,hasManuscript(snapshot));if(same(snapshot,approvedEmptySnapshot))approvedEmptySnapshot=null;
    if(snapshot.publicationMode!=='creation')publicationSnapshot=publicationFields(snapshot);
    if(pending===pendingChange){pending=null;dirty=false}
    succeeded=true;report(pending?'Hay cambios pendientes de guardar en Supabase…':'Guardado confirmado en Supabase · '+new Date().toLocaleTimeString('es-AR'));

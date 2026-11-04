@@ -6,6 +6,8 @@ const {chromium}=require('playwright');
 const OWNER='58c60587-9559-4747-a7bc-a90d36147caa';
 const DOC='disociados-editable-fiel-v1';
 const source=fs.readFileSync(path.join(__dirname,'../escritor/disociados-editable/index.html'),'utf8');
+// Expose the history driver only inside the synthetic fixture, never in production.
+const testSource=source.replace('refreshLayout();historyReady=true;resetDocumentHistory();','window.__historyForTest={save,navigateDocumentHistory,state:()=>({length:documentHistory.length,bytes:historyBytes,full:historyValue.length*2})};refreshLayout();historyReady=true;resetDocumentHistory();');
 // Synthetic text only. These tests never connect to a real account or database.
 function fixture(){
  const titles=['BELA','PRINCIPITA','MANDALA','LATTE','ADORNI','SÁNDALO','BABA YAGA','ROBERTO','BARNIZ','PARBOIL','CLAUDE'];
@@ -33,7 +35,7 @@ async function open(state=server()){
   const auth={onAuthStateChange(callback){window.__authCallback=callback},getSession:async()=>({data:{session:{user:{id:OWNER}}}}),getUser:async()=>({data:{user:{id:OWNER}}})};
   window.supabase={createClient:()=>({auth,from(table){const request={table,eq:{},mode:'read',fields:'',single:false};const q={select(fields){request.fields=fields;return q},eq(key,value){request.eq[key]=value;return q},order(){return q},limit(){return q},update(value){request.mode='update';request.value=value;return q},insert(value){request.mode='insert';request.value=value;return q},maybeSingle(){request.single=true;return window.__guionApi(request)},then(resolve,reject){return window.__guionApi(request).then(resolve,reject)}};return q}})};
  },{OWNER});
- await page.route('**/*',route=>route.request().url()==='https://guion.test/'?route.fulfill({contentType:'text/html',body:source}):route.fulfill({body:''}));
+ await page.route('**/*',route=>route.request().url()==='https://guion.test/'?route.fulfill({contentType:'text/html',body:testSource}):route.fulfill({body:''}));
  await page.goto('https://guion.test/');await page.waitForFunction(()=>!document.querySelector('main').inert);await settled(page);
  return {page,state,errors,async close(){assert.deepEqual(errors,[]);await page.close()}};
 }
@@ -203,16 +205,17 @@ test('history deltas retain Unicode, survive trimming and discard redo branches'
   const p=document.querySelector('.published-story:not([hidden]) p'),main=document.querySelector('main');
   // Explicit commands create separate undo steps; ordinary typing is grouped.
   const values=[];
+  const {save,navigateDocumentHistory,state}=window.__historyForTest;
   for(let i=0;i<110;i++){p.textContent='Paso '+i+' — café 🐢';save();values.push(main.textContent)}
-  const retained=documentHistory.length;
+  const retained=state().length;
   for(let i=0;i<20;i++)navigateDocumentHistory('undo');
   const previous=main.textContent;
   for(let i=0;i<20;i++)navigateDocumentHistory('redo');
-  return {retained,previous,expected:values[89],final:main.textContent,latest:values[109],bytes:historyBytes,full:historyValue.length*2};
+  return {retained,previous,expected:values[89],final:main.textContent,latest:values[109],bytes:state().bytes,full:state().full};
  });
  assert.equal(result.retained,100);assert.equal(result.previous,result.expected);assert.equal(result.final,result.latest);
  assert(result.bytes<result.full*3,'history should store small edits rather than 100 complete copies');
- await page.evaluate(()=>navigateDocumentHistory('undo'));await typeAtEnd(page,'NEW_BRANCH');assert(await page.getByRole('button',{name:'Rehacer',exact:true}).isDisabled());await t.close();
+ await page.evaluate(()=>window.__historyForTest.navigateDocumentHistory('undo'));await typeAtEnd(page,'NEW_BRANCH');assert(await page.getByRole('button',{name:'Rehacer',exact:true}).isDisabled());await t.close();
 });
 
 test('hiding the page flushes a pending typing burst before its debounce expires',async()=>{
@@ -226,10 +229,10 @@ test('hiding the page flushes a pending typing burst before its debounce expires
 });
 
 test('IME composition stays pending until completion and survives an in-flight save',async()=>{
- const state=server(),api=state.api;let release,entered;
+ const state=server(),t=await open(state),api=state.api;let release,entered;
  const saving=new Promise(resolve=>entered=resolve);
  state.api=async request=>{if(request.mode==='update'&&!release){entered();await new Promise(resolve=>release=resolve)}return api(request)};
- const t=await open(state);const {page}=t;
+ const {page}=t;
  await page.locator('.published-story:not([hidden]) p').last().click();await page.keyboard.press('End');await page.keyboard.type('BEFORE_IME');await saving;
  await page.evaluate(()=>{const p=document.querySelector('.published-story:not([hidden]) p');p.dispatchEvent(new CompositionEvent('compositionstart',{bubbles:true}));p.append('漢字');p.dispatchEvent(new InputEvent('input',{bubbles:true,isComposing:true,inputType:'insertCompositionText'}))});
  release();await page.waitForTimeout(300);assert(!state.data.html.includes('漢字'));
