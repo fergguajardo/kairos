@@ -548,7 +548,13 @@ let dirty=false,documentCloud=null,titleSpacing=7,chapterSpacing=3,textSpacing=0
 let documentHistory=[],historyPosition=-1,historyReady=false,historyRestoring=false,historyNeedsReset=false;
 let historyTimer=null,historyValue='',historyBytes=0,manuscriptCache=null;
 const HISTORY_DELAY=500,AUTOSAVE_DELAY=800,HISTORY_BYTE_LIMIT=16*1024*1024;
-function invalidateManuscript(){manuscriptCache=null}
+let storyCaptureCache=new WeakMap();
+function invalidateManuscript(target=null){
+ manuscriptCache=null;
+ const story=target?.closest?.('.published-story');
+ if(story&&story.parentElement===main)storyCaptureCache.delete(story);
+ else storyCaptureCache=new WeakMap();
+}
 const spacingScale=[0,1,3,5,7,9,10];
 const validSpacing=value=>Number.isFinite(value)?spacingScale.reduce((best,next)=>Math.abs(next-value)<Math.abs(best-value)?next:best,1):10;
 const pageIds=Array.from(main.querySelectorAll('.sheet'),sheet=>sheet.id);
@@ -963,16 +969,22 @@ function compactFormatting(root){
 // Editor controls never belong to the saved or published manuscript.
 function manuscriptHTML(){
  if(manuscriptCache!==null)return manuscriptCache.html;
- const copy=main.cloneNode(true);
- copy.querySelectorAll('[data-editor-only]').forEach(node=>node.remove());
- copy.querySelectorAll('[hidden]').forEach(node=>node.removeAttribute('hidden'));
- compactFormatting(copy);
- const html=copy.innerHTML;
- // Reuse the detached capture for the empty-write guard; do not parse and
- // sanitize the entire outgoing manuscript again just to check its text.
- copy.querySelectorAll('#indice,.back-to-index,script,style,iframe,object,embed,link,meta').forEach(node=>node.remove());
- manuscriptCache={html,nonempty:!!copy.textContent.replace(/[\s\u200b\uFEFF]/g,'')||!!copy.querySelector('img')};
- return html;
+ const holder=document.createElement('div'),parts=[];let nonempty=false;
+ for(const node of main.childNodes){
+  const cacheable=node.nodeType===1&&node.matches('.published-story');
+  let capture=cacheable?storyCaptureCache.get(node):null;
+  if(!capture){
+   holder.replaceChildren(node.cloneNode(true));
+   holder.querySelectorAll('[data-editor-only]').forEach(item=>item.remove());
+   holder.querySelectorAll('[hidden]').forEach(item=>item.removeAttribute('hidden'));
+   const html=holder.innerHTML;
+   holder.querySelectorAll('#indice,.back-to-index,script,style,iframe,object,embed,link,meta').forEach(item=>item.remove());
+   capture={html,nonempty:!!holder.textContent.replace(/[\s\u200b\uFEFF]/g,'')||!!holder.querySelector('img')};
+   if(cacheable)storyCaptureCache.set(node,capture);
+  }
+  parts.push(capture.html);nonempty=nonempty||capture.nonempty;
+ }
+ manuscriptCache={html:parts.join(''),nonempty};return manuscriptCache.html;
 }
 function nextChapterNumber(story){
  const numbers=Array.from(story.querySelectorAll('h2'),heading=>{
@@ -1228,7 +1240,6 @@ function recordDocumentHistory(){
  clearTimeout(historyTimer);historyTimer=null;
  if(!historyReady||historyRestoring)return;
  if(historyNeedsReset){resetDocumentHistory();return}
- invalidateManuscript();
  const value=historySnapshot();if(historyValue===value){updateHistoryControls();return}
  for(const entry of documentHistory.splice(historyPosition+1))historyBytes-=historyPatchBytes(entry);
  const patch=historyPatch(historyValue,value);documentHistory.push(patch);historyBytes+=historyPatchBytes(patch);historyPosition++;historyValue=value;
@@ -1256,8 +1267,8 @@ function navigateDocumentHistory(direction){
  }finally{historyRestoring=false}return true;
 }
 
-function save(typing=false){
- invalidateManuscript();
+function save(typing=false,target=null){
+ invalidateManuscript(target);
  if(typing)scheduleDocumentHistory();else recordDocumentHistory();
  if(documentCloud)documentCloud.changed();
 }
@@ -1271,8 +1282,8 @@ refreshLayout();
 // Ordinary typing must not rebuild or move the contenteditable subtree.
 let composing=false;
 main.addEventListener('compositionstart',()=>{composing=true});
-main.addEventListener('input',event=>{if(event.isComposing){invalidateManuscript();dirty=true;documentCloud?.changed();return}selectionInEditor();save(true)});
-main.addEventListener('compositionend',()=>{composing=false;selectionInEditor();save(true)});
+main.addEventListener('input',event=>{if(event.isComposing){invalidateManuscript(event.target);dirty=true;documentCloud?.changed();return}selectionInEditor();save(true,event.target)});
+main.addEventListener('compositionend',event=>{composing=false;selectionInEditor();save(true,event.target)});
 // Rich clipboard data retains list structure and source formatting.
 function styledClipboardFragment(range){
  const fragment=range.cloneContents(),root=range.commonAncestorContainer;
