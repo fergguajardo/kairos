@@ -1075,17 +1075,13 @@ function decisionCriterionLabel(label){
 let decisionSelected=0;
 function attachMatrixFigureClick(scale,bars,range){
  bars.removeAttribute('aria-hidden');range.tabIndex=-1;range.setAttribute('aria-hidden','true');
- const zero=el('button','proposal-zero','0');zero.type='button';
- zero.setAttribute('aria-label',range.getAttribute('aria-label')+': '+(Number(range.step)===10?'0%':'0 de 10'));
- zero.setAttribute('aria-pressed',String(range.getAttribute('aria-valuetext')!=='Sin evaluar'&&Number(range.value)===0));
- zero.onclick=()=>{range.value='0';range.oninput()};scale.append(zero);
  Array.from(bars.children).forEach((mark,index)=>{
   mark.type='button';const score=(index+1)*Number(range.step);
   mark.setAttribute('aria-label',range.getAttribute('aria-label')+': '+score+(Number(range.step)===10?'%':' de 10'));
-  mark.onclick=()=>{range.value=String(score);range.oninput()};
+  mark.onclick=()=>{range.value=String(index===0&&Number(range.value)===score?0:score);range.oninput()};
   mark.setAttribute('aria-pressed',String(range.getAttribute('aria-valuetext')!=='Sin evaluar'&&Number(range.value)===score))
  });
- const update=range.oninput;range.oninput=()=>{update();zero.setAttribute('aria-pressed',String(Number(range.value)===0));Array.from(bars.children).forEach((mark,index)=>mark.setAttribute('aria-pressed',String(Number(range.value)===(index+1)*Number(range.step))))}
+ const update=range.oninput;range.oninput=()=>{update();Array.from(bars.children).forEach((mark,index)=>mark.setAttribute('aria-pressed',String(Number(range.value)===(index+1)*Number(range.step))))}
 }
 function swapProposalRows(rows,from,to){
  if(!Number.isInteger(from)||!Number.isInteger(to)||from<0||to<0||from>=rows.length||to>=rows.length||from===to)return false;
@@ -1120,11 +1116,7 @@ function renderProposalMatrix(page){
   thumbnail.ondrop=event=>{if(draggedProposal===null)return;event.preventDefault();swap(draggedProposal,index)};
   const remove=el('button','matrix-icon proposal-thumbnail-remove');remove.type='button';remove.title='Eliminar propuesta';remove.setAttribute('aria-label','Eliminar propuesta '+proposal.title);remove.append(lineIcon('<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/>'));
   remove.onclick=()=>{if(!confirm('¿Eliminar la propuesta «'+proposal.title+'»?'))return;model.rows.splice(index,1);if(index<decisionSelected)decisionSelected--;save();renderProposalMatrix(page)};
-  const moves=el('div','proposal-thumbnail-moves');
-  [[-1,'Mover a la izquierda','M14 6l-6 6 6 6'],[1,'Mover a la derecha','M10 6l6 6-6 6']].forEach(([offset,label,path])=>{
-   const move=el('button','matrix-icon');move.type='button';move.title=label;move.setAttribute('aria-label',label+': '+proposal.title);move.disabled=index+offset<0||index+offset>=model.rows.length;move.append(lineIcon('<path d="'+path+'"/>'));move.onclick=()=>swap(index,index+offset);moves.append(move)
-  });
-  thumbnail.append(card,remove,moves);rail.append(thumbnail);
+  thumbnail.append(card,remove);rail.append(thumbnail);
  });
  const add=el('button','proposal-control-add');add.type='button';add.title='Añadir propuesta';add.setAttribute('aria-label','Añadir propuesta');add.append(lineIcon('<path d="M12 5v14M5 12h14"/>'));
  add.onclick=()=>{model.rows.push(normalizeDecisionMatrix({rows:[{title:'Propuesta '+(model.rows.length+1)}]}).rows[0]);decisionSelected=model.rows.length-1;save();renderProposalMatrix(page);page.querySelector('.proposal-name')?.focus()};rail.append(add);page.append(rail);
