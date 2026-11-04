@@ -244,7 +244,7 @@ function tangledFixture(){
  const initial=fixture();
  const style='font-family:Outfit, sans-serif !important;font-size:16px !important;font-weight:300 !important;font-style:normal !important;color:rgb(229, 185, 92) !important';
  const paragraphs=Array.from({length:50},(_,i)=>'<p>'+('<span style="'+style+'">').repeat(200)+'PERSONAJE. — Texto sintético '+i+'.'+'</span>'.repeat(200)+'</p>').join('');
- initial.html='<section id="indice"></section><section class="published-story" id="cuento-1" data-kairos-genre="Drama"><h1>1. PRUEBA</h1>'+paragraphs+'</section>';
+ initial.html='<section id="indice"></section><section class="published-story" id="cuento-1" data-kairos-genre="Drama" data-theatre-ready="true"><h1>1. PRUEBA</h1>'+paragraphs+'</section>';
  return initial;
 }
 
