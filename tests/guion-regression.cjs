@@ -7,7 +7,7 @@ const OWNER='58c60587-9559-4747-a7bc-a90d36147caa';
 const DOC='disociados-editable-fiel-v1';
 const source=fs.readFileSync(path.join(__dirname,'../escritor/disociados-editable/index.html'),'utf8');
 // Expose the history driver only inside the synthetic fixture, never in production.
-const testSource=source.replace('refreshLayout();historyReady=true;resetDocumentHistory();','window.__historyForTest={save,navigateDocumentHistory,state:()=>({length:documentHistory.length,bytes:historyBytes,full:historyValue.length*2})};refreshLayout();historyReady=true;resetDocumentHistory();');
+const testSource=source.replace('refreshLayout();historyReady=true;resetDocumentHistory();','window.__historyForTest={save,navigateDocumentHistory,compactFormatting,state:()=>({length:documentHistory.length,bytes:historyBytes,full:historyValue.length*2})};refreshLayout();historyReady=true;resetDocumentHistory();');
 // Synthetic text only. These tests never connect to a real account or database.
 function fixture(){
  const titles=['BELA','PRINCIPITA','MANDALA','LATTE','ADORNI','SÁNDALO','BABA YAGA','ROBERTO','BARNIZ','PARBOIL','CLAUDE'];
@@ -28,14 +28,14 @@ function server(initial=fixture()){
  };
  return state;
 }
-async function open(state=server()){
+async function open(state=server(),htmlSource=testSource){
  const page=await browser.newPage();page.setDefaultTimeout(5000);const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.exposeBinding('__guionApi',(_,request)=>state.api(request));
  await page.addInitScript(({OWNER})=>{
   const auth={onAuthStateChange(callback){window.__authCallback=callback},getSession:async()=>({data:{session:{user:{id:OWNER}}}}),getUser:async()=>({data:{user:{id:OWNER}}})};
   window.supabase={createClient:()=>({auth,from(table){const request={table,eq:{},mode:'read',fields:'',single:false};const q={select(fields){request.fields=fields;return q},eq(key,value){request.eq[key]=value;return q},order(){return q},limit(){return q},update(value){request.mode='update';request.value=value;return q},insert(value){request.mode='insert';request.value=value;return q},maybeSingle(){request.single=true;return window.__guionApi(request)},then(resolve,reject){return window.__guionApi(request).then(resolve,reject)}};return q}})};
  },{OWNER});
- await page.route('**/*',route=>route.request().url()==='https://guion.test/'?route.fulfill({contentType:'text/html',body:testSource}):route.fulfill({body:''}));
+ await page.route('**/*',route=>route.request().url()==='https://guion.test/'?route.fulfill({contentType:'text/html',body:htmlSource}):route.fulfill({body:''}));
  await page.goto('https://guion.test/');await page.waitForFunction(()=>!document.querySelector('main').inert);await settled(page);
  return {page,state,errors,async close(){assert.deepEqual(errors,[]);await page.close()}};
 }
@@ -238,5 +238,70 @@ test('IME composition stays pending until completion and survives an in-flight s
  release();await page.waitForTimeout(300);assert(!state.data.html.includes('漢字'));
  await page.evaluate(()=>document.querySelector('main').dispatchEvent(new CompositionEvent('compositionend',{bubbles:true})));
  await settled(page);assert(state.data.html.includes('漢字'));assert(state.data.html.includes('BEFORE_IME'));await t.close();
+});
+
+function tangledFixture(){
+ const initial=fixture();
+ const style='font-family:Outfit, sans-serif !important;font-size:16px !important;font-weight:300 !important;font-style:normal !important;color:rgb(229, 185, 92) !important';
+ const paragraphs=Array.from({length:50},(_,i)=>'<p>'+('<span style="'+style+'">').repeat(200)+'PERSONAJE. — Texto sintético '+i+'.'+'</span>'.repeat(200)+'</p>').join('');
+ initial.html='<section id="indice"></section><section class="published-story" id="cuento-1" data-kairos-genre="Drama"><h1>1. PRUEBA</h1>'+paragraphs+'</section>';
+ return initial;
+}
+
+test('deeply nested formatting is compacted on load without losing text, typography or saved content',async()=>{
+ const initial=tangledFixture(),t=await open(server(initial)),{page,state}=t;
+ assert(await page.locator('main span').count()<150);
+ const text=await page.locator('.published-story p').allTextContents();
+ assert.deepEqual(text,Array.from({length:50},(_,i)=>'PERSONAJE. — Texto sintético '+i+'.'));
+ const style=await page.locator('.published-story p span').first().evaluate(n=>{const s=getComputedStyle(n);return [s.color,s.fontSize,s.fontWeight,s.fontStyle]});
+ assert.deepEqual(style,['rgb(229, 185, 92)','16px','300','normal']);
+ assert(state.data.html.length<initial.html.length/20);
+ await page.locator('.published-story p').first().click();await page.keyboard.press('End');await page.keyboard.type('FLUJO');await settled(page);
+ assert(state.data.html.includes('FLUJO'));await page.keyboard.press('Control+z');assert(!(await page.locator('main').textContent()).includes('FLUJO'));
+ await page.keyboard.press('Control+y');assert((await page.locator('main').textContent()).includes('FLUJO'));await t.close();
+});
+
+test('compaction preserves mixed formatting, whitespace, links and structural spans',async()=>{
+ const t=await open();const result=await t.page.evaluate(()=>{
+  const root=document.createElement('div');document.body.append(root);
+  root.innerHTML='<p><span style="font-size:16px!important;color:red!important;font-weight:300"><span style="font-size:21px;color:blue;font-style:italic"> A </span></span><span style="font-size:12px">B</span><span style="font-size:12px"> C</span><a href="https://example.com"><span style="color:green"> link </span></a><span class="doc-marker">•</span><span style="margin-left:20px"></span><span style="font-size:20px"><span style="font-size:1.5em">RELATIVE</span></span><span style="text-decoration:underline"><span style="color:red">UNDERLINE</span></span></p>';
+  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT),nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
+  const signature=()=>nodes.map(node=>{const s=getComputedStyle(node.parentElement);return [node.data,s.fontSize,s.fontWeight,s.fontStyle,s.color]});
+  const before=signature(),text=root.textContent;
+  window.__historyForTest.compactFormatting(root);
+  const after=signature(),sameText=text===root.textContent;
+  const protectedNodes=root.querySelectorAll('a,.doc-marker,[style*="margin-left"],[style*="1.5em"],[style*="text-decoration"]').length;
+  root.remove();return {before,after,sameText,protectedNodes};
+ });
+ assert.deepEqual(result.after,result.before);assert(result.sameText);assert.equal(result.protectedNodes,5);await t.close();
+});
+
+test('repeated rich copying and pasting does not rebuild deep format chains',async()=>{
+ const t=await open(),{page}=t;
+ await page.locator('.published-story:not([hidden]) p').last().click();
+ await page.evaluate(()=>{
+  const p=[...document.querySelectorAll('.published-story:not([hidden]) p')].pop();p.innerHTML='<span style="font-size:16px;color:rgb(229,185,92)">CADENA</span>';
+  for(let i=0;i<15;i++){
+   const r=document.createRange();r.selectNodeContents(p);const selection=getSelection();selection.removeAllRanges();selection.addRange(r);
+   const data=new DataTransfer();p.dispatchEvent(new ClipboardEvent('copy',{bubbles:true,cancelable:true,clipboardData:data}));p.dispatchEvent(new ClipboardEvent('paste',{bubbles:true,cancelable:true,clipboardData:data}));
+  }
+ });
+ const depth=await page.getByText('CADENA',{exact:true}).last().evaluate(n=>{let depth=0;while(n&&n.tagName!=='P'){if(n.tagName==='SPAN')depth++;n=n.parentElement}return depth});
+ assert(depth<=3);await settled(page);assert(t.state.data.html.includes('CADENA'));await t.close();
+});
+
+test('profile native typing and deferred save on a synthetic 10000-span document',{skip:!process.env.GUION_PROFILE},async context=>{
+ for(const variant of ['before','after']){
+  const html=variant==='before'?testSource.replace(/compactFormatting\((?:template\.content|copy|fragment|replica)\);/g,''):testSource;
+  const t=await open(server(tangledFixture()),html),{page}=t;
+  await page.locator('.published-story p').first().click();await page.keyboard.press('End');
+  const session=await page.context().newCDPSession(page);await session.send('Performance.enable');
+  const get=async()=>Object.fromEntries((await session.send('Performance.getMetrics')).metrics.map(m=>[m.name,m.value]));
+  const spans=await page.locator('main span').count(),start=await get(),time=Date.now();
+  await page.keyboard.type('Un flujo de palabras con pausas naturales.',{delay:25});const typed=await get();
+  await settled(page);const saved=await get();
+  context.diagnostic(JSON.stringify({variant,spans,elapsedMs:Date.now()-time,typingScriptMs:(typed.ScriptDuration-start.ScriptDuration)*1000,typingLayoutMs:(typed.LayoutDuration-start.LayoutDuration)*1000,typingStyleMs:(typed.RecalcStyleDuration-start.RecalcStyleDuration)*1000,saveScriptMs:(saved.ScriptDuration-typed.ScriptDuration)*1000}));
+  await session.detach();await t.close();
+ }
 });
 

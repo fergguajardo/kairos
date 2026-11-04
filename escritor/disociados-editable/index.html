@@ -1311,12 +1311,48 @@ function applyNarrativeArchitecture(main){
  return before!==main.innerHTML;
 }
 
+// Flatten only redundant, purely typographic wrappers. Relative sizes, layout
+// styles, semantic classes, links and markers keep their original structure.
+function compactFormatting(root){
+ const properties=new Set(['font-family','font-size','font-weight','font-style','color','text-align']);
+ const plain=node=>{
+  if(node?.nodeType!==1||node.tagName!=='SPAN'||[...node.attributes].some(a=>a.name!=='style'&&!(a.name==='class'&&a.value==='clipboard-block')))return false;
+  for(const property of node.style){
+   const value=node.style.getPropertyValue(property).trim();
+   if(!properties.has(property)||/\b(?:inherit|initial|unset|revert|currentcolor|var)\b/i.test(value))return false;
+   if(property==='font-size'&&!/^(?:0|[\d.]+(?:px|pt|pc|in|cm|mm|q|rem))$/i.test(value))return false;
+   if(property==='font-weight'&&!/^(?:[1-9]\d{0,2}|1000|normal|bold)$/i.test(value))return false;
+  }
+  return true;
+ };
+ let changed=false;
+ for(const span of [...root.querySelectorAll('span')].reverse()){
+  if(!plain(span))continue;
+  if(!span.textContent&&[...span.childNodes].every(node=>node.nodeType===3)){span.remove();changed=true;continue}
+  const child=span.childNodes.length===1?span.firstChild:null;
+  if(plain(child)){
+   // Child declarations override inherited declarations, even when the parent
+   // used !important. Preserve every explicit child value and its priority.
+   for(const property of span.style)if(!child.style.getPropertyValue(property))child.style.setProperty(property,span.style.getPropertyValue(property),span.style.getPropertyPriority(property));
+   span.replaceWith(child);changed=true;
+  }
+ }
+ for(const span of root.querySelectorAll('span')){
+  if(!plain(span))continue;
+  while(plain(span.nextSibling)&&span.style.cssText===span.nextSibling.style.cssText){
+   const next=span.nextSibling;span.append(...next.childNodes);next.remove();changed=true;
+  }
+ }
+ return changed;
+}
+
 // Editor controls never belong to the saved or published manuscript.
 function manuscriptHTML(){
  if(manuscriptCache!==null)return manuscriptCache.html;
  const copy=main.cloneNode(true);
  copy.querySelectorAll('[data-editor-only]').forEach(node=>node.remove());
  copy.querySelectorAll('[hidden]').forEach(node=>node.removeAttribute('hidden'));
+ compactFormatting(copy);
  const html=copy.innerHTML;
  // Reuse the detached capture for the empty-write guard; do not parse and
  // sanitize the entire outgoing manuscript again just to check its text.
@@ -1421,6 +1457,7 @@ function duplicateLastDialogue(story){
    if(index<breaks.length)line.setEndBefore(breaks[index]);else line.setEnd(block,block.childNodes.length);
    if(!/^(?:[—–]|[\p{L}][\p{L}\p{M} .'-]*\.\s*[—–])/u.test(line.toString().trim()))continue;
    const replica=line.cloneContents();
+  compactFormatting(replica);
    replica.querySelectorAll('[id]').forEach(node=>node.removeAttribute('id'));
    replica.prepend(document.createElement('br'));
    recordDocumentHistory();
@@ -1526,7 +1563,7 @@ function current(){
  if(publicationMode==='creation'&&publicationSnapshot)return {...draft,...publicationSnapshot,publicationMode,creationDraft:draft};
  return {...draft,publicationMode,creationDraft:null};
 }
-function sanitize(value){const template=document.createElement('template');template.innerHTML=value;const allowed=new Set(['SECTION','HR','BLOCKQUOTE','ARTICLE','DIV','SPAN','P','BR','STRONG','B','EM','I','U','A','UL','OL','LI','H1','H2','H3','H4','H5','H6','IMG']);for(const node of Array.from(template.content.querySelectorAll('*'))){if(!allowed.has(node.tagName)){if(['SCRIPT','STYLE','IFRAME','OBJECT','EMBED','IMG','LINK','META'].includes(node.tagName))node.remove();else node.replaceWith(...node.childNodes);continue}for(const attribute of Array.from(node.attributes)){if(attribute.name==='src'&&node.tagName==='IMG'){if(!/^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(attribute.value))node.removeAttribute('src')}else if(attribute.name==='alt'&&node.tagName==='IMG'){}else if(attribute.name==='href'&&node.tagName==='A'){if(!/^(?:https?:\/\/|#[A-Za-z][\w-]*)/i.test(attribute.value))node.removeAttribute('href')}else if(attribute.name==='style'){const safe=Array.from(node.style).filter(k=>['font-family','font-size','font-weight','font-style','color','margin-top','margin-left','margin-right','padding-left','line-height','list-style-type','text-decoration','width','padding-right','padding-top','padding-bottom','margin-bottom','text-align','text-indent','max-width','height','display','border','border-top','border-left','border-right','border-left-width','border-left-style','border-left-color','border-right-width','border-right-style','border-right-color'].includes(k)).map(k=>k+':'+node.style.getPropertyValue(k)+(node.style.getPropertyPriority(k)?' !important':'')).join(';');node.setAttribute('style',safe)}else if(attribute.name==='data-bela-chapter'&&/^[1-9]\d*$/.test(attribute.value)){}else if(attribute.name==='data-theatre-ready'&&node.tagName==='SECTION'&&attribute.value==='true'){}else if(attribute.name==='data-kairos-genre'&&node.tagName==='SECTION'&&['Thriller','Drama','Comedia','Prosa'].includes(attribute.value)){}else if(attribute.name==='aria-label'){}else if(attribute.name==='class'&&/^(?:principita-gold-aside|sedante-gold-aside|sheet story-start bela-added-chapter|sheet bela-added-chapter|published-story|toc|toc-num|toc-title|toc-chapters|indice-title|back-to-index|tda-flashback-separator)$/.test(attribute.value)){}else if(attribute.name==='class'&&/^((?:voz|capitulo|flashback-muted|flashback-boundary-start|flashback-boundary-end|passage-start|passage-end|passage-top-gap|aside-start|aside-end)(?: (?:voz|capitulo|flashback-muted|flashback-boundary-start|flashback-boundary-end|passage-start|passage-end|passage-top-gap|aside-start|aside-end))*|doc-image|doc-block|doc-line|doc-heading|doc-marker|marker-gap|clipboard-block|page-break|page-content|sheet(?: (?:empty-section|story-start|chapter-start))*)$/.test(attribute.value)){}else if(node.tagName==='OL'&&attribute.name==='start'&&/^\d+$/.test(attribute.value)){}else if(node.tagName==='LI'&&attribute.name==='value'&&/^\d+$/.test(attribute.value)){}else if(attribute.name==='data-kairos-clipboard'&&['blocks','inline'].includes(attribute.value)){}else if(attribute.name==='data-marker-removed'&&attribute.value==='true'){}else if(attribute.name==='data-layout-version'&&attribute.value==='3'){}else if(attribute.name==='id'&&(pageIds.includes(attribute.value)||/^(?:indice|cuento-\d+(?:-encabezado-\d+)?|doc-heading-\d+)$/.test(attribute.value))){}else node.removeAttribute(attribute.name)}if(node.tagName==='A'){node.target='_blank';node.rel='noopener noreferrer'}}return template.innerHTML}
+function sanitize(value){const template=document.createElement('template');template.innerHTML=value;const allowed=new Set(['SECTION','HR','BLOCKQUOTE','ARTICLE','DIV','SPAN','P','BR','STRONG','B','EM','I','U','A','UL','OL','LI','H1','H2','H3','H4','H5','H6','IMG']);for(const node of Array.from(template.content.querySelectorAll('*'))){if(!allowed.has(node.tagName)){if(['SCRIPT','STYLE','IFRAME','OBJECT','EMBED','IMG','LINK','META'].includes(node.tagName))node.remove();else node.replaceWith(...node.childNodes);continue}for(const attribute of Array.from(node.attributes)){if(attribute.name==='src'&&node.tagName==='IMG'){if(!/^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(attribute.value))node.removeAttribute('src')}else if(attribute.name==='alt'&&node.tagName==='IMG'){}else if(attribute.name==='href'&&node.tagName==='A'){if(!/^(?:https?:\/\/|#[A-Za-z][\w-]*)/i.test(attribute.value))node.removeAttribute('href')}else if(attribute.name==='style'){const safe=Array.from(node.style).filter(k=>['font-family','font-size','font-weight','font-style','color','margin-top','margin-left','margin-right','padding-left','line-height','list-style-type','text-decoration','width','padding-right','padding-top','padding-bottom','margin-bottom','text-align','text-indent','max-width','height','display','border','border-top','border-left','border-right','border-left-width','border-left-style','border-left-color','border-right-width','border-right-style','border-right-color'].includes(k)).map(k=>k+':'+node.style.getPropertyValue(k)+(node.style.getPropertyPriority(k)?' !important':'')).join(';');node.setAttribute('style',safe)}else if(attribute.name==='data-bela-chapter'&&/^[1-9]\d*$/.test(attribute.value)){}else if(attribute.name==='data-theatre-ready'&&node.tagName==='SECTION'&&attribute.value==='true'){}else if(attribute.name==='data-kairos-genre'&&node.tagName==='SECTION'&&['Thriller','Drama','Comedia','Prosa'].includes(attribute.value)){}else if(attribute.name==='aria-label'){}else if(attribute.name==='class'&&/^(?:principita-gold-aside|sedante-gold-aside|sheet story-start bela-added-chapter|sheet bela-added-chapter|published-story|toc|toc-num|toc-title|toc-chapters|indice-title|back-to-index|tda-flashback-separator)$/.test(attribute.value)){}else if(attribute.name==='class'&&/^((?:voz|capitulo|flashback-muted|flashback-boundary-start|flashback-boundary-end|passage-start|passage-end|passage-top-gap|aside-start|aside-end)(?: (?:voz|capitulo|flashback-muted|flashback-boundary-start|flashback-boundary-end|passage-start|passage-end|passage-top-gap|aside-start|aside-end))*|doc-image|doc-block|doc-line|doc-heading|doc-marker|marker-gap|clipboard-block|page-break|page-content|sheet(?: (?:empty-section|story-start|chapter-start))*)$/.test(attribute.value)){}else if(node.tagName==='OL'&&attribute.name==='start'&&/^\d+$/.test(attribute.value)){}else if(node.tagName==='LI'&&attribute.name==='value'&&/^\d+$/.test(attribute.value)){}else if(attribute.name==='data-kairos-clipboard'&&['blocks','inline'].includes(attribute.value)){}else if(attribute.name==='data-marker-removed'&&attribute.value==='true'){}else if(attribute.name==='data-layout-version'&&attribute.value==='3'){}else if(attribute.name==='id'&&(pageIds.includes(attribute.value)||/^(?:indice|cuento-\d+(?:-encabezado-\d+)?|doc-heading-\d+)$/.test(attribute.value))){}else node.removeAttribute(attribute.name)}if(node.tagName==='A'){node.target='_blank';node.rel='noopener noreferrer'}}compactFormatting(template.content);return template.innerHTML}
 function validate(data){
  if(data?.format!==FORMAT)throw Error('El archivo no es un respaldo de este documento.');
  if(data.version===2&&typeof data.html==='string'&&data.html.length<=10000000)return sanitize(data.html);
@@ -1539,7 +1576,7 @@ function apply(data){
  if(publicationMode==='creation'&&data.creationDraft){data=data.creationDraft}
  updatePublicationMode();
  if(historyReady&&!historyRestoring)historyNeedsReset=true;
- const contents=validate(data);applyCover(data);editorialRevision=data.editorialRevision===2?2:0;publishedMigration=[1,2,3,4].includes(data.publishedMigration)?data.publishedMigration:0;
+ const contents=validate(data);if(data.version===2&&contents!==data.html)documentNeedsSync=true;applyCover(data);editorialRevision=data.editorialRevision===2?2:0;publishedMigration=[1,2,3,4].includes(data.publishedMigration)?data.publishedMigration:0;
  titleSpacing=validSpacing(data.titleSpacing);
  textSpacing=validSpacing(data.textSpacing??data.chapterSpacing);
  chapterSpacing=validSpacing(data.textSpacing===undefined?10:data.chapterSpacing);
@@ -1630,7 +1667,7 @@ function styledClipboardFragment(range){
  if(root.nodeType===Node.TEXT_NODE)collect(root);else{const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);while(walker.nextNode())collect(walker.currentNode)}
  const copies=[],walker=document.createTreeWalker(fragment,NodeFilter.SHOW_TEXT);while(walker.nextNode())if(walker.currentNode.length)copies.push(walker.currentNode);
  if(copies.length===originals.length&&copies.every((node,i)=>node.data===originals[i].text))copies.forEach((node,i)=>{const span=document.createElement('span'),style=getComputedStyle(originals[i].node.parentElement);for(const name of ['font-family','font-size','font-weight','font-style','color','text-decoration'])span.style.setProperty(name,style.getPropertyValue(name),'important');node.replaceWith(span);span.append(node)});
- return fragment;
+ compactFormatting(fragment);return fragment;
 }
 function clipboardSequence(event,cut){
  if(main.inert||!event.clipboardData)return;
