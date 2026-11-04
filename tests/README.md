@@ -21,6 +21,13 @@ Undo remains immediate, stores reversible deltas, and limits retained history
 to 100 states / a 16 MiB estimated text budget (at least one undo step).
 Additional checks cover Unicode, history trimming, page hiding and IME input.
 
+Rich-text regression checks load 10,000 nested formatting spans and verify
+compaction, exact text, typography, autosave and undo/redo. Relative font sizes,
+semantic markers, links and layout styles are preserved. Repeated rich
+copy/paste must not grow wrapper chains. Set `GUION_PROFILE=1` to compare native
+typing, style/layout and deferred-save work before/after compaction using CDP.
+Only synthetic text is used by these checks and benchmarks.
+
 `database/guion-save-guard.sql` removes the prior recovery feature and its copies
 without modifying the active document. It retains an empty-overwrite guard.
 
