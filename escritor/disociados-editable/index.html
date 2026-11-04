@@ -931,6 +931,9 @@ const KEY='kairos-disociados-editable-fiel-v1',FORMAT='kairos-disociados-documen
 const main=document.querySelector('main'),status=document.getElementById('status'),picker=document.getElementById('pages')||document.createElement('select');
 let dirty=false,documentCloud=null,titleSpacing=7,chapterSpacing=3,textSpacing=0;
 let documentHistory=[],historyPosition=-1,historyReady=false,historyRestoring=false,historyNeedsReset=false;
+let historyTimer=null,historyValue='',historyBytes=0,manuscriptCache=null;
+const HISTORY_DELAY=180,HISTORY_BYTE_LIMIT=16*1024*1024;
+function invalidateManuscript(){manuscriptCache=null}
 const spacingScale=[0,1,3,5,7,9,10];
 const validSpacing=value=>Number.isFinite(value)?spacingScale.reduce((best,next)=>Math.abs(next-value)<Math.abs(best-value)?next:best,1):10;
 const pageIds=Array.from(main.querySelectorAll('.sheet'),sheet=>sheet.id);
@@ -1310,10 +1313,11 @@ function applyNarrativeArchitecture(main){
 
 // Editor controls never belong to the saved or published manuscript.
 function manuscriptHTML(){
+ if(manuscriptCache!==null)return manuscriptCache;
  const copy=main.cloneNode(true);
  copy.querySelectorAll('[data-editor-only]').forEach(node=>node.remove());
  copy.querySelectorAll('[hidden]').forEach(node=>node.removeAttribute('hidden'));
- return copy.innerHTML;
+ return manuscriptCache=copy.innerHTML;
 }
 function nextChapterNumber(story){
  const numbers=Array.from(story.querySelectorAll('h2'),heading=>{
@@ -1477,6 +1481,7 @@ function ensureStoryAnchors(){
  return changed;
 }
 function refreshLayout(){
+ invalidateManuscript();
  const editingSelection=window.getSelection(),editingRange=editingSelection?.rangeCount?editingSelection.getRangeAt(0):null;
  const caretState=editingRange&&main.contains(editingRange.startContainer)&&main.contains(editingRange.endContainer)?{start:editingRange.startContainer,startOffset:editingRange.startOffset,end:editingRange.endContainer,endOffset:editingRange.endOffset}:null;
  main.querySelectorAll('[data-editor-only]').forEach(node=>node.remove());
@@ -1537,38 +1542,78 @@ function apply(data){
  else{main.innerHTML=originalLayout;pageIds.forEach((id,i)=>{const node=main.querySelector('#'+id+' .page-content');if(node)node.innerHTML=contents[i]})}
  inheritEditing();main.querySelectorAll('.page-break').forEach(node=>node.contentEditable="false");upgradeDocument();
 }
-function historySnapshot(){return {value:JSON.stringify(editableState())}}
-function resetDocumentHistory(){if(historyRestoring)return;documentHistory=[historySnapshot()];historyPosition=0;historyNeedsReset=false;updateHistoryControls()}
+// Keep one baseline and reversible text deltas instead of 100 full manuscripts.
+function historySnapshot(){return JSON.stringify(editableState())}
+function historyPatch(before,after){
+ let start=0,end=0,limit=Math.min(before.length,after.length);
+ while(start<limit&&before.charCodeAt(start)===after.charCodeAt(start))start++;
+ while(end<limit-start&&before.charCodeAt(before.length-1-end)===after.charCodeAt(after.length-1-end))end++;
+ return {start,removed:before.slice(start,before.length-end),inserted:after.slice(start,after.length-end)};
+}
+function applyHistoryPatch(value,patch,backward=false){
+ const removed=backward?patch.inserted:patch.removed,inserted=backward?patch.removed:patch.inserted;
+ return value.slice(0,patch.start)+inserted+value.slice(patch.start+removed.length);
+}
+const historyPatchBytes=patch=>2*(patch.removed.length+patch.inserted.length);
+function resetDocumentHistory(){
+ if(historyRestoring)return;
+ clearTimeout(historyTimer);historyTimer=null;historyValue=historySnapshot();
+ documentHistory=[{value:historyValue}];historyBytes=historyValue.length*2;historyPosition=0;historyNeedsReset=false;updateHistoryControls();
+}
 function updateHistoryControls(){
  const undo=formatTools.querySelector('[data-format="undo"]'),redo=formatTools.querySelector('[data-format="redo"]');
- if(undo)undo.disabled=!historyReady||historyPosition<=0;
- if(redo)redo.disabled=!historyReady||historyPosition>=documentHistory.length-1;
+ if(undo)undo.disabled=!historyReady||(historyPosition<=0&&historyTimer===null);
+ if(redo)redo.disabled=!historyReady||historyTimer!==null||historyPosition>=documentHistory.length-1;
 }
 function recordDocumentHistory(){
+ clearTimeout(historyTimer);historyTimer=null;
  if(!historyReady||historyRestoring)return;
  if(historyNeedsReset){resetDocumentHistory();return}
- const entry=historySnapshot();if(documentHistory[historyPosition]?.value===entry.value)return;
- documentHistory.splice(historyPosition+1);documentHistory.push(entry);historyPosition++;
- if(documentHistory.length>100){documentHistory.shift();historyPosition--}updateHistoryControls();
+ invalidateManuscript();
+ const value=historySnapshot();if(historyValue===value){updateHistoryControls();return}
+ for(const entry of documentHistory.splice(historyPosition+1))historyBytes-=historyPatchBytes(entry);
+ const patch=historyPatch(historyValue,value);documentHistory.push(patch);historyBytes+=historyPatchBytes(patch);historyPosition++;historyValue=value;
+ // Keep at least one undo step, even when one document exceeds the budget.
+ while(documentHistory.length>2&&(documentHistory.length>100||historyBytes>HISTORY_BYTE_LIMIT)){
+  const baseline=documentHistory[0].value,next=applyHistoryPatch(baseline,documentHistory[1]);
+  historyBytes+=2*(next.length-baseline.length)-historyPatchBytes(documentHistory[1]);
+  documentHistory.splice(0,2,{value:next});historyPosition--;
+ }
+ updateHistoryControls();
+}
+function scheduleDocumentHistory(){
+ if(!historyReady||historyRestoring)return;
+ clearTimeout(historyTimer);historyTimer=setTimeout(recordDocumentHistory,HISTORY_DELAY);updateHistoryControls();
 }
 function navigateDocumentHistory(direction){
  if(main.inert||!historyReady)return false;
+ if(historyTimer!==null)recordDocumentHistory();
  const next=historyPosition+(direction==='undo'?-1:1);if(next<0||next>=documentHistory.length)return false;
- const value=JSON.parse(documentHistory[next].value);historyRestoring=true;
+ const valueString=applyHistoryPatch(historyValue,documentHistory[direction==='undo'?historyPosition:next],direction==='undo');
+ const value=JSON.parse(valueString);historyRestoring=true;
  try{
   applyCover(value);main.innerHTML=value.html;titleSpacing=value.titleSpacing;textSpacing=value.textSpacing;chapterSpacing=value.chapterSpacing;publishedMigration=value.publishedMigration;editorialRevision=value.editorialRevision;
-  textRange=null;selectBullets(false);inheritEditing();refreshLayout();historyPosition=next;documentHistory[next]=historySnapshot();save();updateFormatButtons();updateHistoryControls();
+  textRange=null;selectBullets(false);inheritEditing();refreshLayout();historyPosition=next;historyValue=valueString;save();updateFormatButtons();updateHistoryControls();
  }finally{historyRestoring=false}return true;
 }
 
-function save(){
- recordDocumentHistory();
+function save(typing=false){
+ invalidateManuscript();
+ if(typing)scheduleDocumentHistory();else recordDocumentHistory();
  if(documentCloud)documentCloud.changed();
 }
+// Commit a typing group before a separate command changes the manuscript.
+document.addEventListener('pointerdown',()=>{if(historyTimer!==null)recordDocumentHistory()},true);
+main.addEventListener('paste',()=>{if(historyTimer!==null)recordDocumentHistory()},true);
+main.addEventListener('beforeinput',event=>{
+ if(historyTimer!==null&&!['insertText','insertCompositionText','deleteContentBackward','deleteContentForward'].includes(event.inputType))recordDocumentHistory();
+},true);
 refreshLayout();
 // Ordinary typing must not rebuild or move the contenteditable subtree.
-main.addEventListener('input',event=>{if(event.isComposing)return;selectionInEditor();save()});
-main.addEventListener('compositionend',()=>{selectionInEditor();save()});
+let composing=false;
+main.addEventListener('compositionstart',()=>{composing=true});
+main.addEventListener('input',event=>{if(event.isComposing){invalidateManuscript();dirty=true;documentCloud?.changed();return}selectionInEditor();save(true)});
+main.addEventListener('compositionend',()=>{composing=false;selectionInEditor();save(true)});
 // Rich clipboard data retains list structure and source formatting.
 function styledClipboardFragment(range){
  const fragment=range.cloneContents(),root=range.commonAncestorContainer;
@@ -1712,6 +1757,12 @@ function deleteDocumentSpacer(event){
  const selection=window.getSelection();if(!selection.rangeCount||!selection.isCollapsed)return false;
  const range=selection.getRangeAt(0),element=range.startContainer.nodeType===1?range.startContainer:range.startContainer.parentElement;
  const story=element.closest('.published-story');if(!story)return false;
+ const local=element.closest('h1,h2,h3,h4,h5,h6,p,.doc-line,li,div');
+ if(local&&!local.querySelector('h1,h2,h3,h4,h5,h6,p,.doc-line,li,div')){
+  const edge=document.createRange();edge.selectNodeContents(local);
+  if(event.inputType==='deleteContentBackward')edge.setEnd(range.startContainer,range.startOffset);else edge.setStart(range.startContainer,range.startOffset);
+  if(edge.toString().replace(/[\s\u200b]/g,''))return false;
+ }
  const blocks=[...story.querySelectorAll('h1,h2,h3,h4,h5,h6,p,.doc-line,li,div')].filter(node=>!node.closest('#indice,.page-break,.back-to-index')&&!node.querySelector('h1,h2,h3,h4,h5,h6,p,.doc-line,li,div,img'));
  const block=blocks.find(node=>node===element||node.contains(element));if(!block)return false;
  const backwards=event.inputType==='deleteContentBackward';
@@ -1771,6 +1822,9 @@ function updateFormatButtons(){
  const node=textRange.startContainer;
  const source=node.nodeType===Node.ELEMENT_NODE?node:node.parentElement;
  const style=getComputedStyle(source),size=document.getElementById('text-size');
+ const signature=[style.fontSize,style.fontWeight,style.fontStyle,style.color].join('|');
+ if(source===lastFormatSource&&signature===lastFormatStyle)return;
+ lastFormatSource=source;lastFormatStyle=signature;
  const actualPoints=parseFloat(style.fontSize)*.75;
  const points=[11,12,13,15].reduce((nearest,value)=>Math.abs(value-actualPoints)<Math.abs(nearest-actualPoints)?value:nearest,11);
 
@@ -1781,7 +1835,11 @@ function updateFormatButtons(){
  color.value=rgb==='rgb(229,185,92)'?'#E5B95C':rgb==='rgb(243,240,234)'?'#F3F0EA':'';
  document.getElementById('selected-color').style.background=color.value||style.color;
 }
-document.addEventListener('selectionchange',()=>{if(selectionInEditor())updateFormatButtons()});
+let formatFrame=null,lastFormatSource=null,lastFormatStyle='';
+document.addEventListener('selectionchange',()=>{
+ if(!selectionInEditor()||formatFrame!==null)return;
+ formatFrame=requestAnimationFrame(()=>{formatFrame=null;if(selectionInEditor())updateFormatButtons()});
+});
 
 let bulletsSelected=false;
 let activeMarkers=[],markerSelectionAnchor=null;
@@ -1857,8 +1915,14 @@ main.addEventListener('beforeinput',event=>{
  const range=selection.getRangeAt(0),element=range.startContainer.nodeType===1?range.startContainer:range.startContainer.parentElement;
  const story=element.closest('.published-story');if(!story)return;
  if(story.hidden){event.preventDefault();event.stopImmediatePropagation();return}
+ // A text node with content on this side of the caret is inside the story.
+ if(range.startContainer.nodeType===Node.TEXT_NODE){
+  const text=range.startContainer.data;
+  if((backward?text.slice(0,range.startOffset):text.slice(range.startOffset)).replace(/[\s\u200b\uFEFF]/g,''))return;
+ }
  const edge=document.createRange();edge.selectNodeContents(story);
  if(backward)edge.setEnd(range.startContainer,range.startOffset);else edge.setStart(range.startContainer,range.startOffset);
+ if(edge.toString().replace(/[\s\u200b\uFEFF]/g,''))return;
  const fragment=edge.cloneContents();fragment.querySelectorAll('[data-editor-only],.back-to-index,[contenteditable="false"]').forEach(node=>node.remove());
  if(!fragment.textContent.replace(/[\s\u200b\uFEFF]/g,'')&&!fragment.querySelector('img')){event.preventDefault();event.stopImmediatePropagation()}
 },true);
@@ -2228,18 +2292,18 @@ function createDocumentCloud(){
  const remoteButton=document.createElement('button');remoteButton.type='button';remoteButton.textContent='Cargar copia de Supabase';remoteButton.hidden=true;
  controls.append(login,keep,remoteButton);status.after(controls);
  setEditorInert(true);
- const report=text=>{status.textContent=text};
+ const report=text=>{if(status.textContent!==text)status.textContent=text};
  const canonical=value=>Array.isArray(value)?value.map(canonical):value&&typeof value==='object'?Object.fromEntries(Object.keys(value).sort().map(key=>[key,canonical(value[key])])):value;
- const same=(a,b)=>JSON.stringify(canonical(a))===JSON.stringify(canonical(b));
+ const signatures=new WeakMap();
+ const signature=value=>{if(!value||typeof value!=='object')return JSON.stringify(value);if(!signatures.has(value))signatures.set(value,JSON.stringify(canonical(value)));return signatures.get(value)};
+ const same=(a,b)=>signature(a)===signature(b);
  function reportError(){
   setEditorInert(!ready);
   report(ready?'No se confirmó el guardado en Supabase. Hay cambios pendientes en esta pestaña; mantenela abierta y reintentá.':'No se pudo cargar Supabase. Reintentá para habilitar la edición.');
  }
  function markChanged(){
   if(!ready)return;
-  const next=current();
-  if(!saving&&confirmed&&same(next,confirmed)){pending=null;dirty=false;clearTimeout(timer);report('Documento cargado desde Supabase. Sin cambios pendientes.');return}
-  pending=next;dirty=true;report('Cambios pendientes de guardar en Supabase…');
+  pending={};dirty=true;report('Cambios pendientes de guardar en Supabase…');
   clearTimeout(timer);if(!conflict)timer=setTimeout(flush,250);
  }
  async function read(){const r=await client.from('kairos_documents').select('data,updated_at').eq('user_id',OWNER).eq('document_id',DOC).maybeSingle();if(r.error)throw r.error;return r.data;}
@@ -2248,8 +2312,8 @@ function createDocumentCloud(){
   report('Supabase tiene otra versión. Tu edición sigue en esta pestaña. Elegí cuál conservar.');
  }
  async function flush(){
-  clearTimeout(timer);if(!ready||!pending||saving||conflict)return;
-  const snapshot=pending;
+  clearTimeout(timer);if(!ready||!pending||saving||conflict||composing)return;
+  const pendingChange=pending,snapshot=current();
   if(confirmed&&same(snapshot,confirmed)){pending=null;dirty=false;report('Documento cargado desde Supabase. Sin cambios pendientes.');return}
   const manuscript=value=>{const node=document.createElement('div');node.innerHTML=validate(value?.publicationMode==='creation'&&value.creationDraft?value.creationDraft:value);node.querySelectorAll('#indice,[data-editor-only],.back-to-index').forEach(item=>item.remove());return node.textContent.replace(/[\s\u200b\uFEFF]/g,'')||node.querySelector('img')};
   if(confirmed&&manuscript(confirmed)&&!manuscript(snapshot)&&!same(snapshot,approvedEmptySnapshot)){report('El documento quedó vacío. El guardado se pausó para proteger la copia anterior. Usá Deshacer.');return}
@@ -2265,7 +2329,7 @@ function createDocumentCloud(){
    if(!remote||!same(remote.data,snapshot)){showConflict(remote);return}
    stamp=remote.updated_at;confirmed=remote.data;if(same(snapshot,approvedEmptySnapshot))approvedEmptySnapshot=null;
    if(snapshot.publicationMode!=='creation')publicationSnapshot=publicationFields(snapshot);
-   if(pending===snapshot){pending=null;dirty=false}
+   if(pending===pendingChange){pending=null;dirty=false}
    succeeded=true;report(pending?'Hay cambios pendientes de guardar en Supabase…':'Guardado confirmado en Supabase · '+new Date().toLocaleTimeString('es-AR'));
   }catch{reportError()}
   finally{saving=false;publicationBusy=false;updatePublicationMode();if(ready&&pending&&!conflict)timer=setTimeout(flush,succeeded?250:5000)}
@@ -2415,6 +2479,7 @@ function organize(event){
 document.addEventListener('kairos:select-genre',event=>{const index=groups.findIndex(([name])=>name===event.detail);if(index>=0)select(index)});document.addEventListener('disociados:published',organize);document.addEventListener('kairos:document-refreshed',organize);window.addEventListener('hashchange',followHash);organize();
 })();
 </script></body></html>
+
 
 
 

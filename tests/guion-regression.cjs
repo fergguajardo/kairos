@@ -177,3 +177,63 @@ test('move a story to labeled Versos and retain the genre after reload',async()=
  await settled(page);await page.reload();await page.waitForFunction(()=>!document.querySelector('main').inert);
  await tab.click();assert(await page.locator('#cuento-1').isVisible());await t.close();
 });
+
+test('a typing burst defers full manuscript copies and shares the capture with autosave',async()=>{
+ const t=await open();const {page,state}=t;
+ await page.evaluate(()=>{
+  const main=document.querySelector('main'),p=main.querySelector('.published-story:not([hidden]) p');
+  window.__copies=0;const clone=main.cloneNode;main.cloneNode=function(...args){window.__copies++;return clone.apply(this,args)};
+  for(let i=0;i<200;i++){p.append('x');p.dispatchEvent(new InputEvent('input',{bubbles:true,inputType:'insertText',data:'x'}))}
+ });
+ assert.equal(await page.evaluate(()=>window.__copies),0);
+ await settled(page);assert.equal(await page.evaluate(()=>window.__copies),1);
+ assert(state.data.html.includes('x'.repeat(200)));await t.close();
+});
+
+test('immediate undo commits the pending typing group and preserves redo',async()=>{
+ const t=await open();const {page}=t;const before=await stories(page);
+ await page.locator('.published-story:not([hidden]) p').last().click();await page.keyboard.press('End');await page.keyboard.type('FAST_GROUP');
+ const after=await stories(page);await page.keyboard.press('Control+z');assert.deepEqual(await stories(page),before);
+ await page.keyboard.press('Control+y');assert.deepEqual(await stories(page),after);await t.close();
+});
+
+test('history deltas retain Unicode, survive trimming and discard redo branches',async()=>{
+ const t=await open();const {page}=t;
+ const result=await page.evaluate(()=>{
+  const p=document.querySelector('.published-story:not([hidden]) p'),main=document.querySelector('main');
+  // Explicit commands create separate undo steps; ordinary typing is grouped.
+  const values=[];
+  for(let i=0;i<110;i++){p.textContent='Paso '+i+' — café 🐢';save();values.push(main.textContent)}
+  const retained=documentHistory.length;
+  for(let i=0;i<20;i++)navigateDocumentHistory('undo');
+  const previous=main.textContent;
+  for(let i=0;i<20;i++)navigateDocumentHistory('redo');
+  return {retained,previous,expected:values[89],final:main.textContent,latest:values[109],bytes:historyBytes,full:historyValue.length*2};
+ });
+ assert.equal(result.retained,100);assert.equal(result.previous,result.expected);assert.equal(result.final,result.latest);
+ assert(result.bytes<result.full*3,'history should store small edits rather than 100 complete copies');
+ await page.evaluate(()=>navigateDocumentHistory('undo'));await typeAtEnd(page,'NEW_BRANCH');assert(await page.getByRole('button',{name:'Rehacer',exact:true}).isDisabled());await t.close();
+});
+
+test('hiding the page flushes a pending typing burst before its debounce expires',async()=>{
+ const t=await open();const {page,state}=t;
+ await page.evaluate(()=>{
+  const p=document.querySelector('.published-story:not([hidden]) p');p.append('HIDDEN_FLUSH');p.dispatchEvent(new InputEvent('input',{bubbles:true,inputType:'insertText'}));
+  Object.defineProperty(document,'visibilityState',{configurable:true,get:()=> 'hidden'});document.dispatchEvent(new Event('visibilitychange'));
+ });
+ await page.waitForFunction(()=>document.querySelector('#status').textContent.startsWith('Guardado confirmado'));
+ assert(state.data.html.includes('HIDDEN_FLUSH'));await t.close();
+});
+
+test('IME composition stays pending until completion and survives an in-flight save',async()=>{
+ const state=server(),api=state.api;let release,entered;
+ const saving=new Promise(resolve=>entered=resolve);
+ state.api=async request=>{if(request.mode==='update'&&!release){entered();await new Promise(resolve=>release=resolve)}return api(request)};
+ const t=await open(state);const {page}=t;
+ await page.locator('.published-story:not([hidden]) p').last().click();await page.keyboard.press('End');await page.keyboard.type('BEFORE_IME');await saving;
+ await page.evaluate(()=>{const p=document.querySelector('.published-story:not([hidden]) p');p.dispatchEvent(new CompositionEvent('compositionstart',{bubbles:true}));p.append('漢字');p.dispatchEvent(new InputEvent('input',{bubbles:true,isComposing:true,inputType:'insertCompositionText'}))});
+ release();await page.waitForTimeout(300);assert(!state.data.html.includes('漢字'));
+ await page.evaluate(()=>document.querySelector('main').dispatchEvent(new CompositionEvent('compositionend',{bubbles:true})));
+ await settled(page);assert(state.data.html.includes('漢字'));assert(state.data.html.includes('BEFORE_IME'));await t.close();
+});
+
