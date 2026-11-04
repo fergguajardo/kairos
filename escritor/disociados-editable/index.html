@@ -943,7 +943,7 @@ function compactFormatting(root){
  let changed=false;
  for(const span of [...root.querySelectorAll('span')].reverse()){
   if(!plain(span))continue;
-  if(!span.textContent&&[...span.childNodes].every(node=>node.nodeType===3)){span.remove();changed=true;continue}
+  if([...span.childNodes].every(node=>node.nodeType===3)&&!span.textContent){span.remove();changed=true;continue}
   const child=span.childNodes.length===1?span.firstChild:null;
   if(plain(child)&&[...span.style].every(property=>child.style.getPropertyValue(property))){
    // Remove a parent only when the child already declares every property.
