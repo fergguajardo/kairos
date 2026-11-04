@@ -932,7 +932,7 @@ const main=document.querySelector('main'),status=document.getElementById('status
 let dirty=false,documentCloud=null,titleSpacing=7,chapterSpacing=3,textSpacing=0;
 let documentHistory=[],historyPosition=-1,historyReady=false,historyRestoring=false,historyNeedsReset=false;
 let historyTimer=null,historyValue='',historyBytes=0,manuscriptCache=null;
-const HISTORY_DELAY=180,HISTORY_BYTE_LIMIT=16*1024*1024;
+const HISTORY_DELAY=500,AUTOSAVE_DELAY=800,HISTORY_BYTE_LIMIT=16*1024*1024;
 function invalidateManuscript(){manuscriptCache=null}
 const spacingScale=[0,1,3,5,7,9,10];
 const validSpacing=value=>Number.isFinite(value)?spacingScale.reduce((best,next)=>Math.abs(next-value)<Math.abs(best-value)?next:best,1):10;
@@ -1569,8 +1569,9 @@ function resetDocumentHistory(){
 }
 function updateHistoryControls(){
  const undo=formatTools.querySelector('[data-format="undo"]'),redo=formatTools.querySelector('[data-format="redo"]');
- if(undo)undo.disabled=!historyReady||(historyPosition<=0&&historyTimer===null);
- if(redo)redo.disabled=!historyReady||historyTimer!==null||historyPosition>=documentHistory.length-1;
+ const undoDisabled=!historyReady||(historyPosition<=0&&historyTimer===null),redoDisabled=!historyReady||historyTimer!==null||historyPosition>=documentHistory.length-1;
+ if(undo&&undo.disabled!==undoDisabled)undo.disabled=undoDisabled;
+ if(redo&&redo.disabled!==redoDisabled)redo.disabled=redoDisabled;
 }
 function recordDocumentHistory(){
  clearTimeout(historyTimer);historyTimer=null;
@@ -2319,7 +2320,7 @@ function createDocumentCloud(){
  function markChanged(){
   if(!ready)return;
   pending={};dirty=true;report('Cambios pendientes de guardar en Supabase…');
-  clearTimeout(timer);if(!conflict)timer=setTimeout(flush,250);
+  clearTimeout(timer);if(!conflict)timer=setTimeout(flush,AUTOSAVE_DELAY);
  }
  async function read(){const r=await client.from('kairos_documents').select('data,updated_at').eq('user_id',OWNER).eq('document_id',DOC).maybeSingle();if(r.error)throw r.error;return r.data;}
  function showConflict(remote){
@@ -2347,7 +2348,7 @@ function createDocumentCloud(){
    if(pending===pendingChange){pending=null;dirty=false}
    succeeded=true;report(pending?'Hay cambios pendientes de guardar en Supabase…':'Guardado confirmado en Supabase · '+new Date().toLocaleTimeString('es-AR'));
   }catch{reportError()}
-  finally{saving=false;publicationBusy=false;updatePublicationMode();if(ready&&pending&&!conflict)timer=setTimeout(flush,succeeded?250:5000)}
+  finally{saving=false;publicationBusy=false;updatePublicationMode();if(ready&&pending&&!conflict)timer=setTimeout(flush,succeeded?AUTOSAVE_DELAY:5000)}
  }
  async function start(){
   if(loading)return;if(ready){await flush();return}loading=true;setEditorInert(true);report('Cargando documento desde Supabase…');

@@ -39,7 +39,7 @@ async function open(state=server()){
  await page.goto('https://guion.test/');await page.waitForFunction(()=>!document.querySelector('main').inert);await settled(page);
  return {page,state,errors,async close(){assert.deepEqual(errors,[]);await page.close()}};
 }
-async function settled(page){await page.waitForFunction(()=>!/^Guardando/.test(document.querySelector('#status').textContent));await page.waitForTimeout(320)}
+async function settled(page){await page.waitForTimeout(850);await page.waitForFunction(()=>!/^Guardando/.test(document.querySelector('#status').textContent))}
 const stories=page=>page.evaluate(()=>[...document.querySelectorAll('.published-story')].map(s=>({id:s.id,text:s.textContent.replace(/^\s*\d+\.\s*/,''),hidden:s.hidden})));
 const genre=(page,name)=>page.getByRole('tab',{name,exact:true}).click();
 async function selectAllRoot(page){await page.evaluate(()=>{document.querySelector('main').focus();const r=document.createRange();r.selectNodeContents(document.querySelector('main'));getSelection().removeAllRanges();getSelection().addRange(r)})}
