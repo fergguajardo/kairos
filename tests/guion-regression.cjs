@@ -184,7 +184,7 @@ test('a typing burst defers full manuscript copies and shares the capture with a
  const t=await open();const {page,state}=t;
  await page.evaluate(()=>{
   const main=document.querySelector('main'),p=main.querySelector('.published-story:not([hidden]) p');
-  window.__copies=0;const clone=main.cloneNode;main.cloneNode=function(...args){window.__copies++;return clone.apply(this,args)};
+  const story=p.closest('.published-story');window.__copies=0;const clone=story.cloneNode;story.cloneNode=function(...args){window.__copies++;return clone.apply(this,args)};
   for(let i=0;i<200;i++){p.append('x');p.dispatchEvent(new InputEvent('input',{bubbles:true,inputType:'insertText',data:'x'}))}
  });
  assert.equal(await page.evaluate(()=>window.__copies),0);
