@@ -1687,6 +1687,12 @@ document.addEventListener('keydown',event=>{
  if(currentPage!=='redes'||!(event.ctrlKey||event.metaKey)||event.altKey||event.target.closest('input,textarea,select,[contenteditable="true"]')||document.querySelector('dialog[open]'))return;
  const key=event.key.toLowerCase();if(key==='z'){event.preventDefault();event.shiftKey?rDoRedo():rDoUndo()}else if(key==='y'){event.preventDefault();rDoRedo()}
 });
+function navigateRedesCategories(event){
+ if(currentPage!=='redes'||event.defaultPrevented||!['ArrowDown','ArrowUp','Home','End'].includes(event.key)||event.altKey||event.ctrlKey||event.metaKey||event.shiftKey)return;
+ if($('kairos-app')?.hidden||document.querySelector('dialog[open]')||event.target.closest('input,textarea,select,[contenteditable="true"]'))return;
+ const list=document.querySelector('.redes-category-list');if(list?.isConnected)list.onkeydown?.(event);
+}
+document.addEventListener('keydown',navigateRedesCategories);
 function redesDays(count){return count+' '+(count===1?'día':'días')}
 function addRedesCategory(){rPush();const category={id:uid(),name:'Nueva categoría',meses:{}};rCalendars.push(category);rSelectedCalendar=category.id;rSave();renderRedesMonth();refreshRedesButtons();editRedesCategory(category)}
 function deleteRedesCategory(calendar){rPush();rCalendars=rCalendars.filter(c=>c.id!==calendar.id);rSave();renderRedesMonth();refreshRedesButtons()}
@@ -1731,12 +1737,7 @@ function renderRedesMonth(){
  row.append(select,remove);attachRedesCalendarDrag(row,select,calendar.id);list.append(row)
  });
  enableCategoryKeyboard(list,'.redes-category-select',()=>document.querySelector('.redes-category-list'));
- const page=$('page');page.onkeydown=event=>{
-  if(event.defaultPrevented||!['ArrowDown','ArrowUp','Home','End'].includes(event.key))return;
-  if(event.target!==page&&!sidebar.contains(event.target)&&!event.target.closest('.redes-detail'))return;
-  if(event.target.closest('input,textarea,select,a,[contenteditable="true"]'))return;
-  list.onkeydown(event);
- };
+ $('page').onkeydown=null;
  sidebar.append(list);layout.append(sidebar);
  const calendar=rCalendars.find(c=>c.id===rSelectedCalendar),detail=el('section','redes-detail');
  if(!calendar){detail.append(el('h2','','Tu próximo hábito empieza acá'),el('p','muted','Creá una categoría para comenzar a registrar tus días.'),manage);layout.append(detail);host.append(layout);list.scrollTop=scrollTop;return}
