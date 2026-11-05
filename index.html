@@ -1501,7 +1501,7 @@ const workspace=el('div','balance-focus-workspace'),sidebar=el('aside','balance-
   if(event.target!==page&&event.target!==center&&!sidebar.contains(event.target))return;
   nav.onkeydown(event);
  };
-enableScrollKeyboard(center,'Detalle de la categoría de Balance');sidebar.append(el('h2','','Categorías'),nav);const adds=el('div','balance-focus-adds');balanceAddButtons.forEach(({button,label})=>{button.textContent='+ '+label;button.setAttribute('aria-label','Añadir categoría en '+label);adds.append(button)});sidebar.append(adds);
+enableScrollKeyboard(center,'Detalle de la categoría de Balance');sidebar.append(el('h2','','Categorías'),nav);
  if(balanceSummary){const symbols=Array(3).fill('<circle cx="12" cy="12" r="9"/>');[...balanceSummary.children].filter(card=>card.matches('.ing-card,.egr-card,.mar-card')).forEach((card,i)=>{const title=card.querySelector('.cat-name');if(title){title.textContent=title.textContent.replace(/^[✦•·\\s]+/,'');const icon=lineIcon(symbols[i]);icon.setAttribute('aria-hidden','true');title.prepend(icon)}if(i===0){const entries=card.querySelector('.items'),add=card.querySelector('.add-item');if(entries){const edit=el('details','balance-income-editor');edit.append(el('summary','','Editar ingresos'),entries);if(add)edit.append(add);card.append(edit)}}});summary.append(balanceSummary)}
  workspace.append(sidebar,center,summary);page.querySelectorAll('.balance-section').forEach(section=>section.remove());page.append(workspace);draw();
 if(taskData().cards.length){const legacy=el('details','budget-extras');legacy.append(el('summary','','Tarjetas conservadas de Sistemas'));taskData().cards.forEach(c=>{const button=el('button','',c.title);button.onclick=()=>open(c.id);legacy.append(button)});page.append(legacy)}if(data.events.length){const agenda=el('details','budget-extras');agenda.append(el('summary','','Agenda conservada de Sistemas'));data.events.forEach(e=>{const button=el('button','',e.due+' · '+e.title);button.onclick=()=>openEvent(e.due,e);agenda.append(button)});page.append(agenda)}window.scrollTo(viewportX,viewportY)}
@@ -1689,16 +1689,14 @@ function renderRedesMonth(){
  const row=el('div','redes-category'+(calendar.id===rSelectedCalendar?' selected':'')),select=el('button','balance-focus-category redes-category-select'),words=el('span','redes-category-copy');
  select.type='button';select.setAttribute('aria-pressed',String(calendar.id===rSelectedCalendar));select.setAttribute('aria-label',calendar.name);select.title=calendar.name;const categoryIcon=redesCategoryIsotype(calendar.name,index,rCalendars.length);words.append(categoryIcon,el('span','redes-category-label',calendar.name));select.append(words);select.onclick=()=>{rSelectedCalendar=calendar.id;renderRedesMonth()};
 
- row.append(select);attachRedesCalendarDrag(row,select,calendar.id);list.append(row)
+ const remove=el('button','redes-category-delete redes-calendar-icon');remove.type='button';remove.title='Eliminar categoría';remove.setAttribute('aria-label','Eliminar categoría '+calendar.name);remove.append(lineIcon('<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/>'));remove.onclick=()=>deleteRedesCategory(calendar);
+ row.append(select,remove);attachRedesCalendarDrag(row,select,calendar.id);list.append(row)
  });
  enableCategoryKeyboard(list,'.redes-category-select',()=>document.querySelector('.redes-category-list'));sidebar.append(list);layout.append(sidebar);
  const calendar=rCalendars.find(c=>c.id===rSelectedCalendar),detail=el('section','redes-detail');
  if(!calendar){detail.append(el('h2','','Tu próximo hábito empieza acá'),el('p','muted','Creá una categoría para comenzar a registrar tus días.'),manage);layout.append(detail);host.append(layout);list.scrollTop=scrollTop;return}
- const stats=redesStats(calendar),heading=el('div','redes-detail-heading'),edit=el('button','redes-edit');
+ const stats=redesStats(calendar);
  detail.setAttribute('aria-label','Calendario de '+calendar.name);enableScrollKeyboard(detail,'Calendario y conteo de '+calendar.name);
- edit.setAttribute('aria-label','Editar categoría');edit.title='Editar categoría';edit.append(lineIcon('<path d="m16 3 5 5-12 12-6 1 1-6Z M14 5l5 5"/>'));edit.onclick=()=>editRedesCategory(calendar);const actions=el('div','redes-detail-actions');
- const remove=el('button','redes-category-delete redes-calendar-icon');remove.type='button';remove.title='Eliminar categoría';remove.setAttribute('aria-label','Eliminar categoría '+calendar.name);remove.append(lineIcon('<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/>'));remove.onclick=()=>deleteRedesCategory(calendar);
- actions.append(manage,edit,remove);heading.append(actions);detail.append(heading);
  const body=el('div','redes-detail-body'),card=el('section','redes-calendar-card'),date=rCalendarDates[calendar.id]||rMonthDate;
  const year=date.getFullYear(),month=date.getMonth(),key=year+'-'+String(month+1).padStart(2,'0'),days=new Date(year,month+1,0).getDate(),selected=calendar.meses?.[key]||[],bar=el('div','redes-month-bar'),prev=el('button','','‹'),next=el('button','','›');
  prev.setAttribute('aria-label','Mes anterior');next.setAttribute('aria-label','Mes siguiente');prev.onclick=()=>{rCalendarDates[calendar.id]=new Date(year,month-1,1);renderRedesMonth()};next.onclick=()=>{rCalendarDates[calendar.id]=new Date(year,month+1,1);renderRedesMonth()};
