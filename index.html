@@ -905,7 +905,11 @@ dialog.redes-editor :is(h2,label,input,button){font-family:'Outfit',sans-serif!i
  box-shadow:0 8px 30px #0008;overflow-x:auto;
  transition:transform .22s ease,opacity .22s ease,visibility .22s;
 }
-#kairos-app .nav button{height:44px}
+/* Shared label size for navigation, column headings and control cards. */
+#kairos-app{--control-label-size:15px}
+#kairos-app .nav button{height:44px;font-size:var(--control-label-size)!important}
+#kairos-app #board .column h2,
+#kairos-app #board .card h3{font-size:var(--control-label-size)!important}
 #kairos-app .nav.nav-scroll-hidden{
  transform:translate(-50%,calc(100% + 40px + env(safe-area-inset-bottom,0px)));
  opacity:0;visibility:hidden;pointer-events:none;
