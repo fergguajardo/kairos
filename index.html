@@ -941,7 +941,10 @@ body{padding-bottom:calc(110px + env(safe-area-inset-bottom,0px))}
 #auth-gate #auth-submit{width:calc(100% - 6px);height:54px;margin-left:auto;margin-right:auto;background:var(--bg);border-color:var(--gold);color:var(--gold);box-shadow:none}
 #auth-gate #auth-submit:hover{background:var(--bg);border-color:var(--gold-light);color:var(--gold-light)}
 </style>
-</head><body>
+<style id="balance-category-list">
+#page.balance-native .balance-focus-nav{gap:4px;max-height:none;overflow-y:visible}
+#page.balance-native .balance-focus-nav .balance-focus-category{flex-shrink:0;padding:10px}
+</style></head><body>
 <section id="auth-gate" aria-label="Acceso a Kairos" hidden>
 
 <div class="auth-card">
@@ -1491,8 +1494,14 @@ const workspace=el('div','balance-focus-workspace'),sidebar=el('aside','balance-
  if(!balanceViews.some(v=>v.category===balanceSelectedCategory))balanceSelectedCategory=balanceViews[0]?.category||null;
  const nav=el('div','balance-focus-nav');nav.setAttribute('role','group');nav.setAttribute('aria-label','Elegir categoría');
  const draw=()=>{center.replaceChildren();const selected=balanceViews.find(v=>v.category===balanceSelectedCategory);nav.querySelectorAll('button').forEach((button,i)=>button.setAttribute('aria-pressed',String(balanceViews[i]?.category===balanceSelectedCategory)));if(selected){center.append(selected.card);enableScrollKeyboard(selected.card.querySelector('.items'),'Artículos de '+selected.category.name);enableProductKeyboard(selected.card.querySelector('.items'))}else center.append(el('p','muted','Añadí una categoría para comenzar.'))};
- let lastGroup='';balanceViews.forEach(({category,section},i)=>{if(section!==lastGroup){nav.append(el('p','balance-focus-group',section));lastGroup=section}const button=el('button','balance-focus-category'),icon=lineIcon(balanceCategoryIcon(category.name));icon.setAttribute('aria-hidden','true');button.type='button';button.title=category.name;button.append(icon,el('span','',category.name.replace(/^[✦•·\\s]+/,'')));button.setAttribute('aria-pressed',String(category===balanceSelectedCategory));button.onclick=()=>{balanceSelectedCategory=category;draw()};nav.append(button)});
- enableCategoryKeyboard(nav,'.balance-focus-category',()=>document.querySelector('.balance-focus-nav'));enableScrollKeyboard(center,'Detalle de la categoría de Balance');sidebar.append(el('h2','','Categorías'),nav);const adds=el('div','balance-focus-adds');balanceAddButtons.forEach(({button,label})=>{button.textContent='+ '+label;button.setAttribute('aria-label','Añadir categoría en '+label);adds.append(button)});sidebar.append(adds);
+ balanceViews.forEach(({category},i)=>{const button=el('button','balance-focus-category'),icon=lineIcon(balanceCategoryIcon(category.name));icon.setAttribute('aria-hidden','true');button.type='button';button.title=category.name;button.append(icon,el('span','',category.name.replace(/^[✦•·\\s]+/,'')));button.setAttribute('aria-pressed',String(category===balanceSelectedCategory));button.onclick=()=>{balanceSelectedCategory=category;draw()};nav.append(button)});
+ enableCategoryKeyboard(nav,'.balance-focus-category',()=>document.querySelector('.balance-focus-nav'));
+ page.onkeydown=event=>{
+  if(event.defaultPrevented||!nav.isConnected||!['ArrowDown','ArrowUp','Home','End'].includes(event.key))return;
+  if(event.target!==page&&event.target!==center&&!sidebar.contains(event.target))return;
+  nav.onkeydown(event);
+ };
+enableScrollKeyboard(center,'Detalle de la categoría de Balance');sidebar.append(el('h2','','Categorías'),nav);const adds=el('div','balance-focus-adds');balanceAddButtons.forEach(({button,label})=>{button.textContent='+ '+label;button.setAttribute('aria-label','Añadir categoría en '+label);adds.append(button)});sidebar.append(adds);
  if(balanceSummary){const symbols=Array(3).fill('<circle cx="12" cy="12" r="9"/>');[...balanceSummary.children].filter(card=>card.matches('.ing-card,.egr-card,.mar-card')).forEach((card,i)=>{const title=card.querySelector('.cat-name');if(title){title.textContent=title.textContent.replace(/^[✦•·\\s]+/,'');const icon=lineIcon(symbols[i]);icon.setAttribute('aria-hidden','true');title.prepend(icon)}if(i===0){const entries=card.querySelector('.items'),add=card.querySelector('.add-item');if(entries){const edit=el('details','balance-income-editor');edit.append(el('summary','','Editar ingresos'),entries);if(add)edit.append(add);card.append(edit)}}});summary.append(balanceSummary)}
  workspace.append(sidebar,center,summary);page.querySelectorAll('.balance-section').forEach(section=>section.remove());page.append(workspace);draw();
 if(taskData().cards.length){const legacy=el('details','budget-extras');legacy.append(el('summary','','Tarjetas conservadas de Sistemas'));taskData().cards.forEach(c=>{const button=el('button','',c.title);button.onclick=()=>open(c.id);legacy.append(button)});page.append(legacy)}if(data.events.length){const agenda=el('details','budget-extras');agenda.append(el('summary','','Agenda conservada de Sistemas'));data.events.forEach(e=>{const button=el('button','',e.due+' · '+e.title);button.onclick=()=>openEvent(e.due,e);agenda.append(button)});page.append(agenda)}window.scrollTo(viewportX,viewportY)}
