@@ -1255,12 +1255,12 @@ function cleanConsultorHtml(value){
  }};clean(root);return root.innerHTML;
 }
 function normalizeConsultorHtml(raw){return Object.fromEntries(['Análisis','Génesis','Aplicación','Conversión','D.Proyecto','D.Artística','I.Escénica'].map(name=>[name,cleanConsultorHtml(typeof raw?.[name]==='string'?raw[name]:'')]))}
-function renderConsultorNotes(host,name){
+function renderConsultorNotes(host,name,displayName=name){
  host.replaceChildren();host.classList.add('consultor-notes-board');host.style.display='block';
  data.consultorNotes=normalizeConsultorNotes(data.consultorNotes);
  data.consultorNotesHtml=normalizeConsultorHtml(data.consultorNotesHtml);
- const toolbar=el('div','consultor-notes-toolbar');toolbar.setAttribute('role','toolbar');toolbar.setAttribute('aria-label','Formato de apuntes de '+name);
- const editor=el('div','consultor-notes-editor');editor.contentEditable='true';editor.setAttribute('role','textbox');editor.setAttribute('aria-multiline','true');editor.setAttribute('aria-label','Apuntes de '+name);editor.dataset.placeholder='Escribí tus apuntes…';editor.spellcheck=true;
+ const toolbar=el('div','consultor-notes-toolbar');toolbar.setAttribute('role','toolbar');toolbar.setAttribute('aria-label','Formato de apuntes de '+displayName);
+ const editor=el('div','consultor-notes-editor');editor.contentEditable='true';editor.setAttribute('role','textbox');editor.setAttribute('aria-multiline','true');editor.setAttribute('aria-label','Apuntes de '+displayName);editor.dataset.placeholder='Escribí tus apuntes…';editor.spellcheck=true;
  if(data.consultorNotesHtml[name])editor.innerHTML=data.consultorNotesHtml[name];else editor.textContent=data.consultorNotes[name];
  let range=null,index=0;const history=[editor.innerHTML];
  const remember=()=>{const selection=window.getSelection();if(selection?.rangeCount&&editor.contains(selection.anchorNode)&&editor.contains(selection.focusNode))range=selection.getRangeAt(0).cloneRange()};
@@ -1851,13 +1851,13 @@ function renderConsulting(page,sectionName='Consultor'){const navigation=$('proj
  }else if(sectionName==='CEO'){
   navigation.setAttribute('aria-label','Áreas de CEO');
   const areas=[
-   ['D.Proyecto','<circle cx="12" cy="4" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><path d="m11 6-5 11m7-11 5 11M7 19h10"/>'],
-   ['D.Artística','<path d="M12 3a9 9 0 1 0 0 18h2a2 2 0 0 0 1-4 2 2 0 0 1 1-4h2a3 3 0 0 0 3-3c0-4-4-7-9-7Z"/><circle cx="7" cy="10" r="1"/><circle cx="11" cy="7" r="1"/><circle cx="16" cy="8" r="1"/>'],
-   ['I.Escénica','<path d="M3 4h18v16H3zM8 4v16M16 4v16M3 17h18"/><path d="m8 4-5 8M16 4l5 8"/>']
+   ['D.Proyecto','<circle cx="12" cy="5" r="2.5"/><path d="M12 1v1.5M10.5 7 4 22M13.5 7 20 22M6.5 16h11"/>','Proyecto'],
+   ['D.Artística','<path d="m12 2 2.2 5.8L20 10l-5.8 2.2L12 18l-2.2-5.8L4 10l5.8-2.2L12 2Z"/><path d="M18 4c4-1 6 1 4 5-2 5-11 11-17 12-5 1-5-3-1-7"/>','Arte'],
+   ['I.Escénica','<path d="M3 3c6 3 12 3 18 0 0 10-3 16-9 19C6 19 3 13 3 3Z"/><path d="M6 10q2-3 4 0m4 0q2-3 4 0M8 15q4 5 8 0"/>','Escena']
   ];
   let selected='D.Proyecto';try{const saved=sessionStorage.getItem(KEY+'-ceo-area');if(areas.some(([name])=>name===saved))selected=saved}catch{}
-  const materialSections=Array.from(content.children),notesHost=el('div');content.prepend(notesHost);const choose=name=>{materialSections.forEach(section=>section.hidden=name!=='D.Proyecto');renderConsultorNotes(notesHost,name);content.dataset.ceoArea=name;content.setAttribute('role','region');content.setAttribute('aria-label',name+' — Apuntes'+(name==='D.Proyecto'?' y Material':''));buttons.forEach(button=>button.setAttribute('aria-pressed',String(button.textContent===name)));try{sessionStorage.setItem(KEY+'-ceo-area',name)}catch{}};
-  areas.forEach(([name,path])=>{const button=el('button','agenda-section-button');button.type='button';button.append(lineIcon(path),el('span','',name));button.querySelector('svg').classList.add('agenda-section-icon');button.onclick=()=>choose(name);buttons.push(button);panel.append(button)});
+  const materialSections=Array.from(content.children),notesHost=el('div');content.prepend(notesHost);const choose=name=>{materialSections.forEach(section=>section.hidden=name!=='D.Proyecto');const label=areas.find(area=>area[0]===name)[2];renderConsultorNotes(notesHost,name,label);content.dataset.ceoArea=name;content.setAttribute('role','region');content.setAttribute('aria-label',label+' — Apuntes'+(name==='D.Proyecto'?' y Material':''));buttons.forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.ceoArea===name)));try{sessionStorage.setItem(KEY+'-ceo-area',name)}catch{}};
+  areas.forEach(([name,path,label])=>{const button=el('button','agenda-section-button');button.type='button';button.dataset.ceoArea=name;button.append(lineIcon(path),el('span','',label));button.querySelector('svg').classList.add('agenda-section-icon');button.onclick=()=>choose(name);buttons.push(button);panel.append(button)});
   choose(selected);
  }
 }
