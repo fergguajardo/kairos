@@ -1244,7 +1244,7 @@ function renderProposalMatrix(page){
  table.append(body);scroll.append(table);detail.append(scroll);page.append(detail);
 }
 
-function normalizeConsultorNotes(raw){return Object.fromEntries(['Análisis','Génesis','Aplicación','Conversión'].map(name=>[name,typeof raw?.[name]==='string'?raw[name]:'']))}
+function normalizeConsultorNotes(raw){return Object.fromEntries(['Análisis','Génesis','Aplicación','Conversión','D.Proyecto','D.Artística','I.Escénica'].map(name=>[name,typeof raw?.[name]==='string'?raw[name]:'']))}
 function cleanConsultorHtml(value){
  const root=document.createElement('div');root.innerHTML=String(value||'');
  const tags=new Set(['DIV','P','BR','SPAN','B','STRONG','I','EM','U','S','UL','OL','LI','BLOCKQUOTE']);
@@ -1254,7 +1254,7 @@ function cleanConsultorHtml(value){
  for(const [property,value] of Object.entries(styles))child.style.setProperty(property,value);
  }};clean(root);return root.innerHTML;
 }
-function normalizeConsultorHtml(raw){return Object.fromEntries(['Análisis','Génesis','Aplicación','Conversión'].map(name=>[name,cleanConsultorHtml(typeof raw?.[name]==='string'?raw[name]:'')]))}
+function normalizeConsultorHtml(raw){return Object.fromEntries(['Análisis','Génesis','Aplicación','Conversión','D.Proyecto','D.Artística','I.Escénica'].map(name=>[name,cleanConsultorHtml(typeof raw?.[name]==='string'?raw[name]:'')]))}
 function renderConsultorNotes(host,name){
  host.replaceChildren();host.classList.add('consultor-notes-board');host.style.display='block';
  data.consultorNotes=normalizeConsultorNotes(data.consultorNotes);
@@ -1856,7 +1856,7 @@ function renderConsulting(page,sectionName='Consultor'){const navigation=$('proj
    ['I.Escénica','<path d="M3 4h18v16H3zM8 4v16M16 4v16M3 17h18"/><path d="m8 4-5 8M16 4l5 8"/>']
   ];
   let selected='D.Proyecto';try{const saved=sessionStorage.getItem(KEY+'-ceo-area');if(areas.some(([name])=>name===saved))selected=saved}catch{}
-  const choose=name=>{Array.from(content.children).forEach(section=>section.hidden=name!=='D.Proyecto');content.dataset.ceoArea=name;content.setAttribute('role','region');content.setAttribute('aria-label',name+' — Resumen y Material');buttons.forEach(button=>button.setAttribute('aria-pressed',String(button.textContent===name)));try{sessionStorage.setItem(KEY+'-ceo-area',name)}catch{}};
+  const materialSections=Array.from(content.children),notesHost=el('div');content.prepend(notesHost);const choose=name=>{materialSections.forEach(section=>section.hidden=name!=='D.Proyecto');renderConsultorNotes(notesHost,name);content.dataset.ceoArea=name;content.setAttribute('role','region');content.setAttribute('aria-label',name+' — Apuntes'+(name==='D.Proyecto'?' y Material':''));buttons.forEach(button=>button.setAttribute('aria-pressed',String(button.textContent===name)));try{sessionStorage.setItem(KEY+'-ceo-area',name)}catch{}};
   areas.forEach(([name,path])=>{const button=el('button','agenda-section-button');button.type='button';button.append(lineIcon(path),el('span','',name));button.querySelector('svg').classList.add('agenda-section-icon');button.onclick=()=>choose(name);buttons.push(button);panel.append(button)});
   choose(selected);
  }
