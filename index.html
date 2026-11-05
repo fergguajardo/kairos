@@ -1342,16 +1342,16 @@ function renderIntegratedMetrics(page){
  });
  const scale=el('aside','performance-scale');scale.setAttribute('aria-label','Escala de desempeño de '+reachLabel+' sobre seis tarjetas');
  const levels=el('div','performance-scale-levels');
- [{name:'Hermes',image:symbols.hermes,count:'0–2',range:'0–33,3%'},{name:'Apolo',image:symbols.apolo,count:'3–4',range:'50–66,7%'},{name:'Zeus',image:symbols.zeus,count:'5–6',range:'83,3–100%'}].forEach(level=>{
+ [{name:'Hermes',image:symbols.hermes,count:'0–2'},{name:'Apolo',image:symbols.apolo,count:'3–4'},{name:'Zeus',image:symbols.zeus,count:'5–6'}].forEach(level=>{
   const item=el('div','performance-scale-level'),portrait=el('img','performance-scale-portrait');portrait.src=level.image;portrait.alt='';portrait.width=56;portrait.height=56;
-  item.append(portrait,el('strong','',level.name),el('span','performance-scale-count',level.count),el('small','',level.range));levels.append(item);
+  item.append(portrait,el('strong','',level.name),el('span','performance-scale-count',level.count));levels.append(item);
  });
  scale.append(levels);panel.insertBefore(scale,panel.children[1]);
  const managementScale=el('aside','performance-scale performance-scale-management');managementScale.setAttribute('aria-label','Escala de concentración de '+managementLabel+' sobre seis tarjetas');
  const managementLevels=el('div','performance-scale-levels');
- [{name:'Hermes',image:symbols.hermes,count:'4–6',range:'66,7–100%'},{name:'Apolo',image:symbols.apolo,count:'2–3',range:'33,3–50%'},{name:'Zeus',image:symbols.zeus,count:'0–1',range:'0–16,7%'}].forEach(level=>{
+ [{name:'Hermes',image:symbols.hermes,count:'4–6'},{name:'Apolo',image:symbols.apolo,count:'2–3'},{name:'Zeus',image:symbols.zeus,count:'0–1'}].forEach(level=>{
   const item=el('div','performance-scale-level'),portrait=el('img','performance-scale-portrait');portrait.src=level.image;portrait.alt='';portrait.width=56;portrait.height=56;
-  item.append(portrait,el('strong','',level.name),el('span','performance-scale-count',level.count),el('small','',level.range));managementLevels.append(item);
+  item.append(portrait,el('strong','',level.name),el('span','performance-scale-count',level.count));managementLevels.append(item);
  });
  managementScale.append(managementLevels);panel.append(managementScale);
  page.append(panel);
