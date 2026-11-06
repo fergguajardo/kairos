@@ -1169,37 +1169,18 @@ function renderProposalMatrix(page){
  if(!matrix.decision){matrix.decision=normalizeDecisionMatrix({rows:[1,2,3].map(i=>({title:'Propuesta '+i}))});save()}
  matrix.decision=normalizeDecisionMatrix(matrix.decision);
  const model=matrix.decision;decisionSelected=Math.max(0,Math.min(decisionSelected,model.rows.length-1));
- const rail=el('section','proposal-rail');rail.setAttribute('aria-label','Propuestas');
- let draggedProposal=null;
- const swap=(from,to)=>{
-  if(!swapProposalRows(model.rows,from,to))return;
-  if(decisionSelected===from)decisionSelected=to;else if(decisionSelected===to)decisionSelected=from;
-  save();renderProposalMatrix(page);
-  page.querySelectorAll('.proposal-control')[to]?.focus();
- };
- model.rows.forEach((proposal,index)=>{
-  const thumbnail=el('article','proposal-thumbnail');
-  const card=el('button','proposal-control');card.type='button';card.draggable=true;card.setAttribute('aria-pressed',String(index===decisionSelected));
-  card.title='Arrastrá sobre otra propuesta para intercambiarlas. Alt + flechas para mover.';
-  card.append(el('span','proposal-control-index',String(index+1).padStart(2,'0')),el('strong','',proposal.title));
-  card.onclick=()=>{decisionSelected=index;renderProposalMatrix(page)};
-  card.onkeydown=event=>{if(event.altKey&&['ArrowLeft','ArrowRight'].includes(event.key)){event.preventDefault();swap(index,index+(event.key==='ArrowLeft'?-1:1))}};
-  card.ondragstart=event=>{draggedProposal=index;event.dataTransfer.effectAllowed='move';event.dataTransfer.setData('application/x-kairos-proposal',String(index));thumbnail.classList.add('dragging')};
-  card.ondragend=()=>{draggedProposal=null;rail.querySelectorAll('.dragging,.drop-target').forEach(node=>node.classList.remove('dragging','drop-target'))};
-  thumbnail.ondragover=event=>{if(draggedProposal===null||draggedProposal===index)return;event.preventDefault();event.dataTransfer.dropEffect='move';thumbnail.classList.add('drop-target')};
-  thumbnail.ondragleave=event=>{if(!thumbnail.contains(event.relatedTarget))thumbnail.classList.remove('drop-target')};
-  thumbnail.ondrop=event=>{if(draggedProposal===null)return;event.preventDefault();swap(draggedProposal,index)};
-  const remove=el('button','matrix-icon proposal-thumbnail-remove');remove.type='button';remove.title='Eliminar propuesta';remove.setAttribute('aria-label','Eliminar propuesta '+proposal.title);remove.append(lineIcon('<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/>'));
-  remove.onclick=()=>{if(!confirm('¿Eliminar la propuesta «'+proposal.title+'»?'))return;model.rows.splice(index,1);if(index<decisionSelected)decisionSelected--;save();renderProposalMatrix(page)};
-  thumbnail.append(card,remove);rail.append(thumbnail);
- });
- const add=el('button','proposal-control-add');add.type='button';add.title='Añadir propuesta';add.setAttribute('aria-label','Añadir propuesta');add.append(lineIcon('<path d="M12 5v14M5 12h14"/>'));
- add.onclick=()=>{model.rows.push(normalizeDecisionMatrix({rows:[{title:'Propuesta '+(model.rows.length+1)}]}).rows[0]);decisionSelected=model.rows.length-1;save();renderProposalMatrix(page);page.querySelector('.proposal-name')?.focus()};rail.append(add);page.append(rail);
+ const controls=el('div','proposal-selector-controls');controls.style.cssText='display:flex;gap:8px;align-items:center;flex-wrap:wrap';
+ const selector=el('select');selector.setAttribute('aria-label','Seleccionar propuesta');selector.style.cssText='width:auto;max-width:100%;margin:0';
+ model.rows.forEach((proposal,index)=>{const option=el('option','',proposal.title);option.value=String(index);option.selected=index===decisionSelected;selector.append(option)});
+ selector.onchange=()=>{decisionSelected=Number(selector.value);renderProposalMatrix(page)};if(model.rows.length)controls.append(selector);
+ const add=el('button','','+');add.type='button';add.title='Añadir propuesta';add.setAttribute('aria-label','Añadir propuesta');add.onclick=()=>{model.rows.push(normalizeDecisionMatrix({rows:[{title:'Propuesta '+(model.rows.length+1)}]}).rows[0]);decisionSelected=model.rows.length-1;save();renderProposalMatrix(page);page.querySelector('.proposal-name')?.focus()};controls.append(add);
+ if(model.rows.length){const remove=el('button','matrix-icon');remove.type='button';remove.title='Eliminar propuesta';remove.setAttribute('aria-label','Eliminar propuesta seleccionada');remove.append(lineIcon('<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/>'));remove.onclick=()=>{if(!confirm('¿Eliminar la propuesta «'+model.rows[decisionSelected].title+'»?'))return;model.rows.splice(decisionSelected,1);save();renderProposalMatrix(page)};controls.append(remove)}
+ page.append(controls);
  const proposal=model.rows[decisionSelected];if(!proposal){page.append(el('p','muted','Añadí una propuesta para comenzar a evaluar.'));return}
  const detail=el('section','proposal-detail'),heading=el('div','proposal-detail-heading'),name=el('input','proposal-name');
  name.value=proposal.title;name.maxLength=160;name.setAttribute('aria-label','Nombre de la propuesta');
- name.oninput=()=>{proposal.title=name.value;rail.querySelectorAll('.proposal-control strong')[decisionSelected].textContent=name.value;save()};
- name.onblur=()=>{if(!name.value.trim()){proposal.title='Propuesta '+(decisionSelected+1);name.value=proposal.title;rail.querySelectorAll('.proposal-control strong')[decisionSelected].textContent=proposal.title;save()}};
+ name.oninput=()=>{proposal.title=name.value;selector.options[decisionSelected].textContent=name.value;save()};
+ name.onblur=()=>{if(!name.value.trim()){proposal.title='Propuesta '+(decisionSelected+1);name.value=proposal.title;selector.options[decisionSelected].textContent=proposal.title;save()}};
  heading.append(name);detail.append(heading);
  const scroll=el('div','decision-scroll'),table=el('table','decision-table proposal-detail-table');table.setAttribute('aria-label','Matriz de '+proposal.title);
  const body=el('tbody');
@@ -1844,7 +1825,7 @@ function renderConsulting(page,sectionName='Consultor'){const navigation=$('proj
   ];
   let selected='Análisis';try{const saved=sessionStorage.getItem(KEY+'-consultor-stage');if(stages.some(stage=>stage[1]===saved))selected=saved}catch{}
   const sections=Array.from(content.children);
-  const selectStage=label=>{selected=label;sections.forEach((section,index)=>{section.hidden=stages[index][1]!==label||label==='Decisión';section.querySelector('h2')?.remove()});buttons.forEach(button=>button.setAttribute('aria-pressed',String(button.textContent===label)));try{sessionStorage.setItem(KEY+'-consultor-stage',label)}catch{}};
+  const selectStage=label=>{selected=label;sections.forEach((section,index)=>{section.hidden=stages[index][1]!==label;section.querySelector('h2')?.remove()});if(label==='Decisión'){const host=sections[2]?.querySelector('.project-panel-content');if(host&&!host.dataset.matrixMounted){if(data.balance){const target=boards.find(board=>!board.data.balance);if(target){boards.find(board=>board.id===boardId).data=data;boardId=target.id;data=target.data}}host.dataset.matrixMounted='true';host.classList.add('consultor-matrix');renderProposalMatrix(host)}}buttons.forEach(button=>button.setAttribute('aria-pressed',String(button.textContent===label)));try{sessionStorage.setItem(KEY+'-consultor-stage',label)}catch{}};
   stages.forEach(([previous,label,path],index)=>{
    const button=el('button','agenda-section-button');button.type='button';button.append(lineIcon(path),el('span','',label));button.querySelector('svg').classList.add('agenda-section-icon');button.onclick=()=>selectStage(label);buttons.push(button);panel.append(button)
   });
