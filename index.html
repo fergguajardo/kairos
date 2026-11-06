@@ -1844,7 +1844,7 @@ function renderConsulting(page,sectionName='Consultor'){const navigation=$('proj
   ];
   let selected='Análisis';try{const saved=sessionStorage.getItem(KEY+'-consultor-stage');if(stages.some(stage=>stage[1]===saved))selected=saved}catch{}
   const sections=Array.from(content.children);
-  const selectStage=label=>{selected=label;if(label!=='Decisión'){sections[stages.findIndex(stage=>stage[1]===label)]?.querySelector('h2')?.remove()}if(label==='Decisión'){const host=sections[2]?.querySelector('.project-panel-content');if(host&&!host.dataset.matrixMounted){if(data.balance){const target=boards.find(board=>!board.data.balance);if(target){boards.find(board=>board.id===boardId).data=data;boardId=target.id;data=target.data}}host.dataset.matrixMounted='true';host.classList.add('consultor-matrix');renderProposalMatrix(host)}}sections.forEach((section,index)=>{section.hidden=stages[index][1]!==label});buttons.forEach(button=>button.setAttribute('aria-pressed',String(button.textContent===label)));try{sessionStorage.setItem(KEY+'-consultor-stage',label)}catch{}};
+  const selectStage=label=>{selected=label;sections.forEach((section,index)=>{section.hidden=stages[index][1]!==label||label==='Decisión';section.querySelector('h2')?.remove()});buttons.forEach(button=>button.setAttribute('aria-pressed',String(button.textContent===label)));try{sessionStorage.setItem(KEY+'-consultor-stage',label)}catch{}};
   stages.forEach(([previous,label,path],index)=>{
    const button=el('button','agenda-section-button');button.type='button';button.append(lineIcon(path),el('span','',label));button.querySelector('svg').classList.add('agenda-section-icon');button.onclick=()=>selectStage(label);buttons.push(button);panel.append(button)
   });
