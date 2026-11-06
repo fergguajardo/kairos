@@ -1301,7 +1301,7 @@ function applyNarrativeArchitecture(main){
   heading.id=slug+'-encabezado-0';
   story.querySelectorAll('h2').forEach((h,i)=>h.id=slug+'-encabezado-'+(i+1));
   if(!story.querySelector('.back-to-index')){const link=document.createElement('a');link.className='back-to-index';link.href='#indice';link.textContent='Volver al índice';story.append(link)}
-  if(needsReorder)main.append(story);
+  if(needsReorder)story.parentElement.append(story);
  }
  const index=main.querySelector('#indice');
  if(index){const list=document.createElement('ul');list.className='toc';
