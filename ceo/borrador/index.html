@@ -1136,15 +1136,8 @@ function rebuildNarrativeIndex(){
    const chapters=Array.from(story.querySelectorAll('h2,h3,h4,h5,h6'));
    if(chapters.length){const sub=document.createElement('ul');sub.className='toc-chapters';chapters.forEach(chapter=>{const li=document.createElement('li'),a=document.createElement('a');a.href='#'+chapter.id;a.textContent=chapter.textContent.trim();li.style.paddingLeft=Math.max(0,Number(chapter.tagName.slice(1))-2)*12+'px';li.append(a);sub.append(li)});item.append(sub)}
    list.append(item);
-   if(key==='descripciones'){
-    const links=Array.from(story.querySelectorAll('.back-to-index'));
-    const back=links.shift()||document.createElement('a');
-    links.forEach(link=>link.remove());
-    back.className='back-to-index';back.textContent='↑';
-    back.setAttribute('aria-label','Volver al índice');
-    back.removeAttribute('title');story.append(back);
-   }
-   story.querySelectorAll('.back-to-index').forEach(link=>{link.href='#'+id;link.contentEditable='false';link.removeAttribute('target')});
+   const obsoleteLinks=story.querySelectorAll('.back-to-index');
+   if(obsoleteLinks.length){obsoleteLinks.forEach(link=>link.remove());documentNeedsSync=true}
   });
   const label=document.createElement('p');label.className='indice-title';label.textContent='Índice';index.replaceChildren(label,list);
   appendIndexEntryControl(index,label);
@@ -1399,28 +1392,6 @@ function manuscriptHTML(){
  copy.querySelectorAll('[data-editor-only]').forEach(node=>node.remove());
  return copy.innerHTML;
 }
-function renderChapterControls(){
- main.querySelectorAll('.published-story').forEach(story=>{
-  const control=document.createElement('div'),button=document.createElement('button');
-  control.className='chapter-add-control';control.dataset.editorOnly='true';control.contentEditable='false';
-  button.type='button';button.setAttribute('aria-label','Crear subentrada');
-  button.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4v10h14M14 9l5 5-5 5"/></svg>';
-  button.addEventListener('mousedown',event=>event.preventDefault());
-  button.addEventListener('click',()=>{
-   if(main.inert)return;
-   const heading=document.createElement('h2'),paragraph=document.createElement('p');
-   heading.className='doc-heading';heading.textContent='Nuevo encabezado';
-   paragraph.append(document.createElement('br'));control.remove();
-   const backLink=story.querySelector('.back-to-index');
-   if(backLink)backLink.before(heading,paragraph);else story.append(heading,paragraph);
-   refreshLayout();main.focus();const range=document.createRange();range.selectNodeContents(heading);
-   const selection=window.getSelection();selection.removeAllRanges();selection.addRange(range);
-   selectionInEditor();save();heading.scrollIntoView({behavior:'smooth',block:'center'});
-  });
-  control.append(button);const backLink=story.querySelector('.back-to-index');
-  if(backLink)backLink.before(control);else story.append(control);
- });
-}
 
 function refreshLayout(){
  ensureDesignSections();
@@ -1447,7 +1418,6 @@ function refreshLayout(){
  rebuildNarrativeIndex();
  main.querySelectorAll('[id^="indice"]').forEach(index=>index.contentEditable='false');
  if(historyReady&&historyNeedsReset&&!historyRestoring)resetDocumentHistory();
- renderChapterControls();
 }
 
 const editableState=()=>({format:FORMAT,version:2,title:'Diseño',coverTitle:coverTitle.textContent,coverSynopsis:coverSynopsis.textContent,editorialRevision,publishedMigration,titleSpacing,chapterSpacing,textSpacing,html:manuscriptHTML()});
