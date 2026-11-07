@@ -900,7 +900,11 @@ main .bela-added-chapter[data-bela-chapter="4"]{padding-top:16.5pt!important}
 </style><style id="story-titles-ivory">main .published-story h1.doc-heading,main .published-story h1.doc-heading *{color:#F3F0EA!important}</style><style id="hide-cover-synopsis">.cover-desc{display:none!important}</style><style id="crimson-panoramic-cover">
 .cover .cover-art img{width:100%;height:auto;max-height:none;aspect-ratio:1942/809;object-fit:contain;object-position:center;opacity:1}
 .cover-art{width:100%;overflow:hidden;background:#000}
-</style><style id="anthology-presentation">.cover-desc{display:none!important}.anthology-genres{display:flex;align-items:center;justify-content:flex-start;gap:28px;max-width:720px;margin:32px auto 12px;padding:0 24px;color:#F3F0EA;font:400 15px Outfit,sans-serif;flex-wrap:wrap}.anthology-genres span{display:inline-flex;align-items:center;gap:9px}.anthology-genres svg{width:21px;height:21px;flex:none;fill:none;stroke:#E5B95C;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}@media(max-width:480px){.anthology-genres{gap:18px;font-size:14px}.anthology-genres span{gap:6px}}</style><style id="anthology-genre-tabs">.anthology-genres button{display:inline-flex;align-items:center;gap:9px;border:0;border-bottom:1px solid transparent;padding:8px 0;background:transparent;color:inherit;font:inherit;cursor:pointer;white-space:nowrap}.anthology-genres button[aria-selected="true"]{color:#E5B95C;border-bottom-color:#E5B95C}.anthology-genres button:focus-visible{outline:2px solid #E5B95C;outline-offset:5px}.anthology-genres [hidden],.published-document [hidden]{display:none!important}</style><style id="design-navigation-layout">.design-navigation{max-width:720px;gap:28px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin}.design-navigation button{flex:none}.design-navigation svg{width:21px;height:21px}[data-design-section][hidden]{display:none!important}[data-design-section]{min-height:160px}</style><style>
+</style><style id="anthology-presentation">.cover-desc{display:none!important}.anthology-genres{display:flex;align-items:center;justify-content:flex-start;gap:28px;max-width:720px;margin:32px auto 12px;padding:0 24px;color:#F3F0EA;font:400 15px Outfit,sans-serif;flex-wrap:wrap}.anthology-genres span{display:inline-flex;align-items:center;gap:9px}.anthology-genres svg{width:21px;height:21px;flex:none;fill:none;stroke:#E5B95C;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}@media(max-width:480px){.anthology-genres{gap:18px;font-size:14px}.anthology-genres span{gap:6px}}</style><style id="anthology-genre-tabs">.anthology-genres button{display:inline-flex;align-items:center;gap:9px;border:0;border-bottom:1px solid transparent;padding:8px 0;background:transparent;color:inherit;font:inherit;cursor:pointer;white-space:nowrap}.anthology-genres button[aria-selected="true"]{color:#E5B95C;border-bottom-color:#E5B95C}.anthology-genres button:focus-visible{outline:2px solid #E5B95C;outline-offset:5px}.anthology-genres [hidden],.published-document [hidden]{display:none!important}</style><style id="description-index-navigation">
+[data-design-section="descripciones"] .toc-chapters{margin-left:3.8rem}
+[data-design-section="descripciones"] .back-to-index{display:flex;align-items:center;justify-content:center;width:40px;height:40px;box-sizing:border-box;padding:0;font-size:24px!important;line-height:1;letter-spacing:0}
+[data-design-section="descripciones"] .back-to-index:focus-visible{outline:2px solid var(--gold);outline-offset:4px}
+</style><style id="design-navigation-layout">.design-navigation{max-width:720px;gap:28px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin}.design-navigation button{flex:none}.design-navigation svg{width:21px;height:21px}[data-design-section][hidden]{display:none!important}[data-design-section]{min-height:160px}</style><style>
 [id^="indice"] .indice-title{display:flex;align-items:center;justify-content:space-between;gap:16px}
 .index-entry-control{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;padding:7px;border:1px solid var(--line);border-radius:8px;background:transparent;color:var(--gold);cursor:pointer}
 .index-entry-control svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
@@ -1127,6 +1131,14 @@ function rebuildNarrativeIndex(){
    const chapters=Array.from(story.querySelectorAll('h2,h3,h4,h5,h6'));
    if(chapters.length){const sub=document.createElement('ul');sub.className='toc-chapters';chapters.forEach(chapter=>{const li=document.createElement('li'),a=document.createElement('a');a.href='#'+chapter.id;a.textContent=chapter.textContent.trim();li.style.paddingLeft=Math.max(0,Number(chapter.tagName.slice(1))-2)*12+'px';li.append(a);sub.append(li)});item.append(sub)}
    list.append(item);
+   if(key==='descripciones'){
+    const links=Array.from(story.querySelectorAll('.back-to-index'));
+    const back=links.shift()||document.createElement('a');
+    links.forEach(link=>link.remove());
+    back.className='back-to-index';back.textContent='↑';
+    back.setAttribute('aria-label','Volver al índice');
+    back.removeAttribute('title');story.append(back);
+   }
    story.querySelectorAll('.back-to-index').forEach(link=>{link.href='#'+id;link.contentEditable='false';link.removeAttribute('target')});
   });
   const label=document.createElement('p');label.className='indice-title';label.textContent='Índice';index.replaceChildren(label,list);
