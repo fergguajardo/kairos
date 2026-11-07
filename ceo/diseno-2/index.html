@@ -954,8 +954,8 @@ function render(data){
   const heading=story.querySelector('h1');if(!heading)continue;
   const item=document.createElement('li'),link=document.createElement('a'),number=document.createElement('span'),title=document.createElement('span'),text=heading.textContent.trim(),match=text.match(/^(\d+)\.\s*(.*)$/);
   link.href='#'+anchor(heading,'design2-heading-');number.className='toc-num';number.textContent=match?match[1]:'';title.className='toc-title';title.textContent=match?match[2]:text;link.append(number,title);item.append(link);
-  const chapters=story.querySelectorAll('h2,h3,h4,h5,h6');
-  if(chapters.length){const sub=document.createElement('ul');sub.className='toc-chapters';for(const chapter of chapters){const li=document.createElement('li'),a=document.createElement('a');a.href='#'+anchor(chapter,'design2-heading-');a.textContent=chapter.textContent.trim();li.append(a);sub.append(li)}item.append(sub)}
+  // Omit secondary titles while keeping the paragraphs and lists beneath them.
+  story.querySelectorAll('h2').forEach(title=>title.remove());
   list.append(item);
  }
  index.append(label,list);descriptions.prepend(index);
