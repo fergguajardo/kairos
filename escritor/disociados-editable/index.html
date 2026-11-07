@@ -2222,7 +2222,36 @@ document.addEventListener('kairos:select-genre',event=>{const index=groups.findI
  document.addEventListener('kairos:document-refreshed',decorateActs);
  main.addEventListener('input',schedule);
  decorateActs();
-})();</script></body></html>
+})();</script><style id="gluten-soneto-spacing">
+#cuento-17[data-compact-soneto-boundary]{margin-bottom:24px!important}
+#cuento-2[data-compact-gluten-boundary]{margin-top:0!important}
+[data-trailing-story-space]{display:none!important}
+</style><script id="gluten-soneto-spacing-behavior">
+(()=>{
+ const main=document.querySelector('main');if(!main)return;
+ function compactBoundary(){
+  main.querySelectorAll('[data-trailing-story-space]').forEach(node=>node.removeAttribute('data-trailing-story-space'));
+  const gluten=main.querySelector('#cuento-17'),soneto=main.querySelector('#cuento-2');
+  if(!gluten||!soneto)return;
+  gluten.setAttribute('data-compact-soneto-boundary','');soneto.setAttribute('data-compact-gluten-boundary','');
+  function trimEnd(parent){
+   for(const node of Array.from(parent.childNodes).reverse()){
+    if(node.nodeType===3){if(node.textContent.replace(/[\s\u200b\uFEFF]/g,''))return false;continue}
+    if(node.nodeType!==1)continue;
+    if(node.matches('[data-editor-only],.back-to-index'))continue;
+    if(node.matches('img,svg,video,audio,hr,h1,h2,h3,h4,h5,h6'))return false;
+    if(!trimEnd(node))return false;
+    node.setAttribute('data-trailing-story-space','');
+   }
+   return true;
+  }
+  trimEnd(gluten);
+ }
+ document.addEventListener('kairos:document-refreshed',compactBoundary);
+ document.addEventListener('disociados:published',compactBoundary);
+ compactBoundary();
+})();
+</script></body></html>
 
 
 
