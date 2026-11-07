@@ -558,11 +558,11 @@ main .bela-added-chapter[data-bela-chapter="4"]{padding-top:16.5pt!important}
 const KEY='kairos-disociados-editable-fiel-v1',FORMAT='kairos-disociados-document';
 const main=document.querySelector('main'),status=document.getElementById('status'),picker=document.getElementById('pages')||document.createElement('select');
 let dirty=false,documentCloud=null,titleSpacing=7,chapterSpacing=3,textSpacing=0;
-const genreNames=['Prosa','Thriller','Drama','Comedia'];
+const genreNames=['Thriller','Drama','Comedia'];
 const validGenreOrder=value=>Array.isArray(value)&&value.length===genreNames.length&&new Set(value).size===genreNames.length&&value.every(name=>genreNames.includes(name));
 let genreTabOrder=[...genreNames];
-try{const cached=JSON.parse(localStorage.getItem(KEY+'-genre-order'));if(validGenreOrder(cached))genreTabOrder=cached}catch{}
-function applyGenreOrder(value){if(!validGenreOrder(value))return;genreTabOrder=[...value];try{localStorage.setItem(KEY+'-genre-order',JSON.stringify(genreTabOrder))}catch{}document.dispatchEvent(new CustomEvent('kairos:genre-order-loaded',{detail:genreTabOrder}))}
+try{const cached=JSON.parse(localStorage.getItem(KEY+'-genre-order'));const retained=Array.isArray(cached)?cached.filter(name=>genreNames.includes(name)):cached;if(validGenreOrder(retained))genreTabOrder=retained}catch{}
+function applyGenreOrder(value){if(Array.isArray(value))value=value.filter(name=>genreNames.includes(name));if(!validGenreOrder(value))return;genreTabOrder=[...value];try{localStorage.setItem(KEY+'-genre-order',JSON.stringify(genreTabOrder))}catch{}document.dispatchEvent(new CustomEvent('kairos:genre-order-loaded',{detail:genreTabOrder}))}
 window.KairosGenreOrder={get:()=>[...genreTabOrder],change:order=>{if(!validGenreOrder(order))return;applyGenreOrder(order);if(!main.inert)save()}};
 
 let documentHistory=[],historyPosition=-1,historyReady=false,historyRestoring=false,historyNeedsReset=false;
@@ -1086,7 +1086,7 @@ function chooseStoryGenre(story,toolbar){
  if(existing){existing.focus();return}
  const picker=document.createElement('select');picker.className='index-entry-title';picker.setAttribute('aria-label','Categoría de la historia');
  const current=story.dataset.kairosGenre||document.querySelector('.anthology-genres [aria-selected="true"]')?.dataset.genre;
- for(const name of ['Prosa','Thriller','Drama','Comedia']){const option=document.createElement('option');option.value=name;option.textContent=name==='Prosa'?'Romance':name;option.selected=name===current;picker.append(option)}
+ for(const name of ['Thriller','Drama','Comedia']){const option=document.createElement('option');option.value=name;option.textContent=name;option.selected=name===current;picker.append(option)}
  picker.onchange=()=>{if(main.inert)return;const genre=picker.value;recordDocumentHistory();story.dataset.kairosGenre=genre;refreshLayout();document.dispatchEvent(new CustomEvent('kairos:select-genre',{detail:genre}));save()};
  picker.onblur=()=>picker.remove();picker.onkeydown=event=>{if(event.key==='Escape')picker.remove()};
  toolbar.append(picker);picker.focus();
@@ -2140,12 +2140,12 @@ window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.return
 'use strict';
 const nav=document.querySelector('.anthology-genres'),main=document.querySelector('main');
 if(!nav||!main)return;
-const groups=[['Prosa',[]],['Thriller',['Bela','Principita','Mandala','Sándalo']],['Drama',['Latte','Adorni']],['Comedia',['Baba Yaga','Roberto','Barniz']]];
+const groups=[['Thriller',['Bela','Principita','Mandala','Sándalo']],['Drama',['Latte','Adorni']],['Comedia',['Baba Yaga','Roberto','Barniz']]];
 const normalize=text=>text.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/^\s*(?:✦\s*)?\d+[.)]?\s*/,'').trim().toLowerCase();
 let selected=0,stories=[];
 const icons=["<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2\"/></svg>", "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M6 16c5 0 7-8 12-8a4 4 0 0 1 0 8c-5 0-7-8-12-8a4 4 0 1 0 0 8\"/></svg>", "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M18 14l4 4-4 4M18 2l4 4-4 4M2 18h1.973a4 4 0 0 0 3.3-1.7l5.454-8.6a4 4 0 0 1 3.3-1.7H22M2 6h1.972a4 4 0 0 1 3.6 2.2M22 18h-6.041a4 4 0 0 1-3.3-1.8l-.359-.45\"/></svg>"];
 nav.replaceChildren();nav.setAttribute('role','tablist');nav.setAttribute('aria-label','Géneros de la antología');main.id='anthology-stories';main.setAttribute('role','tabpanel');
-const buttons=groups.map(([name],index)=>{const button=document.createElement('button');button.type='button';button.id='genre-tab-'+index;button.setAttribute('role','tab');button.setAttribute('aria-controls',main.id);button.dataset.genre=name;button.setAttribute('aria-label',name==='Prosa'?'Romance':name);button.innerHTML=name==='Prosa'?'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 4.5C7.5 1.5 2 3.5 2 7.5c0 4 4.5 7.5 8.5 11l-1-5 3-3-3-2 1-4Z M14 4.5c3-3 8-.8 8 3 0 4-4 7.5-8 11l-1-4.5 3-3-3-2 1-4.5Z"/></svg>':icons[index-1];button.append(document.createTextNode(name==='Prosa'?'Romance':name));button.onclick=()=>select(index);button.onkeydown=event=>{const available=Array.from(nav.querySelectorAll('button')).filter(button=>!button.hidden).map(button=>buttons.indexOf(button)),position=available.indexOf(index);if(event.altKey&&(event.key==='ArrowRight'||event.key==='ArrowLeft')){event.preventDefault();moveGenre(button,event.key==='ArrowRight'?1:-1);return;}let next;if(event.key==='ArrowRight')next=available[(position+1)%available.length];else if(event.key==='ArrowLeft')next=available[(position+available.length-1)%available.length];else if(event.key==='Home')next=available[0];else if(event.key==='End')next=available[available.length-1];else return;event.preventDefault();select(next);buttons[next].focus()};nav.append(button);return button});
+const buttons=groups.map(([name],index)=>{const button=document.createElement('button');button.type='button';button.id='genre-tab-'+index;button.setAttribute('role','tab');button.setAttribute('aria-controls',main.id);button.dataset.genre=name;button.setAttribute('aria-label',name);button.innerHTML=icons[index];button.append(document.createTextNode(name));button.onclick=()=>select(index);button.onkeydown=event=>{const available=Array.from(nav.querySelectorAll('button')).filter(button=>!button.hidden).map(button=>buttons.indexOf(button)),position=available.indexOf(index);if(event.altKey&&(event.key==='ArrowRight'||event.key==='ArrowLeft')){event.preventDefault();moveGenre(button,event.key==='ArrowRight'?1:-1);return;}let next;if(event.key==='ArrowRight')next=available[(position+1)%available.length];else if(event.key==='ArrowLeft')next=available[(position+available.length-1)%available.length];else if(event.key==='Home')next=available[0];else if(event.key==='End')next=available[available.length-1];else return;event.preventDefault();select(next);buttons[next].focus()};nav.append(button);return button});
 
 let draggedGenre=null,touchDrag=null,suppressClick=false;
 function orderedGenreButtons(){return Array.from(nav.querySelectorAll('button[data-genre]'))}
@@ -2169,6 +2169,8 @@ nav.addEventListener('pointermove',event=>{
  event.preventDefault();const target=document.elementFromPoint(event.clientX,event.clientY)?.closest('button[data-genre]');if(target&&nav.contains(target))placeGenre(touchDrag.button,target,event.clientX);
 });
 function finishTouch(event){if(!touchDrag||event.pointerId!==touchDrag.id)return;const drag=touchDrag;touchDrag=null;drag.button.classList.remove('genre-dragging');if(drag.active){if(event.type==='pointercancel')restoreGenreOrder(drag.order);else persistGenreOrder();suppressClick=true;setTimeout(()=>suppressClick=false,0)}if(nav.hasPointerCapture(event.pointerId))nav.releasePointerCapture(event.pointerId)}
+nav.addEventListener('dragover',event=>{if(draggedGenre){event.preventDefault();event.dataTransfer.dropEffect='move'}});
+nav.addEventListener('drop',event=>{if(draggedGenre){event.preventDefault();persistGenreOrder()}});
 nav.addEventListener('pointerup',finishTouch);nav.addEventListener('pointercancel',finishTouch);
 document.addEventListener('kairos:genre-order-loaded',event=>restoreGenreOrder(event.detail));restoreGenreOrder(window.KairosGenreOrder?.get());
 function select(index){
@@ -2183,7 +2185,7 @@ function followHash(){
 }
 function organize(event){
  const items=Array.from(main.querySelectorAll('#indice > .toc > li, #indice > .published-index > li'));
- stories=Array.from(main.querySelectorAll('.published-story'),(story,position)=>{const name=normalize(story.querySelector('h1')?.textContent||story.getAttribute('aria-label')||'');const explicit=groups.findIndex(([label])=>label===story.dataset.kairosGenre);const group=explicit>=0?explicit:groups.findIndex(([,names])=>names.some(title=>normalize(title)===name));const item=items.find(item=>{const href=item.querySelector('a')?.getAttribute('href');if(!href?.startsWith('#'))return false;const target=document.getElementById(href.slice(1));return target&&(target===story||story.contains(target))});return {story,item,name,group:group<0?2:group,position}});
+ stories=Array.from(main.querySelectorAll('.published-story'),(story,position)=>{const name=normalize(story.querySelector('h1')?.textContent||story.getAttribute('aria-label')||'');const explicit=groups.findIndex(([label])=>label===story.dataset.kairosGenre);const group=explicit>=0?explicit:groups.findIndex(([,names])=>names.some(title=>normalize(title)===name));const item=items.find(item=>{const href=item.querySelector('a')?.getAttribute('href');if(!href?.startsWith('#'))return false;const target=document.getElementById(href.slice(1));return target&&(target===story||story.contains(target))});return {story,item,name,group:group<0?1:group,position}});
  stories.sort((a,b)=>a.group-b.group||(groups[a.group][0]==='Prosa'?a.position-b.position:(groups[a.group][1].findIndex(name=>normalize(name)===a.name)<0?100000+a.position:groups[a.group][1].findIndex(name=>normalize(name)===a.name))-(groups[b.group][1].findIndex(name=>normalize(name)===b.name)<0?100000+b.position:groups[b.group][1].findIndex(name=>normalize(name)===b.name))));
  const currentOrder=Array.from(main.querySelectorAll('.published-story'));
  const needsReorder=stories.some((entry,index)=>entry.story!==currentOrder[index]);
