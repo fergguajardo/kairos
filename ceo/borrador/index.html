@@ -942,6 +942,10 @@ function ensureDesignSections(){
  for(const [id,label] of designSections){
   let panel=Array.from(main.children).find(node=>node.dataset.designSection===id);
   if(!panel){panel=document.createElement('section');panel.dataset.designSection=id;const paragraph=document.createElement('p');paragraph.className='doc-line';paragraph.append(document.createElement('br'));panel.append(paragraph);main.append(panel)}
+  // Consolidate saved copies of a tab without losing its entries.
+  for(const duplicate of Array.from(main.querySelectorAll('[data-design-section]')).filter(node=>node!==panel&&node.dataset.designSection===id)){
+   panel.append(...duplicate.childNodes);duplicate.remove();documentNeedsSync=true;
+  }
   panel.id='design-panel-'+id;panel.setAttribute('role','tabpanel');panel.setAttribute('aria-labelledby','design-tab-'+id);
  }
  selectDesignSection(selectedDesignSection);
@@ -1099,7 +1103,12 @@ function rebuildNarrativeIndex(){
   let index=indexes.shift();
   // The index is rebuilt from entries; discard stale copies from saved layouts.
   if(indexes.length){indexes.forEach(node=>node.remove());documentNeedsSync=true}
-  if(!index){index=document.createElement('section');panel.prepend(index)}
+  if(!index){index=document.createElement('section')}
+  // Older saved copies can retain an index title/list after losing their ID.
+  for(const stale of Array.from(panel.querySelectorAll('.indice-title,.toc')).filter(node=>node.closest('[data-design-section]')===panel&&!index.contains(node))){
+   stale.remove();documentNeedsSync=true;
+  }
+  panel.prepend(index);
   index.id=id;index.contentEditable='false';
   const list=document.createElement('ul');list.className='toc';
   panel.querySelectorAll('.published-story').forEach(story=>{
