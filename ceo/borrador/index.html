@@ -937,6 +937,13 @@ function selectDesignSection(id){
  designSections.forEach(([key],index)=>{const active=key===id,button=designButtons[index],panel=main.querySelector('[data-design-section="'+key+'"]');button.setAttribute('aria-selected',String(active));button.tabIndex=active?0:-1;if(panel)panel.hidden=!active});
 }
 function ensureDesignSections(){
+ // Removed tabs can leave an unassigned index in saved documents.
+ // It sits outside every tab and otherwise remains visible on all of them.
+ for(const index of Array.from(main.querySelectorAll('[id^="indice"]')).filter(node=>!node.closest('[data-design-section]'))){
+  const wrapper=index.parentElement;index.remove();
+  if(wrapper!==main&&!wrapper.textContent.trim()&&!wrapper.querySelector('.published-story,img'))wrapper.remove();
+  documentNeedsSync=true;
+ }
  let first=Array.from(main.children).find(node=>node.dataset.designSection==='descripciones');
  if(!first){first=document.createElement('section');first.dataset.designSection='descripciones';first.append(...main.childNodes);main.append(first)}
  for(const [id,label] of designSections){
