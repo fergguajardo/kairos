@@ -1561,7 +1561,7 @@ function renderBalance(){const page=$('page'),viewportX=window.scrollX,viewportY
  if(needsSections||needsSharedPanel)save();
  [{id:'esencial',name:'Esencial',incomeKey:'ingresos',investmentKey:'inversion'},{id:'complemento',name:'Complemento',incomeKey:'ingresos',investmentKey:'inversion'}].forEach((section,sectionIndex)=>{
  const categories=b.categorias.filter(category=>balanceCategorySection(category)===section.id);
- const fmt=n=>'$'+n.toLocaleString('es-AR',{maximumFractionDigits:2}),income=(b[section.incomeKey]||[]).reduce((a,r)=>a+balanceNumber(r[1]),0),investment=(b[section.investmentKey]||[]).reduce((a,r)=>a+balanceNumber(r[1]),0),expense=b.categorias.reduce((a,c)=>a+c.items.reduce((v,r)=>v+balanceNumber(r[1])*balanceNumber(r[2]),0),investment),margin=income-expense,pct=v=>income>0?(v/income*100).toLocaleString('es-AR',{maximumFractionDigits:1})+' %':'—';
+ const fmt=n=>'$'+n.toLocaleString('es-AR',{useGrouping:true,maximumFractionDigits:2}),income=(b[section.incomeKey]||[]).reduce((a,r)=>a+balanceNumber(r[1]),0),investment=(b[section.investmentKey]||[]).reduce((a,r)=>a+balanceNumber(r[1]),0),expense=b.categorias.reduce((a,c)=>a+c.items.reduce((v,r)=>v+balanceNumber(r[1])*balanceNumber(r[2]),0),investment),margin=income-expense,pct=v=>income>0?(v/income*100).toLocaleString('es-AR',{useGrouping:true,maximumFractionDigits:1})+' %':'—';
  const sectionHost=el('section','balance-section');sectionHost.setAttribute('aria-label',section.name);sectionHost.append(el('h2','balance-section-title',section.name));page.append(sectionHost);
  const retainedScroll=scrolls[sectionIndex]||0;
 
