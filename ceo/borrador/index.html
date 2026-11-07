@@ -1095,7 +1095,10 @@ function appendIndexEntryControl(index,label){
 function rebuildNarrativeIndex(){
  for(const panel of main.querySelectorAll('[data-design-section]')){
   const key=panel.dataset.designSection,id=key==='descripciones'?'indice':'indice-'+key;
-  let index=panel.querySelector('[id^="indice"]');
+  const indexes=Array.from(panel.querySelectorAll('[id^="indice"]')).filter(node=>node.closest('[data-design-section]')===panel);
+  let index=indexes.shift();
+  // The index is rebuilt from entries; discard stale copies from saved layouts.
+  if(indexes.length){indexes.forEach(node=>node.remove());documentNeedsSync=true}
   if(!index){index=document.createElement('section');panel.prepend(index)}
   index.id=id;index.contentEditable='false';
   const list=document.createElement('ul');list.className='toc';
