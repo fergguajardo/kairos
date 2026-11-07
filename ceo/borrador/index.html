@@ -182,7 +182,7 @@ main {
   margin: 0 auto;
   padding: 0 1.5rem 4rem;
 }
-#indice {
+[id^="indice"] {
   padding-top: 2.5rem;
   scroll-margin-top: 1rem;
 }
@@ -420,19 +420,19 @@ main h2.doc-heading,main h3.doc-heading,main h4.doc-heading,main h5.doc-heading,
 /* Todo texto sin un color dorado explícito hereda el marfil del selector. */
 main,main .page-content,main .doc-block,main .doc-line,main p,main li{color:var(--ink)}
 
-.published-story{margin:40px 0 64px;scroll-margin-top:24px}.published-index{list-style:none;padding:0}.published-index>li{margin:12px 0}.published-index ul{margin:6px 0 0 22px;padding:0;list-style:none}.published-index ul li{margin:4px 0}.published-document #indice{margin-bottom:40px}.published-document h1.doc-heading{font-size:inherit}.published-document .page-break::after{display:none}.published-document .page-break{height:0;padding:0!important;margin:0!important}.published-document .sheet{scroll-margin-top:24px}.published-document{color:#F3F0EA}.published-document .page-content{color:#F3F0EA}
+.published-story{margin:40px 0 64px;scroll-margin-top:24px}.published-index{list-style:none;padding:0}.published-index>li{margin:12px 0}.published-index ul{margin:6px 0 0 22px;padding:0;list-style:none}.published-index ul li{margin:4px 0}.published-document [id^="indice"]{margin-bottom:40px}.published-document h1.doc-heading{font-size:inherit}.published-document .page-break::after{display:none}.published-document .page-break{height:0;padding:0!important;margin:0!important}.published-document .sheet{scroll-margin-top:24px}.published-document{color:#F3F0EA}.published-document .page-content{color:#F3F0EA}
 </style>
 <style>
 /* Índice de lectura original: números separados, filas y divisores. */
-#indice .indice-title{margin:0 0 1.2rem!important;color:var(--gold);font-weight:400}
-#indice .toc{font-family:Outfit,sans-serif}
-#indice .toc-num{color:var(--gold);font-weight:500}
-#indice .toc-title{color:var(--ink);font-weight:400}
-#indice .toc-chapters{list-style:none;margin:0 0 .6rem 2.4rem;padding:0}
-#indice .toc-chapters li{border:0}
-#indice .toc-chapters a{padding:.35rem .4rem;font-size:.9rem;color:var(--ink)}
+[id^="indice"] .indice-title{margin:0 0 1.2rem!important;color:var(--gold);font-weight:400}
+[id^="indice"] .toc{font-family:Outfit,sans-serif}
+[id^="indice"] .toc-num{color:var(--gold);font-weight:500}
+[id^="indice"] .toc-title{color:var(--ink);font-weight:400}
+[id^="indice"] .toc-chapters{list-style:none;margin:0 0 .6rem 2.4rem;padding:0}
+[id^="indice"] .toc-chapters li{border:0}
+[id^="indice"] .toc-chapters a{padding:.35rem .4rem;font-size:.9rem;color:var(--ink)}
 </style>
-<style>#indice a[href]{cursor:pointer}#indice a[href]:focus-visible{outline:2px solid var(--gold);outline-offset:3px}</style>
+<style>[id^="indice"] a[href]{cursor:pointer}[id^="indice"] a[href]:focus-visible{outline:2px solid var(--gold);outline-offset:3px}</style>
 <style>@font-face {
   font-family: 'Outfit';
   font-style: normal;
@@ -465,16 +465,16 @@ main,main .page-content,main .doc-block,main .doc-line,main p,main li{color:var(
 <style id="reader-type-sizes">
 .cover-title{font-size:60px!important}
 .cover-desc{font-size:18.5px!important}
-#indice .toc-title,#indice .toc-num{font-size:17.5px!important}
-#indice .toc-chapters a{font-size:17px!important}
+[id^="indice"] .toc-title,[id^="indice"] .toc-num{font-size:17.5px!important}
+[id^="indice"] .toc-chapters a{font-size:17px!important}
 .published-story .page-content,.published-story .page-content p{font-size:16.5px!important}
 .published-story h1.doc-heading,.published-story h1.doc-heading *{font-size:17.5px!important}
 .published-story h2.doc-heading,.published-story h2.doc-heading *,.published-story .capitulo,.published-story .capitulo *{font-size:17px!important}
 .published-story .back-to-index{font-size:16px!important}
-#indice .indice-title{font-size:12px!important}
+[id^="indice"] .indice-title{font-size:12px!important}
 .cover-eyebrow,body>footer{font-size:12px!important}
 </style>
-<style id="chapter-italics">#indice .toc-chapters a,#indice .toc-chapters a *,.published-story h2.doc-heading,.published-story h2.doc-heading *,.published-story .capitulo,.published-story .capitulo *{font-style:italic!important}</style><style id="draft-project-adaptation">.toolbar{position:sticky;top:0;z-index:20}.cover{min-height:70vh}.published-document{max-width:720px!important;background:transparent!important;padding:0 24px 40px!important}.published-document .sheet{padding:0!important}.published-document .page-content{min-height:0}.published-document h1.doc-heading{scroll-margin-top:110px}.published-document #indice{scroll-margin-top:110px}.published-document .toc-chapters{font-style:italic}.published-document .tda-flashback-separator{border:0;border-top:1px solid #E5B95C;margin:16px 0}.published-document .page-content p{margin-top:0!important;margin-bottom:0!important}</style><style>
+<style id="chapter-italics">[id^="indice"] .toc-chapters a,[id^="indice"] .toc-chapters a *,.published-story h2.doc-heading,.published-story h2.doc-heading *,.published-story .capitulo,.published-story .capitulo *{font-style:italic!important}</style><style id="draft-project-adaptation">.toolbar{position:sticky;top:0;z-index:20}.cover{min-height:70vh}.published-document{max-width:720px!important;background:transparent!important;padding:0 24px 40px!important}.published-document .sheet{padding:0!important}.published-document .page-content{min-height:0}.published-document h1.doc-heading{scroll-margin-top:110px}.published-document [id^="indice"]{scroll-margin-top:110px}.published-document .toc-chapters{font-style:italic}.published-document .tda-flashback-separator{border:0;border-top:1px solid #E5B95C;margin:16px 0}.published-document .page-content p{margin-top:0!important;margin-bottom:0!important}</style><style>
 /* Una línea de aire antes del capítulo 4 de Bela. */
 main .bela-added-chapter[data-bela-chapter="4"]{padding-top:16.5pt!important}
 </style><style id="editorial-spacing-20261022">
@@ -573,7 +573,7 @@ main {
   margin: 0 auto;
   padding: 0 1.5rem 4rem;
 }
-#indice {
+[id^="indice"] {
   padding-top: 2.5rem;
   scroll-margin-top: 1rem;
 }
@@ -811,19 +811,19 @@ main h2.doc-heading,main h3.doc-heading,main h4.doc-heading,main h5.doc-heading,
 /* Todo texto sin un color dorado explícito hereda el marfil del selector. */
 main,main .page-content,main .doc-block,main .doc-line,main p,main li{color:var(--ink)}
 
-.published-story{margin:40px 0 64px;scroll-margin-top:24px}.published-index{list-style:none;padding:0}.published-index>li{margin:12px 0}.published-index ul{margin:6px 0 0 22px;padding:0;list-style:none}.published-index ul li{margin:4px 0}.published-document #indice{margin-bottom:40px}.published-document h1.doc-heading{font-size:inherit}.published-document .page-break::after{display:none}.published-document .page-break{height:0;padding:0!important;margin:0!important}.published-document .sheet{scroll-margin-top:24px}.published-document{color:#F3F0EA}.published-document .page-content{color:#F3F0EA}
+.published-story{margin:40px 0 64px;scroll-margin-top:24px}.published-index{list-style:none;padding:0}.published-index>li{margin:12px 0}.published-index ul{margin:6px 0 0 22px;padding:0;list-style:none}.published-index ul li{margin:4px 0}.published-document [id^="indice"]{margin-bottom:40px}.published-document h1.doc-heading{font-size:inherit}.published-document .page-break::after{display:none}.published-document .page-break{height:0;padding:0!important;margin:0!important}.published-document .sheet{scroll-margin-top:24px}.published-document{color:#F3F0EA}.published-document .page-content{color:#F3F0EA}
 </style>
 <style>
 /* Índice de lectura original: números separados, filas y divisores. */
-#indice .indice-title{margin:0 0 1.2rem!important;color:var(--gold);font-weight:400}
-#indice .toc{font-family:Outfit,sans-serif}
-#indice .toc-num{color:var(--gold);font-weight:500}
-#indice .toc-title{color:var(--ink);font-weight:400}
-#indice .toc-chapters{list-style:none;margin:0 0 .6rem 2.4rem;padding:0}
-#indice .toc-chapters li{border:0}
-#indice .toc-chapters a{padding:.35rem .4rem;font-size:.9rem;color:var(--ink)}
+[id^="indice"] .indice-title{margin:0 0 1.2rem!important;color:var(--gold);font-weight:400}
+[id^="indice"] .toc{font-family:Outfit,sans-serif}
+[id^="indice"] .toc-num{color:var(--gold);font-weight:500}
+[id^="indice"] .toc-title{color:var(--ink);font-weight:400}
+[id^="indice"] .toc-chapters{list-style:none;margin:0 0 .6rem 2.4rem;padding:0}
+[id^="indice"] .toc-chapters li{border:0}
+[id^="indice"] .toc-chapters a{padding:.35rem .4rem;font-size:.9rem;color:var(--ink)}
 </style>
-<style>#indice a[href]{cursor:pointer}#indice a[href]:focus-visible{outline:2px solid var(--gold);outline-offset:3px}</style>
+<style>[id^="indice"] a[href]{cursor:pointer}[id^="indice"] a[href]:focus-visible{outline:2px solid var(--gold);outline-offset:3px}</style>
 <style>@font-face {
   font-family: 'Outfit';
   font-style: normal;
@@ -856,16 +856,16 @@ main,main .page-content,main .doc-block,main .doc-line,main p,main li{color:var(
 <style id="reader-type-sizes">
 .cover-title{font-size:60px!important}
 .cover-desc{font-size:18.5px!important}
-#indice .toc-title,#indice .toc-num{font-size:17.5px!important}
-#indice .toc-chapters a{font-size:17px!important}
+[id^="indice"] .toc-title,[id^="indice"] .toc-num{font-size:17.5px!important}
+[id^="indice"] .toc-chapters a{font-size:17px!important}
 .published-story .page-content,.published-story .page-content p{font-size:16.5px!important}
 .published-story h1.doc-heading,.published-story h1.doc-heading *{font-size:17.5px!important}
 .published-story h2.doc-heading,.published-story h2.doc-heading *,.published-story .capitulo,.published-story .capitulo *{font-size:17px!important}
 .published-story .back-to-index{font-size:16px!important}
-#indice .indice-title{font-size:12px!important}
+[id^="indice"] .indice-title{font-size:12px!important}
 .cover-eyebrow,body>footer{font-size:12px!important}
 </style>
-<style id="chapter-italics">#indice .toc-chapters a,#indice .toc-chapters a *,.published-story h2.doc-heading,.published-story h2.doc-heading *,.published-story .capitulo,.published-story .capitulo *{font-style:italic!important}</style>
+<style id="chapter-italics">[id^="indice"] .toc-chapters a,[id^="indice"] .toc-chapters a *,.published-story h2.doc-heading,.published-story h2.doc-heading *,.published-story .capitulo,.published-story .capitulo *{font-style:italic!important}</style>
 <style>
 /* Una línea de aire antes del capítulo 4 de Bela. */
 main .bela-added-chapter[data-bela-chapter="4"]{padding-top:16.5pt!important}
@@ -875,7 +875,7 @@ main .bela-added-chapter[data-bela-chapter="4"]{padding-top:16.5pt!important}
 .published-story .page-content,.published-story .page-content *{line-height:1.5!important}
 .published-story .sheet+.sheet{padding-top:0!important}
 .published-story .sheet,.published-story .page-content,.published-story .doc-block,.published-story .clipboard-block{min-height:0;margin-top:0!important;margin-bottom:0!important;padding-top:0!important;padding-bottom:0!important}
-</style><style id="editable-integration">.toolbar{position:sticky;top:0;z-index:20}.toolbar h1{font-size:18px}main[contenteditable="true"]{outline:none}#indice,.published-story h1,.published-story h2{scroll-margin-top:110px}</style><style id="save-status">#status:empty,#status[hidden]{display:none!important}#status{display:block!important;padding:10px 24px;color:var(--light);font-size:14px}</style><style id="cover-editing">.cover-title[contenteditable],.cover-desc[contenteditable]{outline:none}.cover-title[contenteditable]:focus-visible,.cover-desc[contenteditable]:focus-visible{outline:1px dashed var(--gold);outline-offset:6px}</style><style id="panoramic-cover">
+</style><style id="editable-integration">.toolbar{position:sticky;top:0;z-index:20}.toolbar h1{font-size:18px}main[contenteditable="true"]{outline:none}[id^="indice"],.published-story h1,.published-story h2{scroll-margin-top:110px}</style><style id="save-status">#status:empty,#status[hidden]{display:none!important}#status{display:block!important;padding:10px 24px;color:var(--light);font-size:14px}</style><style id="cover-editing">.cover-title[contenteditable],.cover-desc[contenteditable]{outline:none}.cover-title[contenteditable]:focus-visible,.cover-desc[contenteditable]:focus-visible{outline:1px dashed var(--gold);outline-offset:6px}</style><style id="panoramic-cover">
 /* Portada: fotografía y sinopsis en zonas independientes. */
 .cover{display:block;min-height:0;background:#000}
 .cover::before,.cover::after{content:none}
@@ -893,15 +893,15 @@ main .bela-added-chapter[data-bela-chapter="4"]{padding-top:16.5pt!important}
 @media(max-width:639px){
 .cover-title{font-size:45px!important}
 .cover-desc{font-size:17.5px!important}
-#indice .toc-title,#indice .toc-num{font-size:17px!important}
-#indice .toc-chapters a{font-size:16.5px!important}
+[id^="indice"] .toc-title,[id^="indice"] .toc-num{font-size:17px!important}
+[id^="indice"] .toc-chapters a{font-size:16.5px!important}
 .published-story .page-content,.published-story .page-content p{font-size:16.5px!important}
 }
 </style><style id="story-titles-ivory">main .published-story h1.doc-heading,main .published-story h1.doc-heading *{color:#F3F0EA!important}</style><style id="hide-cover-synopsis">.cover-desc{display:none!important}</style><style id="crimson-panoramic-cover">
 .cover .cover-art img{width:100%;height:auto;max-height:none;aspect-ratio:1942/809;object-fit:contain;object-position:center;opacity:1}
 .cover-art{width:100%;overflow:hidden;background:#000}
 </style><style id="anthology-presentation">.cover-desc{display:none!important}.anthology-genres{display:flex;align-items:center;justify-content:flex-start;gap:28px;max-width:720px;margin:32px auto 12px;padding:0 24px;color:#F3F0EA;font:400 15px Outfit,sans-serif;flex-wrap:wrap}.anthology-genres span{display:inline-flex;align-items:center;gap:9px}.anthology-genres svg{width:21px;height:21px;flex:none;fill:none;stroke:#E5B95C;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}@media(max-width:480px){.anthology-genres{gap:18px;font-size:14px}.anthology-genres span{gap:6px}}</style><style id="anthology-genre-tabs">.anthology-genres button{display:inline-flex;align-items:center;gap:9px;border:0;border-bottom:1px solid transparent;padding:8px 0;background:transparent;color:inherit;font:inherit;cursor:pointer;white-space:nowrap}.anthology-genres button[aria-selected="true"]{color:#E5B95C;border-bottom-color:#E5B95C}.anthology-genres button:focus-visible{outline:2px solid #E5B95C;outline-offset:5px}.anthology-genres [hidden],.published-document [hidden]{display:none!important}</style><style id="design-navigation-layout">.design-navigation{max-width:960px;gap:28px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin}.design-navigation button{flex:none}.design-navigation svg{width:21px;height:21px}[data-design-section][hidden]{display:none!important}[data-design-section]{min-height:160px}</style><style>
-#indice .indice-title{display:flex;align-items:center;justify-content:space-between;gap:16px}
+[id^="indice"] .indice-title{display:flex;align-items:center;justify-content:space-between;gap:16px}
 .index-entry-control{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;padding:7px;border:1px solid var(--line);border-radius:8px;background:transparent;color:var(--gold);cursor:pointer}
 .index-entry-control svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 .index-entry-control:hover{border-color:var(--gold);background:#E5B95C15}.index-entry-control:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
@@ -996,8 +996,10 @@ coverTitle.addEventListener('keydown',event=>{if(event.key==='Enter')event.preve
 let publishedMigration=4,editorialRevision=2;
 let documentNeedsSync=false;
 function normalizeStoryNumbers(){
- let changed=false,number=0;
- main.querySelectorAll('.published-story').forEach(story=>{
+ let changed=false;
+ for(const panel of main.querySelectorAll('[data-design-section]')){
+ let number=0;
+ panel.querySelectorAll('.published-story').forEach(story=>{
   if(!story.textContent.replace(/Volver al índice/g,'').trim()&&!story.querySelector('img')){story.remove();changed=true;return}
   const heading=story.querySelector('h1');if(!heading)return;
   number++;
@@ -1013,6 +1015,7 @@ function normalizeStoryNumbers(){
   }
   const label=heading.textContent.trim();if(story.getAttribute('aria-label')!==label){story.setAttribute('aria-label',label);changed=true}
  });
+ }
  return changed;
 }
 function decorateSedanteAside(){
@@ -1075,7 +1078,7 @@ function appendIndexEntryControl(index,label){
  label.append(button);
  button.addEventListener('click',()=>{
   if(main.inert)return;
-  const panel=main.querySelector('[data-design-section="'+selectedDesignSection+'"]');
+  const panel=index.closest('[data-design-section]');
   const section=document.createElement('section');section.className='published-story';
   const heading=document.createElement('h1');heading.className='doc-heading';heading.textContent='Nueva entrada';
   const paragraph=document.createElement('p');paragraph.append(document.createElement('br'));
@@ -1090,21 +1093,26 @@ function appendIndexEntryControl(index,label){
 }
 
 function rebuildNarrativeIndex(){
- const index=main.querySelector('#indice');if(!index)return;
- const list=document.createElement('ul');list.className='toc';
- main.querySelectorAll('.published-story').forEach(story=>{
-  const heading=story.querySelector('h1');if(!heading)return;
-  const item=document.createElement('li'),link=document.createElement('a'),number=document.createElement('span'),title=document.createElement('span');
-  const text=heading.textContent.trim(),match=text.match(/^(\d+)\.\s*(.*)$/);
-  number.className='toc-num';number.textContent=match?match[1]:'';title.className='toc-title';title.textContent=match?match[2]:text;
-  link.href='#'+heading.id;link.append(number,title);item.append(link);
-  const chapters=Array.from(story.querySelectorAll('h2')).filter(node=>/^(?:Cap[ií]tulo|Escena)\s+\d+/i.test(node.textContent.trim()));
-  if(chapters.length){const sub=document.createElement('ul');sub.className='toc-chapters';chapters.forEach(chapter=>{const li=document.createElement('li'),a=document.createElement('a');a.href='#'+chapter.id;a.textContent=chapter.textContent.trim();li.append(a);sub.append(li)});item.append(sub)}
-  list.append(item);
- });
- index.replaceChildren();const label=document.createElement('p');label.className='indice-title';label.textContent='Índice';index.append(label,list);index.setAttribute('contenteditable','false');
- appendIndexEntryControl(index,label);
- main.querySelectorAll('.back-to-index').forEach(link=>{link.href='#indice';link.setAttribute('contenteditable','false');link.removeAttribute('target')});
+ for(const panel of main.querySelectorAll('[data-design-section]')){
+  const key=panel.dataset.designSection,id=key==='descripciones'?'indice':'indice-'+key;
+  let index=panel.querySelector('[id^="indice"]');
+  if(!index){index=document.createElement('section');panel.prepend(index)}
+  index.id=id;index.contentEditable='false';
+  const list=document.createElement('ul');list.className='toc';
+  panel.querySelectorAll('.published-story').forEach(story=>{
+   const heading=story.querySelector('h1');if(!heading)return;
+   const item=document.createElement('li'),link=document.createElement('a'),number=document.createElement('span'),title=document.createElement('span');
+   const text=heading.textContent.trim(),match=text.match(/^(\d+)\.\s*(.*)$/);
+   number.className='toc-num';number.textContent=match?match[1]:'';title.className='toc-title';title.textContent=match?match[2]:text;
+   link.href='#'+heading.id;link.append(number,title);item.append(link);
+   const chapters=Array.from(story.querySelectorAll('h2,h3,h4,h5,h6'));
+   if(chapters.length){const sub=document.createElement('ul');sub.className='toc-chapters';chapters.forEach(chapter=>{const li=document.createElement('li'),a=document.createElement('a');a.href='#'+chapter.id;a.textContent=chapter.textContent.trim();li.style.paddingLeft=Math.max(0,Number(chapter.tagName.slice(1))-2)*12+'px';li.append(a);sub.append(li)});item.append(sub)}
+   list.append(item);
+   story.querySelectorAll('.back-to-index').forEach(link=>{link.href='#'+id;link.contentEditable='false';link.removeAttribute('target')});
+  });
+  const label=document.createElement('p');label.className='indice-title';label.textContent='Índice';index.replaceChildren(label,list);
+  appendIndexEntryControl(index,label);
+ }
 }
 
 function inheritEditing(){main.querySelectorAll('[contenteditable]').forEach(node=>{if(!node.matches('.page-break,.doc-marker,.marker-gap,[data-editor-only]'))node.removeAttribute('contenteditable')});main.querySelectorAll('.page-number').forEach(node=>node.remove());}
@@ -1354,42 +1362,25 @@ function manuscriptHTML(){
  copy.querySelectorAll('[data-editor-only]').forEach(node=>node.remove());
  return copy.innerHTML;
 }
-function nextChapterNumber(story){
- const numbers=Array.from(story.querySelectorAll('h2'),heading=>{
-  const match=heading.textContent.trim().match(/^(?:Cap[ií]tulo|Escena)\s+(\d+)/i);
-  return match?Number(match[1]):0;
- });
- return Math.max(0,...numbers)+1;
-}
 function renderChapterControls(){
  main.querySelectorAll('.published-story').forEach(story=>{
-  const name=story.querySelector('h1')?.textContent.replace(/^\s*(?:✦\s*)?\d+[.)]\s*/,'').trim();
-  if(!/^(?:BELA|LATTE)$/i.test(name||''))return;
   const control=document.createElement('div'),button=document.createElement('button');
   control.className='chapter-add-control';control.dataset.editorOnly='true';control.contentEditable='false';
-  button.type='button';button.disabled=main.inert||publicationChecking;
-  button.title='Agregar capítulo '+nextChapterNumber(story)+' a '+name;
-  button.setAttribute('aria-label',button.title);
-  button.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v16M4 12h16"/></svg>';
+  button.type='button';button.setAttribute('aria-label','Crear subentrada');
+  button.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4v10h14M14 9l5 5-5 5"/></svg>';
   button.addEventListener('mousedown',event=>event.preventDefault());
   button.addEventListener('click',()=>{
-   if(main.inert||publicationChecking)return;
-   recordDocumentHistory();
-   const number=nextChapterNumber(story),heading=document.createElement('h2'),paragraph=document.createElement('p');
-   heading.className='doc-heading';heading.textContent='Capítulo '+number;
-   paragraph.style.cssText=bodyParagraphStyle;paragraph.append(document.createElement('br'));
-   // Keep the new chapter after all existing text, before the return link.
-   control.remove();
+   if(main.inert)return;
+   const heading=document.createElement('h2'),paragraph=document.createElement('p');
+   heading.className='doc-heading';heading.textContent='Nuevo encabezado';
+   paragraph.append(document.createElement('br'));control.remove();
    const backLink=story.querySelector('.back-to-index');
-   story.append(heading,paragraph);if(backLink)story.append(backLink);
-   refreshLayout();
-   main.focus();const range=document.createRange();range.selectNodeContents(paragraph);range.collapse(true);
+   if(backLink)backLink.before(heading,paragraph);else story.append(heading,paragraph);
+   refreshLayout();main.focus();const range=document.createRange();range.selectNodeContents(heading);
    const selection=window.getSelection();selection.removeAllRanges();selection.addRange(range);
-   selectionInEditor();updateFormatButtons();save();
-   paragraph.scrollIntoView({behavior:'smooth',block:'center'});
+   selectionInEditor();save();heading.scrollIntoView({behavior:'smooth',block:'center'});
   });
-  control.append(button);
-  const backLink=story.querySelector('.back-to-index');
+  control.append(button);const backLink=story.querySelector('.back-to-index');
   if(backLink)backLink.before(control);else story.append(control);
  });
 }
@@ -1399,14 +1390,16 @@ function refreshLayout(){
  main.querySelectorAll('[data-editor-only]').forEach(node=>node.remove());
  if(normalizeLegacyHeadings())documentNeedsSync=true;
  if(normalizeEleventhStory())documentNeedsSync=true;
- if(applyNarrativeArchitecture(main))documentNeedsSync=true;
+ // Design entries keep their order within their own tab.
  if(normalizeStoryNumbers())documentNeedsSync=true;
  if(decorateSedanteAside())documentNeedsSync=true;
  if(decoratePrincipitaAside())documentNeedsSync=true;
  if(refineNarrativeAsides())documentNeedsSync=true;
  picker.replaceChildren();
+ const headingIds=new Set();
  main.querySelectorAll('h1,h2,h3,h4,h5,h6').forEach((heading,index)=>{
-  if(!heading.id)heading.id='doc-heading-'+index;
+  if(!heading.id||headingIds.has(heading.id)){let suffix=index;while(main.querySelector('#doc-heading-'+suffix)||headingIds.has('doc-heading-'+suffix))suffix++;heading.id='doc-heading-'+suffix}
+  headingIds.add(heading.id);
   const option=document.createElement('option');option.value=heading.id;
   option.textContent='\u00a0'.repeat(Math.max(0,Number(heading.tagName.slice(1))-1)*4)+heading.textContent.trim();picker.append(option);
  });
@@ -1415,7 +1408,7 @@ function refreshLayout(){
   else{link.target='_blank';link.rel='noopener noreferrer'}
  });
  rebuildNarrativeIndex();
- const index=main.querySelector('#indice');if(index)index.contentEditable='false';
+ main.querySelectorAll('[id^="indice"]').forEach(index=>index.contentEditable='false');
  if(historyReady&&historyNeedsReset&&!historyRestoring)resetDocumentHistory();
  renderChapterControls();
 }
@@ -1426,7 +1419,7 @@ function current(){
  if(publicationMode==='creation'&&publicationSnapshot)return {...draft,...publicationSnapshot,publicationMode,creationDraft:draft};
  return {...draft,publicationMode,creationDraft:null};
 }
-function sanitize(value){const template=document.createElement('template');template.innerHTML=value;const allowed=new Set(['SECTION','HR','BLOCKQUOTE','ARTICLE','DIV','SPAN','P','BR','STRONG','B','EM','I','U','A','UL','OL','LI','H1','H2','H3','H4','H5','H6','IMG']);for(const node of Array.from(template.content.querySelectorAll('*'))){if(!allowed.has(node.tagName)){if(['SCRIPT','STYLE','IFRAME','OBJECT','EMBED','IMG','LINK','META'].includes(node.tagName))node.remove();else node.replaceWith(...node.childNodes);continue}for(const attribute of Array.from(node.attributes)){if(attribute.name==='src'&&node.tagName==='IMG'){if(!/^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(attribute.value))node.removeAttribute('src')}else if(attribute.name==='alt'&&node.tagName==='IMG'){}else if(attribute.name==='href'&&node.tagName==='A'){if(!/^(?:https?:\/\/|#[A-Za-z][\w-]*)/i.test(attribute.value))node.removeAttribute('href')}else if(attribute.name==='style'){const safe=Array.from(node.style).filter(k=>['font-family','font-size','font-weight','font-style','color','margin-top','margin-left','margin-right','padding-left','line-height','list-style-type','text-decoration','width','padding-right','padding-top','padding-bottom','margin-bottom','text-align','text-indent','max-width','height','display','border','border-top','border-left','border-right','border-left-width','border-left-style','border-left-color','border-right-width','border-right-style','border-right-color'].includes(k)).map(k=>k+':'+node.style.getPropertyValue(k)).join(';');node.setAttribute('style',safe)}else if(attribute.name==='data-bela-chapter'&&/^[1-9]\d*$/.test(attribute.value)){}else if(attribute.name==='data-design-section'&&designSections.some(([id])=>id===attribute.value)){}else if(attribute.name==='aria-label'){}else if(attribute.name==='class'&&/^(?:principita-gold-aside|sedante-gold-aside|sheet story-start bela-added-chapter|sheet bela-added-chapter|published-story|toc|toc-num|toc-title|toc-chapters|indice-title|back-to-index|tda-flashback-separator)$/.test(attribute.value)){}else if(attribute.name==='class'&&/^((?:voz|capitulo|flashback-muted|flashback-boundary-start|flashback-boundary-end|passage-start|passage-end|passage-top-gap|aside-start|aside-end)(?: (?:voz|capitulo|flashback-muted|flashback-boundary-start|flashback-boundary-end|passage-start|passage-end|passage-top-gap|aside-start|aside-end))*|doc-image|doc-block|doc-line|doc-heading|doc-marker|marker-gap|clipboard-block|page-break|page-content|sheet(?: (?:empty-section|story-start|chapter-start))*)$/.test(attribute.value)){}else if(node.tagName==='OL'&&attribute.name==='start'&&/^\d+$/.test(attribute.value)){}else if(node.tagName==='LI'&&attribute.name==='value'&&/^\d+$/.test(attribute.value)){}else if(attribute.name==='data-kairos-clipboard'&&['blocks','inline'].includes(attribute.value)){}else if(attribute.name==='data-marker-removed'&&attribute.value==='true'){}else if(attribute.name==='data-layout-version'&&attribute.value==='3'){}else if(attribute.name==='id'&&(pageIds.includes(attribute.value)||/^(?:indice|cuento-\d+(?:-encabezado-\d+)?|doc-heading-\d+)$/.test(attribute.value))){}else node.removeAttribute(attribute.name)}if(node.tagName==='A'){node.target='_blank';node.rel='noopener noreferrer'}}return template.innerHTML}
+function sanitize(value){const template=document.createElement('template');template.innerHTML=value;const allowed=new Set(['SECTION','HR','BLOCKQUOTE','ARTICLE','DIV','SPAN','P','BR','STRONG','B','EM','I','U','A','UL','OL','LI','H1','H2','H3','H4','H5','H6','IMG']);for(const node of Array.from(template.content.querySelectorAll('*'))){if(!allowed.has(node.tagName)){if(['SCRIPT','STYLE','IFRAME','OBJECT','EMBED','IMG','LINK','META'].includes(node.tagName))node.remove();else node.replaceWith(...node.childNodes);continue}for(const attribute of Array.from(node.attributes)){if(attribute.name==='src'&&node.tagName==='IMG'){if(!/^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(attribute.value))node.removeAttribute('src')}else if(attribute.name==='alt'&&node.tagName==='IMG'){}else if(attribute.name==='href'&&node.tagName==='A'){if(!/^(?:https?:\/\/|#[A-Za-z][\w-]*)/i.test(attribute.value))node.removeAttribute('href')}else if(attribute.name==='style'){const safe=Array.from(node.style).filter(k=>['font-family','font-size','font-weight','font-style','color','margin-top','margin-left','margin-right','padding-left','line-height','list-style-type','text-decoration','width','padding-right','padding-top','padding-bottom','margin-bottom','text-align','text-indent','max-width','height','display','border','border-top','border-left','border-right','border-left-width','border-left-style','border-left-color','border-right-width','border-right-style','border-right-color'].includes(k)).map(k=>k+':'+node.style.getPropertyValue(k)).join(';');node.setAttribute('style',safe)}else if(attribute.name==='data-bela-chapter'&&/^[1-9]\d*$/.test(attribute.value)){}else if(attribute.name==='data-design-section'&&designSections.some(([id])=>id===attribute.value)){}else if(attribute.name==='aria-label'){}else if(attribute.name==='class'&&/^(?:principita-gold-aside|sedante-gold-aside|sheet story-start bela-added-chapter|sheet bela-added-chapter|published-story|toc|toc-num|toc-title|toc-chapters|indice-title|back-to-index|tda-flashback-separator)$/.test(attribute.value)){}else if(attribute.name==='class'&&/^((?:voz|capitulo|flashback-muted|flashback-boundary-start|flashback-boundary-end|passage-start|passage-end|passage-top-gap|aside-start|aside-end)(?: (?:voz|capitulo|flashback-muted|flashback-boundary-start|flashback-boundary-end|passage-start|passage-end|passage-top-gap|aside-start|aside-end))*|doc-image|doc-block|doc-line|doc-heading|doc-marker|marker-gap|clipboard-block|page-break|page-content|sheet(?: (?:empty-section|story-start|chapter-start))*)$/.test(attribute.value)){}else if(node.tagName==='OL'&&attribute.name==='start'&&/^\d+$/.test(attribute.value)){}else if(node.tagName==='LI'&&attribute.name==='value'&&/^\d+$/.test(attribute.value)){}else if(attribute.name==='data-kairos-clipboard'&&['blocks','inline'].includes(attribute.value)){}else if(attribute.name==='data-marker-removed'&&attribute.value==='true'){}else if(attribute.name==='data-layout-version'&&attribute.value==='3'){}else if(attribute.name==='id'&&(pageIds.includes(attribute.value)||/^(?:indice(?:-(?:descripciones|estrategias|objetivos|tacticas|modelos))?|cuento-\d+(?:-encabezado-\d+)?|doc-heading-\d+)$/.test(attribute.value))){}else node.removeAttribute(attribute.name)}if(node.tagName==='A'){node.target='_blank';node.rel='noopener noreferrer'}}return template.innerHTML}
 function validate(data){
  if(data?.format!==FORMAT)throw Error('El archivo no es un respaldo de este documento.');
  if(data.version===2&&typeof data.html==='string'&&data.html.length<=10000000)return sanitize(data.html);
@@ -1569,7 +1562,7 @@ main.addEventListener('paste',event=>{
  const rich=event.clipboardData.getData('text/html');
  if(rich){
   const template=document.createElement('template');template.innerHTML=sanitize(rich);
-  template.content.querySelectorAll('#indice,.back-to-index,[data-editor-only]').forEach(node=>node.remove());
+  template.content.querySelectorAll('[id^="indice"],.back-to-index,[data-editor-only]').forEach(node=>node.remove());
   template.content.querySelectorAll('[id],[contenteditable],[hidden]').forEach(node=>{node.removeAttribute('id');node.removeAttribute('contenteditable');node.removeAttribute('hidden')});
   if(template.content.textContent.trim()||template.content.querySelector('img,br')){
    event.preventDefault();selectBullets(false);
@@ -2117,7 +2110,7 @@ function createDocumentCloud(){
   save();
   const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
   const signature=(root,title,synopsis)=>{
-   const copy=root.cloneNode(true);copy.querySelectorAll('#indice,.back-to-index').forEach(node=>node.remove());
+   const copy=root.cloneNode(true);copy.querySelectorAll('[id^="indice"],.back-to-index').forEach(node=>node.remove());
    return JSON.stringify([title,synopsis,copy.textContent].map(text=>(text||'').replace(/[\s\u200b\uFEFF]+/g,' ').trim()));
   };
   const template=document.createElement('template');template.innerHTML=requested.html;
